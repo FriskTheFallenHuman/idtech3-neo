@@ -1,9 +1,7 @@
 scons: Reading SConscript files ...
-  File "D:\a\project-neo\project-neo\SConstruct", line 49
+  File "D:\a\project-neo\project-neo\site_scons\doom_build.py", line 57
 
-    print('32-bit. Task 12 in TODO.md opens the door to 64-b
+    if shutil.which('clang-cl'):
 
-          ^
-
-SyntaxError: unterminated string literal (detected at line 49)
+IndentationError: unexpected indent
 
