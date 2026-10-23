@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-#define AL_ALEXT_PROTOTYPES
 #include "../client/client.h"
 #include "snd_local.h"
 #include "../openal/include/AL/al.h"
@@ -91,6 +90,10 @@ void UpdateStreams(float gain) {
 }
 ALCdevice *device;
 ALCcontext *context;
+// Entry points for the ALC_SOFT_pause_device extension. The bundled import
+// library does not export them, so they are resolved at runtime instead.
+LPALCDEVICEPAUSESOFT PauseDeviceSOFT = nullptr;
+LPALCDEVICERESUMESOFT ResumeDeviceSOFT = nullptr;
 int soundCount = 1, listener = -1;
 cvar_t *volume, *musicVolume, *muted;
 float globalGain = 1, fadeStartGain = 1, fadeTarget = 1;
@@ -167,7 +170,7 @@ void MusicCommand() {
     S_StartBackgroundTrack(Cmd_Argv(1), Cmd_Argc() > 2 ? Cmd_Argv(2) : Cmd_Argv(1), 0);
 }
 void InfoCommand() {
-    Com_Printf("Doom audio: OpenAL Soft static, %d sources, %d registered sounds; Doom OPL2 "
+    Com_Printf("Doom audio: OpenAL Soft dynamic, %d sources, %d registered sounds; Doom OPL2 "
                "and TiMidity music\n",
                SourceCount, soundCount - 1);
     int playing = 0, sampleOffset = 0;
@@ -198,7 +201,9 @@ void S_SetEditorPaused(qboolean paused) {
             alListenerf(AL_GAIN, 0);
             // Stop the device clock as well as output. Sources, queued buffers
             // and synthesizer positions remain intact until the editor closes.
-            alcDevicePauseSOFT(device);
+            if (PauseDeviceSOFT) {
+                PauseDeviceSOFT(device);
+            }
         }
     } else {
         if (fadeEnd > fadeStart) {
@@ -206,7 +211,9 @@ void S_SetEditorPaused(qboolean paused) {
             fadeEnd += now - editorPauseStarted;
         }
         if (Ready()) {
-            alcDeviceResumeSOFT(device);
+            if (ResumeDeviceSOFT) {
+                ResumeDeviceSOFT(device);
+            }
         }
     }
 }
@@ -239,14 +246,22 @@ void S_Init() {
     }
     alDistanceModel(AL_LINEAR_DISTANCE_CLAMPED);
     alDopplerFactor(0);
+    // The bundled import library does not export the pause/resume extension
+    // entry points, so fetch them by name from the loaded OpenAL runtime.
+    PauseDeviceSOFT = reinterpret_cast<LPALCDEVICEPAUSESOFT>(
+        alcGetProcAddress(device, "alcDevicePauseSOFT"));
+    ResumeDeviceSOFT = reinterpret_cast<LPALCDEVICERESUMESOFT>(
+        alcGetProcAddress(device, "alcDeviceResumeSOFT"));
     if (editorPaused) {
         alListenerf(AL_GAIN, 0);
-        alcDevicePauseSOFT(device);
+        if (PauseDeviceSOFT) {
+            PauseDeviceSOFT(device);
+        }
     }
     for (auto &voice : voices) {
         alGenSources(1, &voice.source);
     }
-    Cvar_Set("s_backend", "OpenAL Soft (static)");
+    Cvar_Set("s_backend", "OpenAL Soft (dynamic)");
     Cmd_AddCommand("play", PlayCommand);
     Cmd_AddCommand("music", MusicCommand);
     Cmd_AddCommand("s_info", InfoCommand);
