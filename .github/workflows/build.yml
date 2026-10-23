@@ -59,6 +59,21 @@ jobs:
           JOBS=$(nproc 2>/dev/null || echo 2)
           scons -j "$JOBS" 2>&1 | tee build.log
 
+      - name: Report the build errors
+        # The full build log is only in the artifact, so the errors are
+        # copied into the job summary where they can be read on the run
+        # page without downloading anything.
+        if: failure() && runner.os == 'Windows' && matrix.arch == 'x86'
+        shell: bash
+        run: |
+          {
+            echo '### Build errors'
+            echo ''
+            echo '```'
+            grep -i -E 'error|scons: ***' build.log | head -40 || true
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
       - name: Not built on this platform
         if: ${{ !(runner.os == 'Windows' && matrix.arch == 'x86') }}
         shell: bash
