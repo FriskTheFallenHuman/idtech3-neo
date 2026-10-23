@@ -11,9 +11,12 @@ Plain English only. Update this file as work moves forward.
 - FluidSynth swap: TiMidity is out and FluidSynth 2.6.1 replaces it. The
   engine loads libfluidsynth-3.dll at runtime through GetProcAddress, so the
   DLL is optional and the engine still boots without it (OPL2 and PCM music
-  keep working). The SoundFont is base/sound/timidity/TimGM6mb.sf2 and the
-  MIDI backend cvar value is "fluidsynth" now. The CI build is green with
-  no warnings.
+  keep working). The prebuilt Win32 DLLs (libfluidsynth-3.dll with its
+  sndfile.dll and SDL3.dll dependencies) are in the repository now and scons
+  ships the three of them next to the engine and the tests, so the
+  "fluidsynth" music backend works out of the box. The SoundFont is
+  base/sound/timidity/TimGM6mb.sf2 and the MIDI backend cvar value is
+  "fluidsynth" now. The CI build is green with no warnings.
 - bin/base layout: the game modules and the aas profiles are copied into
   bin/base, no longer into the repository base/.
 
@@ -28,8 +31,10 @@ Plain English only. Update this file as work moves forward.
   - OpenAL Soft: the bundled package is prebuilt, the engine links
     libs/Win32/OpenAL32.lib and the build ships the bundled DLL as
     OpenAL32.dll. No CMake anywhere in the build.
-  - FluidSynth: headers are bundled, the DLL is loaded at runtime, no import
-    library is linked. Non-Windows systems fetch the pinned sources.
+  - FluidSynth: the headers and the prebuilt DLLs are bundled, the DLL is
+    loaded at runtime, no import library is linked, and scons copies
+    libfluidsynth-3.dll, sndfile.dll and SDL3.dll next to the engine and the
+    tests. Non-Windows systems fetch the pinned sources.
   - clang-cl is the preferred compiler, plain MSVC is the fallback. Windows
     x86 only for now (the game module ABI is still 32-bit, see task 4).
   - "scons tests" builds the tests, "scons test" runs them.
@@ -41,10 +46,9 @@ Plain English only. Update this file as work moves forward.
 
 ## Planned next, in priority order
 
-1. Get the CI build green after the FluidSynth swap.
-2. Auto download and replacement of dependencies (tasks 9 and 10).
-3. Botlib as a DLL with the parser in the engine (task 3).
-4. Full C++ with idLib (tasks 5 and 8).
+1. Auto download and replacement of dependencies (tasks 9 and 10).
+2. Botlib as a DLL with the parser in the engine (task 3).
+3. Full C++ with idLib (tasks 5 and 8).
 
 ## Not started yet
 

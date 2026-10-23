@@ -256,15 +256,19 @@ openal_copies = [
 ]
 
 # FluidSynth is loaded at runtime, so its DLL ships next to the engine and
-# the tests when the prebuilt package is present. The library itself is
-# optional: the engine still boots without it.
-fluidsynth_dll = 'code/third-party/fluidsynth/Win32/bin/libfluidsynth-3.dll'
+# the tests when the prebuilt package is present. libfluidsynth-3.dll needs
+# sndfile.dll and SDL3.dll next to it, so the three ship together. The
+# library itself is optional: the engine still boots without it.
+fluidsynth_bin = 'code/third-party/fluidsynth/Win32/bin'
 fluidsynth_copies = []
-if os.path.exists(fluidsynth_dll):
-    fluidsynth_copies = [
-        env.InstallAs('#bin/libfluidsynth-3.dll', '#' + fluidsynth_dll),
-        env.InstallAs('#bin/tests/libfluidsynth-3.dll', '#' + fluidsynth_dll),
-    ]
+if os.path.exists(os.path.join(fluidsynth_bin, 'libfluidsynth-3.dll')):
+    for dll in ('libfluidsynth-3.dll', 'sndfile.dll', 'SDL3.dll'):
+        source = os.path.join(fluidsynth_bin, dll)
+        if os.path.exists(source):
+            fluidsynth_copies.append(
+                env.InstallAs('#bin/' + dll, '#' + source))
+            fluidsynth_copies.append(
+                env.InstallAs('#bin/tests/' + dll, '#' + source))
 
 # The engine is not finished until the modules are built too.
 engine_extra = [cgame, qagame, ui_dll] + base_copies
@@ -351,6 +355,3 @@ Options:
 
 print('Config: %s, arch: %s, editor: %s' % (config, arch, build_editor))
 print('Binaries go to bin/, the build files live in build/%s/' % config)
-
-
-

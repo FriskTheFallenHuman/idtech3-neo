@@ -65,15 +65,15 @@ the exe folder's base directory.
   soft_oal.dll, which scons copies next to the binaries as OpenAL32.dll.
   Non-Windows systems fetch the OpenAL Soft 1.23.1 sources into
   build/downloads/ instead, see task 9.
-- FluidSynth: third-party/fluidsynth ships the 2.6.1 headers and the CMake
-  and pkgconfig files. The engine links no import library; snd_fluidsynth.cpp
-  loads libfluidsynth-3.dll at runtime with LoadLibrary and resolves the
-  entry points with GetProcAddress, the same pattern as the optional OpenAL
-  extension entry points. When the prebuilt DLL is present under
-  third-party/fluidsynth/Win32/bin, scons copies it next to the engine and
-  the tests. Missing DLL means no synth: the engine still boots and plays
-  OPL2 and PCM music. Non-Windows systems fetch the 2.6.1 sources into
-  build/downloads/ like OpenAL Soft.
+- FluidSynth: third-party/fluidsynth ships the 2.6.1 headers, the CMake and
+  pkgconfig files and the prebuilt Win32 DLLs (libfluidsynth-3.dll with its
+  sndfile.dll and SDL3.dll dependencies). The engine links no import
+  library; snd_fluidsynth.cpp loads libfluidsynth-3.dll at runtime with
+  LoadLibrary and resolves the entry points with GetProcAddress, the same
+  pattern as the optional OpenAL extension entry points. scons copies the
+  three DLLs next to the engine and the tests. Missing DLLs mean no synth:
+  the engine still boots and plays OPL2 and PCM music. Non-Windows systems
+  fetch the 2.6.1 sources into build/downloads/ like OpenAL Soft.
 - Useful commands: scons, scons config=debug, scons editor=no, scons tests,
   scons test, scons -c.
 
@@ -168,6 +168,3 @@ Not legal advice, but nothing here obviously clashes. Double check qclib.
 - Rename code/ to src/ to match the plan, or keep code/ and update the docs?
 - extractfuncs: pull the original tool from the RTCW / ET sources in as reference
   and adapt it, or write a fresh one?
-- The prebuilt libfluidsynth-3.dll is not in the repository yet. Drop it into
-  code/third-party/fluidsynth/Win32/bin/ to have scons ship it next to the
-  engine, or keep it out of git on purpose.
