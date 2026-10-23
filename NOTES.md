@@ -16,15 +16,16 @@ fallback, and 32-bit only: the game module ABI is still 32-bit until task 12
 does the 64-bit work (the old bytecode VM that also forced this is gone,
 task 2 removed it). The engine executable is Doom.exe (the
 old CMake target was "wolf"). Everything the build makes lands in bin/ at the
-root, and the game modules and the aas profiles are copied into bin/base, the
-only base directory the build writes to. The engine loads the modules from
-the exe folder's base directory.
+root, except the game modules: they are built into base/ itself, the game
+data folder, and the aas profiles go to base/aas. bin/base is a link to
+base/, so the engine loads the modules from the exe folder's base directory
+and from mod folders set with fs_game.
 
 ## Folder map
 
-- base/ - game data (maps, wads, libraries loaded by the engine)
-- bin/ - the finished binaries (Doom.exe, the game modules, toolsx86.dll, tests);
-  the game modules and the aas profiles sit in bin/base
+- base/ - game data (maps, wads) plus the game modules and the aas profiles
+  the build puts there; bin/base links to this folder
+- bin/ - the finished binaries (Doom.exe, toolsx86.dll, tests)
 - code/ - the engine and the game. The plan calls this src/, the rename is still open.
 - code/game/ - game, cgame, ui and botlib
 - code/idLib/ - idLib from Doom 3 BFG, already vendored
@@ -37,6 +38,11 @@ the exe folder's base directory.
 
 - SConstruct at the root, helpers in site_scons/doom_build.py, source lists in
   site_scons/doom_sources.py.
+- bin/base is a link to the repository base/ folder (a directory junction on
+  Windows, a symlink elsewhere). The build creates it when it is missing and
+  replaces a real folder left by an older build. The game modules are built
+  straight into base/ through this link, so no module copies sit in bin/,
+  and the aas profiles are installed into base/aas like the old build did.
 - The old CMake files had stale folder names (win32/, jpeg-6/, ft2/, zlib/,
   libpng/, timidy/, game/, cgame/, ui/, botlib/ written as top level folders).
   The source lists keep those names and fix_path() in doom_sources.py moves
@@ -101,8 +107,9 @@ the exe folder's base directory.
 - The UI module still checks apiVersion on load; game and cgame do not need
   it because the struct layout is fixed at build time now.
 - Sys_LoadDll searches in order: the working directory, the exe folder's
-  base directory (bin/base), then fs_basepath and fs_cdpath with the game
-  dir. The build only puts the modules into bin/base.
+  base directory (bin/base, a link to the repository base/ folder), then
+  fs_basepath and fs_cdpath with the game dir, so mod folders set with
+  fs_game work too. The build puts the modules into base/.
 
 ## How the music playback works (after the FluidSynth swap)
 

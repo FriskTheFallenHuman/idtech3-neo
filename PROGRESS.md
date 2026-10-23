@@ -17,8 +17,11 @@ Plain English only. Update this file as work moves forward.
   "fluidsynth" music backend works out of the box. The SoundFont is
   base/sound/timidity/TimGM6mb.sf2 and the MIDI backend cvar value is
   "fluidsynth" now. The CI build is green with no warnings.
-- bin/base layout: the game modules and the aas profiles are copied into
-  bin/base, no longer into the repository base/.
+- base/ layout: bin/base is a link to the repository base/ folder (a
+  directory junction on Windows). The game modules are built straight into
+  base/, with no copies left in bin/, and the aas profiles go to base/aas
+  like before. The engine loads the modules from there and from mod
+  folders set with fs_game.
 
 ## Planned next, in priority order
 

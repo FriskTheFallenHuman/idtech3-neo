@@ -6,10 +6,15 @@
 #   scons test          build and run the tests
 #   scons -c            remove the build files
 #
-# Everything the build produces lands in bin/ at the repository root. The
-# engine loads the game modules from bin/base, so they are copied there.
+# Everything the build produces lands in bin/ at the repository root, except
+# the game modules: they are built into base/ itself, the game data folder,
+# because that is where the engine loads them from. bin/base is a link to
+# base/, so the engine finds them next to the game data.
 
 import os
+import shutil
+import stat
+import subprocess
 
 import doom_build
 import doom_sources
@@ -70,6 +75,30 @@ def module_env(name):
     variant = build_target + '/' + name + '/code'
     e.VariantDir(variant, '#code', duplicate=0)
     return e, variant
+
+
+# --- bin/base links to the game data ---
+
+# The game data lives in base/ at the repository root and the engine loads
+# the game modules from the base directory next to the executable. bin/base
+# is a link to base/ so both are the same folder: the modules are built
+# straight into the game data, the way the old build installed them.
+# Windows needs a directory junction for this, other systems a plain
+# symlink.
+bin_base = os.path.join('bin', 'base')
+if os.path.isdir(bin_base) and not os.path.islink(bin_base):
+    if getattr(os.stat(bin_base), 'st_reparse_tag', 0) != stat.IO_REPARSE_TAG_MOUNT_POINT:
+        # An old build left a real folder here. It only holds build copies,
+        # so replacing it with the link is safe.
+        shutil.rmtree(bin_base)
+if not os.path.exists(bin_base):
+    os.makedirs('bin', exist_ok=True)
+    if os.name == 'nt':
+        subprocess.check_call(
+            'mklink /J "%s" "%s"' % (bin_base, os.path.abspath('base')),
+            shell=True)
+    else:
+        os.symlink('base', bin_base)
 
 
 # --- the small support libraries ---
@@ -180,16 +209,20 @@ if build_editor:
               'comdlg32', 'shell32', 'advapi32', 'windowscodecs', 'ole32',
               'dwmapi', 'winmm'])
 
-    # The navigation profiles are plain data files the game reads from base/.
+    # The navigation profiles are plain data files the game reads from
+    # base/aas, like the old build installed them.
     aas_copies = env.Install(
-        '#bin/base/aas', ['#code/' + cfg for cfg in doom_sources.AAS_CONFIG_FILES])
+        '#base/aas', ['#code/' + cfg for cfg in doom_sources.AAS_CONFIG_FILES])
 
 # --- the game modules ---
 
+# The modules are built straight into base/ through the bin/base link, where
+# the engine loads them from. The engine also loads them from mod folders
+# set with fs_game, so the same files work for mods that ship their own.
 cgame_env, cgame_variant = module_env('cgame')
 cgame_env.Append(CPPDEFINES=['CGAMEDLL'], CPPPATH=['#code', generated_target])
 cgame = cgame_env.SharedLibrary(
-    '#bin/cgamex86',
+    '#bin/base/cgamex86',
     [cgame_variant + '/' + p for p in
      doom_sources.CGAME_SOURCES + doom_sources.CGAME_EXTRA_SOURCES
      + doom_sources.DOOM_FX_SOURCES])
@@ -199,7 +232,7 @@ qagame_env.Append(
     CPPDEFINES=['GAMEDLL', 'DOOM_SAVE_CALLBACKS'],
     CPPPATH=['#code', generated_target])
 qagame = qagame_env.SharedLibrary(
-    '#bin/qagamex86',
+    '#bin/base/qagamex86',
     [qagame_variant + '/' + p for p in
      doom_sources.GAME_SOURCES + doom_sources.GAME_EXTRA_SOURCES],
     LIBS=['winmm'])
@@ -207,18 +240,9 @@ qagame = qagame_env.SharedLibrary(
 ui_env, ui_variant = module_env('ui')
 ui_env.Append(CPPDEFINES=['UI_EXPORTS'], CPPPATH=['#code', generated_target])
 ui_dll = ui_env.SharedLibrary(
-    '#bin/uix86',
+    '#bin/base/uix86',
     [ui_variant + '/' + p for p in
      doom_sources.UI_SOURCES + doom_sources.UI_EXTRA_SOURCES])
-
-# The engine loads the game modules from bin/base, so they are copied there.
-# The Program/SharedLibrary calls above return a list of nodes that also
-# carries the .lib and .exp files built next to each dll, so only the .dll
-# files are listed here.
-base_copies = env.Install(
-    '#bin/base',
-    [env.File('#bin/' + name + '.dll')
-     for name in ('cgamex86', 'qagamex86', 'uix86')])
 
 # --- the engine executable ---
 
@@ -271,7 +295,7 @@ if os.path.exists(os.path.join(fluidsynth_bin, 'libfluidsynth-3.dll')):
                 env.InstallAs('#bin/tests/' + dll, '#' + source))
 
 # The engine is not finished until the modules are built too.
-engine_extra = [cgame, qagame, ui_dll] + base_copies
+engine_extra = [cgame, qagame, ui_dll]
 if build_editor:
     engine_extra += [editor_dll] + aas_copies
 env.Depends(wolf, engine_extra)
@@ -335,7 +359,7 @@ env.Alias('test', test_run)
 
 # --- the default target ---
 
-default_targets = [wolf] + base_copies + openal_copies + fluidsynth_copies
+default_targets = [wolf] + openal_copies + fluidsynth_copies
 if build_editor:
     default_targets += [editor_dll] + aas_copies
 env.Default(default_targets)
@@ -355,3 +379,4 @@ Options:
 
 print('Config: %s, arch: %s, editor: %s' % (config, arch, build_editor))
 print('Binaries go to bin/, the build files live in build/%s/' % config)
+print('The game modules go to base/, bin/base links to it.')
