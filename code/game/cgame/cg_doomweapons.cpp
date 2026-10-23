@@ -258,8 +258,20 @@ void CG_DrawDoomWeapon() {
     }
     const bool invisible = ps.powerups[PW_INVIS] > cg.time &&
                            (ps.powerups[PW_INVIS] - cg.time > 4000 || ((cg.time / 115) & 1));
-    const vec4_t shadow = {0.3f, 0.3f, 0.3f, 0.35f};
-    trap_R_SetColor(invisible ? shadow : nullptr);
+    // Doom dims the weapon sprite with the sector light at the player position
+    vec4_t tint = {1.0f, 1.0f, 1.0f, 1.0f};
+    vec3_t ambient, directed, lightDirection;
+    if (trap_R_LightForPoint(cg.refdef.vieworg, ambient, directed, lightDirection)) {
+        const float light = max(0.08f, min(ambient[0], 255.0f) / 255.0f);
+        tint[0] = tint[1] = tint[2] = light;
+    }
+    if (invisible) {
+        tint[0] *= 0.3f;
+        tint[1] *= 0.3f;
+        tint[2] *= 0.3f;
+        tint[3] = 0.35f;
+    }
+    trap_R_SetColor(tint);
     // Presentation offsets use Doom's original 200-line canvas, independent of
     // resolution. The shotgun needs a smaller lift than the other weapons.
     constexpr int weaponLift[] = {12, 20, 6, 12, 12, 12, 12, 12};
