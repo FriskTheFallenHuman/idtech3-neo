@@ -126,6 +126,9 @@ static void VID_AppActivate( BOOL fActive, BOOL minimize ) {
 
 	// minimize/restore mouse-capture on demand
 	if ( !g_wv.activeApp ) {
+		// Release the win32 button latch so no mouse button stays stuck
+		// down across the focus change
+		IN_MouseEvent( 0 );
 		IN_Activate( qfalse );
 	} else
 	{
@@ -477,6 +480,13 @@ LONG WINAPI MainWndProc(
 	case WM_MOUSEMOVE:
 	{
 		int temp;
+
+		// Ignore mouse messages while another window has focus. The
+		// click that brings the window back still works, because
+		// WM_ACTIVATE is processed before the button message.
+		if ( !g_wv.activeApp ) {
+			break;
+		}
 
 		temp = 0;
 

@@ -461,6 +461,15 @@ void IN_Frame( void ) {
 		return;
 	}
 
+	// An activate message is not always delivered (the editor return path
+	// and swallowed window messages can miss it). Only capture the mouse
+	// while the game window really is the foreground window, otherwise the
+	// cursor stays hidden and clipped while another application has focus.
+	if ( GetForegroundWindow() != g_wv.hWnd ) {
+		IN_DeactivateMouse();
+		return;
+	}
+
 	IN_ActivateMouse();
 
 	// post events to the system que
