@@ -3,6 +3,7 @@
 #include "cg_doomfx.h"
 #include "cg_doomweapons.h"
 #include "cg_doomitems.h"
+#include "cg_doommap.h"
 #include "../game/bg_doomweapons.h"
 #include "../game/bg_doommonsters.h"
 
@@ -208,6 +209,10 @@ void CG_DrawDoomWeapon() {
         ps.pm_type == PM_INTERMISSION || ps.persistant[PERS_TEAM] == TEAM_SPECTATOR) {
         return;
     }
+    // The automap covers the view area, and Doom hides the weapon while it is up.
+    if (CG_DoomMapVisible()) {
+        return;
+    }
     CG_RegisterDoomWeapon(ps.weapon);
     if (!doomweapon::Selectable(ps, cg.weaponSelect)) {
         cg.weaponSelect = ps.weapon;
@@ -247,7 +252,7 @@ void CG_DrawDoomWeapon() {
     const auto &sprite = set.frames[frame];
     if (cg_debugAnim.integer & 4) {
         CG_Printf("Doom weapon=%d state=%d anim=%d time=%d delay=%d frame=%d offset=%d ammo=%d\n",
-                  ps.weapon, ps.weaponstate, ps.weapAnim, ps.weaponTime, ps.weaponDelay, frame,
+                  ps.weapon, ps.weaponstate, ps.weapAnim, cg.weaponTime, cg.weaponDelay, frame,
                   sprite.offsetY,
                   doomweapon::Get(ps.weapon)->cost ? ps.ammo[doomweapon::Get(ps.weapon)->ammo] : 0);
     }
