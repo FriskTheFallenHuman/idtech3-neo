@@ -5,12 +5,15 @@ name: Build log digest
 # the first errors with their file and line. The report goes into the job
 # summary, is saved as an artifact and is committed to the repository as
 # build-digest.md, so it can be read without downloading the artifact.
+#
+# This runs when the Build workflow finishes, not when build.log is pushed:
+# the Build workflow commits build.log with GITHUB_TOKEN and pushes made with
+# that token do not trigger other workflows. A finished run does.
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - build.log
+  workflow_run:
+    workflows: [Build]
+    types: [completed]
   workflow_dispatch:
 
 permissions:

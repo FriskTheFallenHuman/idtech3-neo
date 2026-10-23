@@ -80,9 +80,9 @@ jobs:
       - name: Save the build log
         # The build log is committed to the repository root, the same
         # place a manual build keeps it, whether the build passed or
-        # failed. This triggers the digest workflow, which writes
-        # build-digest.md, and lets the log be read without downloading
-        # the artifact.
+        # failed. The digest workflow then runs when this Build run
+        # finishes, writes build-digest.md and lets the log be read
+        # without downloading the artifact.
         if: ${{ !cancelled() && runner.os == 'Windows' && matrix.arch == 'x86' }}
         shell: bash
         run: |
