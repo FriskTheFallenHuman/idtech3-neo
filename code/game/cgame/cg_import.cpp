@@ -129,19 +129,19 @@ int trap_CM_TransformedPointContents( const vec3_t p, clipHandle_t model, const 
 	return cgameImports->CM_TransformedPointContents( p, model, origin, angles );
 }
 
-void trap_CM_BoxTrace( trace_t * results, const vec3_t start, const vec3_t end, const vec3_t mins, const vec3_t maxs, clipHandle_t model, int brushmask ) {
+void trap_CM_BoxTrace( trace_t * results, const vec3_t * start, const vec3_t * end, const vec3_t * mins, const vec3_t * maxs, clipHandle_t model, int brushmask ) {
 	cgameImports->CM_BoxTrace( results, start, end, mins, maxs, model, brushmask );
 }
 
-void trap_CM_TransformedBoxTrace( trace_t * results, const vec3_t start, const vec3_t end, const vec3_t mins, const vec3_t maxs, clipHandle_t model, int brushmask, const vec3_t origin, const vec3_t angles ) {
+void trap_CM_TransformedBoxTrace( trace_t * results, const vec3_t * start, const vec3_t * end, const vec3_t * mins, const vec3_t * maxs, clipHandle_t model, int brushmask, const vec3_t * origin, const vec3_t * angles ) {
 	cgameImports->CM_TransformedBoxTrace( results, start, end, mins, maxs, model, brushmask, origin, angles );
 }
 
-void trap_CM_CapsuleTrace( trace_t * results, const vec3_t start, const vec3_t end, const vec3_t mins, const vec3_t maxs, clipHandle_t model, int brushmask ) {
+void trap_CM_CapsuleTrace( trace_t * results, const vec3_t * start, const vec3_t * end, const vec3_t * mins, const vec3_t * maxs, clipHandle_t model, int brushmask ) {
 	cgameImports->CM_CapsuleTrace( results, start, end, mins, maxs, model, brushmask );
 }
 
-void trap_CM_TransformedCapsuleTrace( trace_t * results, const vec3_t start, const vec3_t end, const vec3_t mins, const vec3_t maxs, clipHandle_t model, int brushmask, const vec3_t origin, const vec3_t angles ) {
+void trap_CM_TransformedCapsuleTrace( trace_t * results, const vec3_t * start, const vec3_t * end, const vec3_t * mins, const vec3_t * maxs, clipHandle_t model, int brushmask, const vec3_t * origin, const vec3_t * angles ) {
 	cgameImports->CM_TransformedCapsuleTrace( results, start, end, mins, maxs, model, brushmask, origin, angles );
 }
 
@@ -470,8 +470,7 @@ int trap_R_LightForPoint( vec3_t point, vec3_t ambient, vec3_t directed, vec3_t 
 	return cgameImports->R_LightForPoint( point, ambient, directed, lightDirection );
 }
 
-void trap_R_DrawDoomMap( int x, int y, int size, const byte * pixels ) {
-	cgameImports->R_DrawDoomMap( x, y, size, pixels );
+void trap_R_DrawDoomMap( int x, int y, int width, int height, const byte * pixels ) {
+	cgameImports->R_DrawDoomMap( x, y, width, height, pixels );
 }
-
 
