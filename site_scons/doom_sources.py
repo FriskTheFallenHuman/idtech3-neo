@@ -68,7 +68,8 @@ WOLF_SOURCES = fix_paths([
     'win32/win_main.cpp',
     'win32/win_net.cpp',
     'win32/win_shared.cpp',
-    'win32/win_syscon.cpp',
+    'win32/win
+_syscon.cpp',
     'win32/win_wndproc.cpp',
 ])
 
@@ -135,7 +136,8 @@ CGAME_SOURCES = fix_paths([
     'cgame/cg_event.cpp',
     'cgame/cg_flamethrower.cpp',
     'cgame/cg_info.cpp',
-    'cgame/cg_localents.cpp',
+    'cga
+me/cg_localents.cpp',
     'cgame/cg_main.cpp',
     'cgame/cg_marks.cpp',
     'cgame/cg_newDraw.cpp',
@@ -209,7 +211,8 @@ GAME_SOURCES = fix_paths([
     'game/g_script_actions.cpp',
     'game/g_session.cpp',
     'game/g_spawn.cpp',
-    'game/g_svcmds.cpp',
+    'game/
+g_svcmds.cpp',
     'game/g_import.cpp',
     'game/g_target.cpp',
     'game/g_team.cpp',
@@ -289,7 +292,8 @@ RENDERER_EXTRA_SOURCES = fix_paths([
     'renderer/tr_glprogs.cpp',
     'renderer/tr_vfx.cpp',
     'renderer/tr_decals.cpp',
-    'renderer/tr_hbao.cpp',
+    'renderer/tr_hbao.cp
+p',
     'renderer/tr_editor.cpp',
     'win32/win_png.cpp',
 ])
@@ -354,7 +358,8 @@ AASBUILD_SOURCES = fix_paths([
     'tools/compilers/aasbuild/csg.cpp',
     'tools/compilers/aasbuild/glfile.cpp',
     'tools/compilers/aasbuild/l_bsp_ent.cpp',
-    'tools/compilers/aasbuild/l_bsp_hl.cpp',
+    'to
+ols/compilers/aasbuild/l_bsp_hl.cpp',
     'tools/compilers/aasbuild/l_bsp_q1.cpp',
     'tools/compilers/aasbuild/l_bsp_q2.cpp',
     'tools/compilers/aasbuild/l_bsp_q3.cpp',
@@ -408,7 +413,8 @@ EDITOR_CORE_SOURCES = [
     'tools/editor/DoomProject.cpp',
     'tools/editor/MapTextures.cpp',
     'tools/editor/idfunctions.cpp',
-    'tools/editor/pathops.cpp',
+    't
+ools/editor/pathops.cpp',
     'tools/editor/lbmfunctions.cpp',
     'tools/editor/SpecialList.cpp',
     'tools/editor/Timing.cpp',
@@ -447,8 +453,9 @@ IMGUI_SOURCES = [
 
 
 # The test programs. Each entry is a dictionary:
-#   name     - the exe name (built as bin/tests/<name>.exe)
-#   sources  - the files to compile, code/ relative
+#   name     - the exe name (built as bin/tests/<name>)
+#   sources  - the files to compile; test files live in test/, engine files under code/
+#   args     - the command line the test runner passes (optional)
 #   defines  - extra defines (optional)
 #   libs     - static libraries from this build to link in (optional)
 #   syslibs  - system libraries to link in (optional)
@@ -456,43 +463,45 @@ IMGUI_SOURCES = [
 TESTS = [
     {
         'name': 'doommap_format_tests',
-        'sources': ['tools/compilers/dmap/tests/format_tests.cpp'],
+        'sources': ['test/dmap/format_tests.cpp'],
+        'args': ['base/maps/e1m1.bsp'],
     },
     {
         'name': 'doom_menu_tests',
-        'sources': ['ui/tests/doom_menu_tests.cpp'],
+        'sources': ['test/ui/doom_menu_tests.cpp'],
     },
     {
         'name': 'doom_content_tests',
-        'sources': ['qcommon/tests/doom_content_tests.cpp', 'qcommon/doom_content.cpp'],
+        'sources': ['test/qcommon/doom_content_tests.cpp', 'qcommon/doom_content.cpp'],
     },
     {
         'name': 'doom_damage_view_tests',
-        'sources': ['cgame/tests/doom_damage_view_tests.cpp'],
+        'sources':
+ ['test/cgame/doom_damage_view_tests.cpp'],
         'sections': True,
     },
     {
         'name': 'doom_display_tests',
-        'sources': ['ui/tests/display_tests.cpp'],
+        'sources': ['test/ui/display_tests.cpp'],
     },
     {
         'name': 'doom_hud_tests',
-        'sources': ['cgame/tests/doom_hud_tests.cpp'],
+        'sources': ['test/cgame/doom_hud_tests.cpp'],
     },
     {
         'name': 'doom_weapon_tests',
-        'sources': ['game/tests/doom_weapon_tests.cpp'],
+        'sources': ['test/game/doom_weapon_tests.cpp'],
     },
     {
         'name': 'doom_png_tests',
-        'sources': ['renderer/tests/png_tests.cpp', 'win32/win_png.cpp'],
+        'sources': ['test/renderer/png_tests.cpp', 'win32/win_png.cpp'],
         # win_png.cpp carries the stb_image implementation and the fixtures
         # are hand rolled, so the test needs no extra libraries.
     },
     {
         'name': 'doom_sprite_animation_tests',
         'sources': [
-            'cgame/tests/doom_sprite_animation_tests.cpp',
+            'test/cgame/doom_sprite_animation_tests.cpp',
             'cgame/cg_weaponanim.cpp',
             'game/q_shared.cpp',
             'game/q_math.cpp',
@@ -502,7 +511,7 @@ TESTS = [
     {
         'name': 'doom_weapon_server_tests',
         'sources': [
-            'game/tests/doom_weapon_server_tests.cpp',
+            'test/game/doom_weapon_server_tests.cpp',
             'game/g_doomweapons.cpp',
             'game/q_shared.cpp',
             'game/q_math.cpp',
@@ -512,7 +521,7 @@ TESTS = [
     {
         'name': 'doom_monster_tests',
         'sources': [
-            'game/tests/doom_monster_tests.cpp',
+            'test/game/doom_monster_tests.cpp',
             'game/bg_doommonsters.cpp',
             'game/q_shared.cpp',
             'game/q_math.cpp',
@@ -522,7 +531,7 @@ TESTS = [
     {
         'name': 'doom_monster_server_tests',
         'sources': [
-            'game/tests/doom_monster_server_tests.cpp',
+            'test/game/doom_monster_server_tests.cpp',
             'game/g_doomai.cpp',
             'game/bg_doommonsters.cpp',
             'game/q_shared.cpp',
@@ -537,8 +546,9 @@ TESTS = [
     },
     {
         'name': 'doom_shader_index_tests',
-        'sources': [
-            'renderer/tests/shader_index_tests.cpp',
+      
+  'sources': [
+            'test/renderer/shader_index_tests.cpp',
             'game/q_shared.cpp',
             'game/q_math.cpp',
         ],
@@ -547,7 +557,7 @@ TESTS = [
     {
         'name': 'doom_replication_tests',
         'sources': [
-            'game/tests/doom_replication_tests.cpp',
+            'test/game/doom_replication_tests.cpp',
             'qcommon/msg.cpp',
             'qcommon/huffman.cpp',
             'game/q_shared.cpp',
@@ -558,7 +568,7 @@ TESTS = [
     {
         'name': 'doom_sprite_pmove_tests',
         'sources': [
-            'game/tests/doom_sprite_pmove_tests.cpp',
+            'test/game/doom_sprite_pmove_tests.cpp',
             'game/bg_pmove.cpp',
             'game/bg_slidemove.cpp',
             'game/bg_animation.cpp',
@@ -573,7 +583,7 @@ TESTS = [
     {
         'name': 'doom_item_tests',
         'sources': [
-            'game/tests/doom_item_tests.cpp',
+            'test/game/doom_item_tests.cpp',
             'game/g_doomitems.cpp',
             'game/bg_doommonsters.cpp',
             'game/q_shared.cpp',
@@ -583,17 +593,17 @@ TESTS = [
     },
     {
         'name': 'doom_teleport_tests',
-        'sources': ['game/tests/doom_teleport_tests.cpp', 'game/q_shared.cpp', 'game/q_math.cpp'],
+        'sources': ['test/game/doom_teleport_tests.cpp', 'game/q_shared.cpp', 'game/q_math.cpp'],
         'sections': True,
     },
     {
         'name': 'doom_light_tests',
-        'sources': ['renderer/tests/doom_light_tests.cpp'],
+        'sources': ['test/renderer/doom_light_tests.cpp'],
     },
     {
         'name': 'doom_level_tests',
         'sources': [
-            'game/tests/doom_level_tests.cpp',
+            'test/game/doom_level_tests.cpp',
             'game/g_doomlevel.cpp',
             'game/bg_doommonsters.cpp',
             'game/q_shared.cpp',
@@ -604,17 +614,18 @@ TESTS = [
     {
         'name': 'doom_screen_tests',
         'sources': [
-            'cgame/tests/doom_screen_tests.cpp',
+            'test/cgame/doom_screen_tests.cpp',
             'cgame/cg_doomscreens.cpp',
             'game/q_shared.cpp',
-            'game/q_math.cpp',
+            'game/q_math.cp
+p',
         ],
         'sections': True,
     },
     {
         'name': 'doom_audio_tests',
         'sources': [
-            'sound/tests/audio_tests.cpp',
+            'test/sound/audio_tests.cpp',
             'sound/snd_fluidsynth.cpp',
             'sound/snd_wave.cpp',
         ],
@@ -624,7 +635,7 @@ TESTS = [
     {
         'name': 'doom_music_stream_tests',
         'sources': [
-            'sound/tests/music_stream_tests.cpp',
+            'test/sound/music_stream_tests.cpp',
             'sound/snd_music.cpp',
             'sound/snd_fluidsynth.cpp',
             'sound/snd_musicmix.cpp',
@@ -639,13 +650,13 @@ TESTS = [
     },
     {
         'name': 'doom_opl_tests',
-        'sources': ['sound/tests/opl_tests.cpp', 'sound/snd_musicmix.cpp'],
+        'sources': ['test/sound/opl_tests.cpp', 'sound/snd_musicmix.cpp'],
         'libs': ['doom_opl'],
     },
     {
         'name': 'doom_fx_tests',
         'sources': [
-            'cgame/tests/doom_fx_tests.cpp',
+            'test/cgame/doom_fx_tests.cpp',
             'cgame/cg_marks.cpp',
         ] + [
             'cgame/fx/genericparser2.cpp',
@@ -663,12 +674,12 @@ TESTS = [
     },
     {
         'name': 'doom_fx_material_tests',
-        'sources': ['cgame/tests/doom_fx_material_tests.cpp', 'cgame/cg_doomfx_materials.cpp'],
+        'sources': ['test/cgame/doom_fx_material_tests.cpp', 'cgame/cg_doomfx_materials.cpp'],
     },
     {
         'name': 'doom_blood_tests',
         'sources': [
-            'cgame/tests/doom_blood_tests.cpp',
+            'test/cgame/doom_blood_tests.cpp',
             'cgame/cg_doomfx_blood.cpp',
             'game/q_shared.cpp',
             'game/q_math.cpp',
@@ -677,8 +688,9 @@ TESTS = [
     },
     {
         'name': 'doom_netchan_tests',
-        'sources': [
-            'game/tests/doom_netchan_tests.cpp',
+        'sources': 
+[
+            'test/game/doom_netchan_tests.cpp',
             'qcommon/net_chan.cpp',
             'qcommon/msg.cpp',
             'qcommon/huffman.cpp',
@@ -690,20 +702,20 @@ TESTS = [
     {
         'name': 'doom_save_callbacks_tests',
         'sources': [
-            'game/tests/doom_save_callbacks_tests.cpp',
-            'game/tests/doom_save_callbacks_other.cpp',
+            'test/game/doom_save_callbacks_tests.cpp',
+            'test/game/doom_save_callbacks_other.cpp',
             'game/g_save_callbacks.cpp',
         ],
         'defines': ['DOOM_SAVE_CALLBACK_TEST'],
     },
     {
         'name': 'doom_save_header_tests',
-        'sources': ['game/tests/doom_save_header_tests.cpp'],
+        'sources': ['test/game/doom_save_header_tests.cpp'],
     },
     {
         'name': 'doom_save_clients_tests',
         'sources': [
-            'game/tests/doom_save_clients_tests.cpp',
+            'test/game/doom_save_clients_tests.cpp',
             'game/g_doomsave.cpp',
             'game/bg_doommonsters.cpp',
             'game/q_shared.cpp',
@@ -713,30 +725,33 @@ TESTS = [
     },
     {
         'name': 'doom_bot_tests',
-        'sources': ['game/tests/doom_bot_tests.cpp', 'game/q_shared.cpp', 'game/q_math.cpp'],
+        'sources': ['test/game/doom_bot_tests.cpp', 'game/q_shared.cpp', 'game/q_math.cpp'],
         'sections': True,
     },
     {
         'name': 'doomed_authoring_tests',
-        'sources': ['tools/editor/tests/AuthoringTests.cpp'],
+        'sources': ['test/editor/AuthoringTests.cpp'],
         'libs': ['doomed_core'],
         'syslibs': ['windowscodecs', 'ole32'],
     },
     {
         'name': 'doomed_host_tests',
-        'sources': ['tools/editor/tests/HostTests.cpp'],
+        'sources': ['test/editor/HostTests.cpp'],
+        'args': ['bin/toolsx86.dll', 'build/test-scratch/doomed_host',
+                 'base/wad/DOOM.WAD', '.'],
         'libs': ['doomed_core'],
         'syslibs': ['windowscodecs', 'ole32', 'user32', 'psapi'],
     },
     {
         'name': 'doomed_port_tests',
-        'sources': ['tools/editor/tests/PortTests.cpp'],
+        'sources': ['test/editor/PortTests.cpp'],
+        'args': ['.', 'build/test-scratch/doomed_port'],
         'libs': ['doomed_core'],
         'syslibs': ['windowscodecs', 'ole32'],
     },
     {
         'name': 'doomed_core_tests',
-        'sources': ['tools/editor/tests/CoreTests.cpp'],
+        'sources': ['test/editor/CoreTests.cpp'],
         'libs': ['doomed_core'],
         'syslibs': ['windowscodecs', 'ole32'],
     },

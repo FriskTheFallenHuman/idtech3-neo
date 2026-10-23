@@ -46,7 +46,8 @@ if os.name != 'nt':
 
 if arch != 'x86':
     print('Only x86 builds work right now. The game module ABI is still')
-    print('32-bit. Task 12 in TODO.md opens the door to 64-bit.')
+    print('32-bit. Task 12 in TODO.md opens the door to 64-b
+it.')
     Exit(1)
 
 if config not in ('debug', 'release'):
@@ -103,7 +104,8 @@ if not os.path.exists(bin_base):
 
 # --- the small support libraries ---
 
-# miniz replaces the old bundled zlib (and the libpng build that sat on top
+# miniz replaces the 
+old bundled zlib (and the libpng build that sat on top
 # of it). One C file, no configuration needed.
 miniz_env, miniz_variant = module_env('doom_miniz')
 miniz_env.Append(CPPPATH=['#code/third-party/miniz'])
@@ -153,7 +155,8 @@ editor_core_env.Append(
     CPPDEFINES=['WIN32_LEAN_AND_MEAN', 'WINVER=0x0A00', '_WIN32_WINNT=0x0A00'],
     CPPPATH=['#code/tools/editor', '#code'])
 doomed_core = editor_core_env.StaticLibrary(
-    build_target + '/doomed_core',
+    build_tar
+get + '/doomed_core',
     [editor_core_variant + '/' + p for p in doom_sources.EDITOR_CORE_SOURCES])
 
 imgui_env, imgui_variant = module_env('doomed_imgui')
@@ -201,7 +204,8 @@ if build_editor:
                  '#code/third-party/imgui/backends', generated_target])
     editor_sources = [editor_variant + '/' + p for p in
                       editor_cpp + doom_sources.EDITOR_EXTRA_SOURCES]
-    editor_sources.append(generated_target + '/compiler-exports.def')
+    editor_sources.append(generated_target + '/compiler-exports
+.def')
     editor_dll = editor_env.SharedLibrary(
         '#bin/toolsx86',
         editor_sources,
@@ -253,7 +257,8 @@ wolf_env.Append(
         '#code',
         '#code/third-party/openal/include',
         '#code/third-party/fluidsynth/include',
-        '#code/third-party/stb',
+        '#code/th
+ird-party/stb',
         '#code/third-party/miniz',
         generated_target])
 wolf_env['SUBSYSTEM'] = 'WINDOWS'
@@ -294,7 +299,8 @@ if os.path.exists(os.path.join(fluidsynth_bin, 'libfluidsynth-3.dll')):
             fluidsynth_copies.append(
                 env.InstallAs('#bin/tests/' + dll, '#' + source))
 
-# The engine is not finished until the modules are built too.
+# The engine is not fini
+shed until the modules are built too.
 engine_extra = [cgame, qagame, ui_dll]
 if build_editor:
     engine_extra += [editor_dll] + aas_copies
@@ -338,10 +344,17 @@ for test in doom_sources.TESTS:
 
     test_libs = [BUILT_LIBS[name] for name in test.get('libs', [])]
     test_libs += test.get('syslibs', [])
+    # Test files live in test/ at the repository root, engine files they
+    # pull in still live under code/.
+    test_sources = []
+    for path in doom_sources.fix_paths(test['sources']):
+        if path.startswith('test/'):
+            test_sources.append('#' + path)
+        else:
+            test_sources.append(test_variant + '/' + path)
     node = test_env.Program(
         '#bin/tests/' + test['name'],
-        [test_variant + '/' + p
-         for p in doom_sources.fix_paths(test['sources'])],
+        test_sources,
         LIBS=test_libs)
     if test['name'] == 'doomed_host_tests' and editor_dll:
         env.Depends(node, editor_dll)
@@ -350,6 +363,9 @@ for test in doom_sources.TESTS:
 env.Alias('tests', test_nodes)
 
 # "scons test" builds the tests, runs them and stops when one fails.
+# The tests stay optional for a plain build; the CI run always executes them.
+env['TEST_ARGS'] = {test['name']: test.get('args', [])
+                    for test in doom_sources.TESTS}
 test_run = env.Command(
     build_target + '/tests-run.stamp',
     test_nodes,
@@ -360,7 +376,8 @@ env.Alias('test', test_run)
 # --- the default target ---
 
 default_targets = [wolf] + openal_copies + fluidsynth_copies
-if build_editor:
+if build_
+editor:
     default_targets += [editor_dll] + aas_copies
 env.Default(default_targets)
 

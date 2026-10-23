@@ -51,7 +51,8 @@ def make_base_env(config):
     """
     from SCons.Script import Environment
 
-    env = Environment(tools=['default'], TARGET_ARCH='x86')
+    en
+v = Environment(tools=['default'], TARGET_ARCH='x86')
 
     if shutil.which('clang-cl'):
         env['CC'] = 'clang-cl'
@@ -101,7 +102,8 @@ def write_generated_files(build_root, code_dir='code'):
 
 
 def fetch_openal_soft(download_dir):
-    """Download the OpenAL Soft sources for the non-Windows builds.
+    """Download the OpenAL Soft sources for the non-Wind
+ows builds.
 
     The vendored copy in code/third-party/openal is the prebuilt Windows
     package (headers, import libraries and DLLs). Other systems fetch the
@@ -153,7 +155,8 @@ def fetch_fluidsynth(download_dir):
     version = '2.6.1'
     extracted = os.path.join(download_dir, 'fluidsynth-' + version)
     if os.path.isdir(extracted):
-        return extracted
+        
+return extracted
 
     os.makedirs(download_dir, exist_ok=True)
     url = ('https://github.com/FluidSynth/fluidsynth/archive/refs/tags/'
@@ -181,11 +184,16 @@ def run_tests(target, source, env):
     """Run every test program in source, called by "scons test"."""
     import subprocess
 
+    # The TESTS list in doom_sources.py carries the command line each
+    # test needs, the runner looks it up by executable name.
+    test_args = env.get('TEST_ARGS') or {}
     failed = []
     for test in source:
         name = os.path.basename(test.path)
+        if name.endswith('.exe'):
+            name = name[:-len('.exe')]
         print('Running %s' % name)
-        code = subprocess.call([test.abspath])
+        code = subprocess.call([test.abspath] + list(test_args.get(name, [])))
         if code != 0:
             failed.append(name)
 
