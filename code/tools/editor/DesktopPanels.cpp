@@ -15,12 +15,6 @@ Line *selectedLine(App &a) {
             return &l;
     return nullptr;
 }
-Thing *selectedThing(App &a) {
-    for (auto &t : a.world.things)
-        if (t.selected > 0)
-            return &t;
-    return nullptr;
-}
 void at(App &a, float x, float y, float width = 0) {
     ImGui::SetCursorPos({(7 + x) * a.dpi, (24 + y) * a.dpi});
     if (width)
@@ -567,3 +561,4 @@ bool drawDesktopPanel(App &a, const std::string &key) {
     return true;
 }
 } // namespace de
+

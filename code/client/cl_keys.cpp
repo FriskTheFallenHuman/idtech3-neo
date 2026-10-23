@@ -196,7 +196,7 @@ keyname_t keynames_d[] =    //deutsch
 	{"EINGABETASTE", K_ENTER},
 	{"ESC", K_ESCAPE},
 	{"LEERTASTE", K_SPACE},
-	{"RÜCKTASTE", K_BACKSPACE},
+	{"R\xDC" "CKTASTE", K_BACKSPACE},
 	{"PFEILT.AUF", K_UPARROW},
 	{"PFEILT.UNTEN", K_DOWNARROW},
 	{"PFEILT.LINKS", K_LEFTARROW},
@@ -449,9 +449,9 @@ keyname_t keynames_s[] =  //Spanish - Updated 11/5
 
 	{"ALT", K_ALT},
 	{"CTRL", K_CTRL},
-	{"MAYÚS", K_SHIFT},
+	{"MAY\xDA" "S", K_SHIFT},
 
-	{"BLOQ_MAYÚS", K_CAPSLOCK},
+	{"BLOQ_MAY\xDA" "S", K_CAPSLOCK},
 
 	{"F1", K_F1},
 	{"F2", K_F2},
@@ -468,16 +468,16 @@ keyname_t keynames_s[] =  //Spanish - Updated 11/5
 
 	{"INSERT", K_INS},
 	{"SUPR", K_DEL},
-	{"AV_PÁG", K_PGDN},
-	{"RE_PÁG", K_PGUP},
+	{"AV_P\xC1" "G", K_PGDN},
+	{"RE_P\xC1" "G", K_PGUP},
 	{"INICIO", K_HOME},
 	{"FIN", K_END},
 
-	{"RATÓN1", K_MOUSE1},
-	{"RATÓN2", K_MOUSE2},
-	{"RATÓN3", K_MOUSE3},
-	{"RATÓN4", K_MOUSE4},
-	{"RATÓN5", K_MOUSE5},
+	{"RAT\xD3" "N1", K_MOUSE1},
+	{"RAT\xD3" "N2", K_MOUSE2},
+	{"RAT\xD3" "N3", K_MOUSE3},
+	{"RAT\xD3" "N4", K_MOUSE4},
+	{"RAT\xD3" "N5", K_MOUSE5},
 
 	{"RUEDA_HACIA_ARRIBA",   K_MWHEELUP },
 	{"RUEDA_HACIA_ABAJO",    K_MWHEELDOWN },
@@ -534,13 +534,13 @@ keyname_t keynames_s[] =  //Spanish - Updated 11/5
 
 	{"INICIO(NUM)",          K_KP_HOME },
 	{"ARRIBA(NUM)",      K_KP_UPARROW },
-	{"RE_PÁG(NUM)",          K_KP_PGUP },
+	{"RE_P\xC1" "G(NUM)",          K_KP_PGUP },
 	{"IZQUIERDA(NUM)",   K_KP_LEFTARROW },
 	{"5(NUM)",           K_KP_5 },
 	{"DERECHA(NUM)", K_KP_RIGHTARROW },
 	{"FIN(NUM)",         K_KP_END },
 	{"ABAJO(NUM)",   K_KP_DOWNARROW },
-	{"AV_PÁG(NUM)",          K_KP_PGDN },
+	{"AV_P\xC1" "G(NUM)",          K_KP_PGDN },
 	{"INTRO(NUM)",       K_KP_ENTER },
 	{"INS(NUM)",         K_KP_INS },
 	{"SUPR(NUM)",            K_KP_DEL },
@@ -569,7 +569,7 @@ keyname_t keynames_i[] =  //Italian
 	{"SPAZIO", K_SPACE},
 	{"BACKSPACE", K_BACKSPACE},
 	{"FRECCIASU", K_UPARROW},
-	{"FRECCIAGIÙ", K_DOWNARROW},
+	{"FRECCIAGI\xD9", K_DOWNARROW},
 	{"FRECCIASX", K_LEFTARROW},
 	{"FRECCIADX", K_RIGHTARROW},
 
@@ -594,7 +594,7 @@ keyname_t keynames_i[] =  //Italian
 
 	{"INS", K_INS},
 	{"CANC", K_DEL},
-	{"PAGGIÙ", K_PGDN},
+	{"PAGGI\xD9", K_PGDN},
 	{"PAGGSU", K_PGUP},
 	{"HOME", K_HOME},
 	{"FINE", K_END},
@@ -606,7 +606,7 @@ keyname_t keynames_i[] =  //Italian
 	{"MOUSE5", K_MOUSE5},
 
 	{"ROTELLASU",    K_MWHEELUP },
-	{"ROTELLAGIÙ",   K_MWHEELDOWN },
+	{"ROTELLAGI\xD9",   K_MWHEELDOWN },
 
 	{"JOY1", K_JOY1},
 	{"JOY2", K_JOY2},
@@ -665,8 +665,8 @@ keyname_t keynames_i[] =  //Italian
 	{"TN_5",         K_KP_5 },
 	{"TN_FRECCIA_DX",    K_KP_RIGHTARROW },
 	{"TN_FINE",          K_KP_END },
-	{"TN_FRECCIAGIÙ",    K_KP_DOWNARROW },
-	{"TN_PAGGIÙ",            K_KP_PGDN },
+	{"TN_FRECCIAGI\xD9",    K_KP_DOWNARROW },
+	{"TN_PAGGI\xD9",            K_KP_PGDN },
 	{"TN_INVIO",     K_KP_ENTER },
 	{"TN_INS",           K_KP_INS },
 	{"TN_CANC",          K_KP_DEL },
@@ -679,7 +679,7 @@ keyname_t keynames_i[] =  //Italian
 
 	{"PAUSA", K_PAUSE},
 
-	{"ò", ';'},   // because a raw semicolon seperates commands
+	{"\xF2", ';'},   // because a raw semicolon seperates commands
 
 	{"COMMAND", K_COMMAND},  //mac
 
@@ -1916,4 +1916,5 @@ void Key_ClearStates( void ) {
 		keys[i].repeats = 0;
 	}
 }
+
 
