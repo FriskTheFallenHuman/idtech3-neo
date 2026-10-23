@@ -1,0 +1,63 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "build (SCons)",
+      "detail": "Build the engine, the game modules and the editor into bin/.",
+      "type": "shell",
+      "command": "scons",
+      "group": { "kind": "build", "isDefault": true },
+      "problemMatcher": ["$msCompile"]
+    },
+    {
+      "label": "build debug",
+      "detail": "Build the debug version into bin/.",
+      "type": "shell",
+      "command": "scons",
+      "args": ["config=debug"],
+      "problemMatcher": ["$msCompile"]
+    },
+    {
+      "label": "build without the editor",
+      "detail": "Build only the engine and the game modules.",
+      "type": "shell",
+      "command": "scons",
+      "args": ["editor=no"],
+      "problemMatcher": ["$msCompile"]
+    },
+    {
+      "label": "build with build.log",
+      "detail": "Build and write the full output to build.log in the root, ready for the log digest workflow.",
+      "type": "shell",
+      "command": "scons 2>&1 | tee build.log",
+      "linux": { "command": "scons 2>&1 | tee build.log" },
+      "windows": { "command": "scons 2>&1 | tee build.log", "shell": { "executable": "bash" } },
+      "problemMatcher": ["$msCompile"]
+    },
+    {
+      "label": "clean",
+      "detail": "Remove the build files.",
+      "type": "shell",
+      "command": "scons",
+      "args": ["-c"],
+      "problemMatcher": []
+    },
+    {
+      "label": "run tests",
+      "detail": "Build and run the tests.",
+      "type": "shell",
+      "command": "scons",
+      "args": ["test"],
+      "group": { "kind": "test", "isDefault": true },
+      "problemMatcher": []
+    },
+    {
+      "label": "run engine",
+      "detail": "Start the engine from bin/.",
+      "type": "shell",
+      "linux": { "command": "./bin/Doom" },
+      "windows": { "command": "bin\\Doom.exe" },
+      "problemMatcher": []
+    }
+  ]
+}

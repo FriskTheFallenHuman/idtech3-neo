@@ -1,0 +1,61 @@
+{
+  "version": 4,
+  "configurations": [
+    {
+      "name": "Windows",
+      "includePath": [
+        "${workspaceFolder}/code",
+        "${workspaceFolder}/code/game/game",
+        "${workspaceFolder}/code/game/cgame",
+        "${workspaceFolder}/code/game/ui",
+        "${workspaceFolder}/code/game/botlib",
+        "${workspaceFolder}/code/sys/win32",
+        "${workspaceFolder}/code/splines",
+        "${workspaceFolder}/code/tools/editor",
+        "${workspaceFolder}/code/idLib",
+        "${workspaceFolder}/code/third-party/ft2",
+        "${workspaceFolder}/code/third-party/openal/include",
+        "${workspaceFolder}/code/third-party/zlib",
+        "${workspaceFolder}/code/third-party/libpng",
+        "${workspaceFolder}/code/third-party/timidy/src",
+        "${workspaceFolder}/code/third-party/jpeg-6",
+        "${workspaceFolder}/code/third-party/imgui",
+        "${workspaceFolder}/code/third-party/qclib"
+      ],
+      "defines": [
+        "WIN32",
+        "_WINDOWS",
+        "NOMINMAX",
+        "C_ONLY",
+        "_USE_32BIT_TIME_T",
+        "_CRT_SECURE_NO_WARNINGS",
+        "_CRT_NONSTDC_NO_WARNINGS",
+        "AL_LIBTYPE_STATIC",
+        "TIMIDITY_STATIC"
+      ],
+      "intelliSenseMode": "windows-msvc-x86",
+      "cStandard": "c17",
+      "cppStandard": "c++17"
+    },
+    {
+      "name": "Linux",
+      "includePath": [
+        "${workspaceFolder}/code",
+        "${workspaceFolder}/code/game/game",
+        "${workspaceFolder}/code/game/cgame",
+        "${workspaceFolder}/code/game/ui",
+        "${workspaceFolder}/code/game/botlib",
+        "${workspaceFolder}/code/sys/unix",
+        "${workspaceFolder}/code/idLib",
+        "${workspaceFolder}/code/third-party/ft2",
+        "${workspaceFolder}/code/third-party/openal/include",
+        "${workspaceFolder}/code/third-party/zlib",
+        "${workspaceFolder}/code/third-party/qclib"
+      ],
+      "defines": ["_LINUX", "GNU_SOURCE"],
+      "intelliSenseMode": "linux-gcc-x64",
+      "cStandard": "c17",
+      "cppStandard": "c++17"
+    }
+  ]
+}

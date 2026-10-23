@@ -1,0 +1,31 @@
+# Build output
+bin/
+build/
+out/
+
+# Binaries the build copies next to the game data
+base/cgamex86.dll
+base/qagamex86.dll
+base/uix86.dll
+base/aas/doom_*.cfg
+base/*.lib
+base/*.exp
+
+# SCons
+.sconsign.dblite
+.sconsign/
+__pycache__/
+
+# Compiled files
+*.o
+*.obj
+*.lib
+*.a
+*.pdb
+*.ilk
+
+# Editor cache
+.vscode/ipch/
+
+# build.log is not ignored on purpose, the log digest workflow reads it from the root.
+

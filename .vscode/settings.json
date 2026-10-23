@@ -1,0 +1,30 @@
+{
+  "files.associations": {
+    "*.qc": "c",
+    "*.qh": "c"
+  },
+  "files.exclude": {
+    "**/.sconsign.dblite": true,
+    "**/.sconsign": true
+  },
+  "search.exclude": {
+    "bin/": true,
+    "build/": true,
+    "references/": true
+  },
+  "C_Cpp.default.cStandard": "c17",
+  "C_Cpp.default.cppStandard": "c++17",
+  "C_Cpp.default.includePath": [
+    "${workspaceFolder}/code",
+    "${workspaceFolder}/code/game/game",
+    "${workspaceFolder}/code/game/cgame",
+    "${workspaceFolder}/code/game/ui",
+    "${workspaceFolder}/code/game/botlib",
+    "${workspaceFolder}/code/sys/win32",
+    "${workspaceFolder}/code/idLib",
+    "${workspaceFolder}/code/third-party/ft2",
+    "${workspaceFolder}/code/third-party/openal/include",
+    "${workspaceFolder}/code/third-party/zlib",
+    "${workspaceFolder}/code/third-party/qclib"
+  ]
+}

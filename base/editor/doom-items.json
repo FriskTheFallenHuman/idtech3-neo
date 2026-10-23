@@ -1,0 +1,654 @@
+[
+  {
+    "thing": 2001,
+    "directory": "shotgun",
+    "prefix": "SHOT",
+    "steps": [
+      [
+        0,
+        1,
+        0,
+        0
+      ]
+    ]
+  },
+  {
+    "thing": 2002,
+    "directory": "chaingun",
+    "prefix": "MGUN",
+    "steps": [
+      [
+        0,
+        1,
+        0,
+        0
+      ]
+    ]
+  },
+  {
+    "thing": 2003,
+    "directory": "rocketlauncher",
+    "prefix": "LAUN",
+    "steps": [
+      [
+        0,
+        1,
+        0,
+        0
+      ]
+    ]
+  },
+  {
+    "thing": 2004,
+    "directory": "plasma",
+    "prefix": "PLAS",
+    "steps": [
+      [
+        0,
+        1,
+        0,
+        0
+      ]
+    ]
+  },
+  {
+    "thing": 2005,
+    "directory": "chainsaw",
+    "prefix": "CSAW",
+    "steps": [
+      [
+        0,
+        1,
+        0,
+        0
+      ]
+    ]
+  },
+  {
+    "thing": 2006,
+    "directory": "bfg9000",
+    "prefix": "BFUG",
+    "steps": [
+      [
+        0,
+        1,
+        0,
+        0
+      ]
+    ]
+  },
+  {
+    "thing": 2007,
+    "directory": "clip",
+    "prefix": "CLIP",
+    "steps": [
+      [
+        0,
+        1,
+        0,
+        0
+      ]
+    ]
+  },
+  {
+    "thing": 2048,
+    "directory": "bulletbox",
+    "prefix": "AMMO",
+    "steps": [
+      [
+        0,
+        1,
+        0,
+        0
+      ]
+    ]
+  },
+  {
+    "thing": 2008,
+    "directory": "shells",
+    "prefix": "SHEL",
+    "steps": [
+      [
+        0,
+        1,
+        0,
+        0
+      ]
+    ]
+  },
+  {
+    "thing": 2049,
+    "directory": "shellbox",
+    "prefix": "SBOX",
+    "steps": [
+      [
+        0,
+        1,
+        0,
+        0
+      ]
+    ]
+  },
+  {
+    "thing": 2010,
+    "directory": "rocket",
+    "prefix": "ROCK",
+    "steps": [
+      [
+        0,
+        1,
+        0,
+        0
+      ]
+    ]
+  },
+  {
+    "thing": 2046,
+    "directory": "rocketbox",
+    "prefix": "BROK",
+    "steps": [
+      [
+        0,
+        1,
+        0,
+        0
+      ]
+    ]
+  },
+  {
+    "thing": 2047,
+    "directory": "cell",
+    "prefix": "CELL",
+    "steps": [
+      [
+        0,
+        1,
+        0,
+        0
+      ]
+    ]
+  },
+  {
+    "thing": 17,
+    "directory": "cellpack",
+    "prefix": "CELP",
+    "steps": [
+      [
+        0,
+        1,
+        0,
+        0
+      ]
+    ]
+  },
+  {
+    "thing": 8,
+    "directory": "backpack",
+    "prefix": "BPAK",
+    "steps": [
+      [
+        0,
+        1,
+        0,
+        0
+      ]
+    ]
+  },
+  {
+    "thing": 2011,
+    "directory": "stimpack",
+    "prefix": "STIM",
+    "steps": [
+      [
+        0,
+        1,
+        0,
+        0
+      ]
+    ]
+  },
+  {
+    "thing": 2012,
+    "directory": "medikit",
+    "prefix": "MEDI",
+    "steps": [
+      [
+        0,
+        1,
+        0,
+        0
+      ]
+    ]
+  },
+  {
+    "thing": 2014,
+    "directory": "healthbonus",
+    "prefix": "BON1",
+    "steps": [
+      [
+        0,
+        6,
+        0,
+        0
+      ],
+      [
+        1,
+        6,
+        0,
+        0
+      ],
+      [
+        2,
+        6,
+        0,
+        0
+      ],
+      [
+        3,
+        6,
+        0,
+        0
+      ],
+      [
+        2,
+        6,
+        0,
+        0
+      ],
+      [
+        1,
+        6,
+        0,
+        0
+      ]
+    ]
+  },
+  {
+    "thing": 2015,
+    "directory": "armorbonus",
+    "prefix": "BON2",
+    "steps": [
+      [
+        0,
+        6,
+        0,
+        0
+      ],
+      [
+        1,
+        6,
+        0,
+        0
+      ],
+      [
+        2,
+        6,
+        0,
+        0
+      ],
+      [
+        3,
+        6,
+        0,
+        0
+      ],
+      [
+        2,
+        6,
+        0,
+        0
+      ],
+      [
+        1,
+        6,
+        0,
+        0
+      ]
+    ]
+  },
+  {
+    "thing": 2013,
+    "directory": "soulsphere",
+    "prefix": "SOUL",
+    "steps": [
+      [
+        0,
+        6,
+        0,
+        1
+      ],
+      [
+        1,
+        6,
+        0,
+        1
+      ],
+      [
+        2,
+        6,
+        0,
+        1
+      ],
+      [
+        3,
+        6,
+        0,
+        1
+      ],
+      [
+        2,
+        6,
+        0,
+        1
+      ],
+      [
+        1,
+        6,
+        0,
+        1
+      ]
+    ]
+  },
+  {
+    "thing": 2018,
+    "directory": "greenarmor",
+    "prefix": "ARM1",
+    "steps": [
+      [
+        0,
+        6,
+        0,
+        0
+      ],
+      [
+        1,
+        7,
+        0,
+        1
+      ]
+    ]
+  },
+  {
+    "thing": 2019,
+    "directory": "bluearmor",
+    "prefix": "ARM2",
+    "steps": [
+      [
+        0,
+        6,
+        0,
+        0
+      ],
+      [
+        1,
+        6,
+        0,
+        1
+      ]
+    ]
+  },
+  {
+    "thing": 2022,
+    "directory": "invulnerability",
+    "prefix": "PINV",
+    "steps": [
+      [
+        0,
+        6,
+        0,
+        1
+      ],
+      [
+        1,
+        6,
+        0,
+        1
+      ],
+      [
+        2,
+        6,
+        0,
+        1
+      ],
+      [
+        3,
+        6,
+        0,
+        1
+      ]
+    ]
+  },
+  {
+    "thing": 2023,
+    "directory": "berserk",
+    "prefix": "PSTR",
+    "steps": [
+      [
+        0,
+        1,
+        0,
+        1
+      ]
+    ]
+  },
+  {
+    "thing": 2024,
+    "directory": "invisibility",
+    "prefix": "PINS",
+    "steps": [
+      [
+        0,
+        6,
+        0,
+        1
+      ],
+      [
+        1,
+        6,
+        0,
+        1
+      ],
+      [
+        2,
+        6,
+        0,
+        1
+      ],
+      [
+        3,
+        6,
+        0,
+        1
+      ]
+    ]
+  },
+  {
+    "thing": 2025,
+    "directory": "radiationsuit",
+    "prefix": "SUIT",
+    "steps": [
+      [
+        0,
+        1,
+        0,
+        1
+      ]
+    ]
+  },
+  {
+    "thing": 2026,
+    "directory": "computermap",
+    "prefix": "PMAP",
+    "steps": [
+      [
+        0,
+        6,
+        0,
+        1
+      ],
+      [
+        1,
+        6,
+        0,
+        1
+      ],
+      [
+        2,
+        6,
+        0,
+        1
+      ],
+      [
+        3,
+        6,
+        0,
+        1
+      ],
+      [
+        2,
+        6,
+        0,
+        1
+      ],
+      [
+        1,
+        6,
+        0,
+        1
+      ]
+    ]
+  },
+  {
+    "thing": 2045,
+    "directory": "lightvisor",
+    "prefix": "PVIS",
+    "steps": [
+      [
+        0,
+        6,
+        0,
+        1
+      ],
+      [
+        1,
+        6,
+        0,
+        0
+      ]
+    ]
+  },
+  {
+    "thing": 5,
+    "directory": "bluekey",
+    "prefix": "BKEY",
+    "steps": [
+      [
+        0,
+        10,
+        0,
+        0
+      ],
+      [
+        1,
+        10,
+        0,
+        1
+      ]
+    ]
+  },
+  {
+    "thing": 6,
+    "directory": "yellowkey",
+    "prefix": "YKEY",
+    "steps": [
+      [
+        0,
+        10,
+        0,
+        0
+      ],
+      [
+        1,
+        10,
+        0,
+        1
+      ]
+    ]
+  },
+  {
+    "thing": 13,
+    "directory": "redkey",
+    "prefix": "RKEY",
+    "steps": [
+      [
+        0,
+        10,
+        0,
+        0
+      ],
+      [
+        1,
+        10,
+        0,
+        1
+      ]
+    ]
+  },
+  {
+    "thing": 40,
+    "directory": "blueskull",
+    "prefix": "BSKU",
+    "steps": [
+      [
+        0,
+        10,
+        0,
+        0
+      ],
+      [
+        1,
+        10,
+        0,
+        1
+      ]
+    ]
+  },
+  {
+    "thing": 39,
+    "directory": "yellowskull",
+    "prefix": "YSKU",
+    "steps": [
+      [
+        0,
+        10,
+        0,
+        0
+      ],
+      [
+        1,
+        10,
+        0,
+        1
+      ]
+    ]
+  },
+  {
+    "thing": 38,
+    "directory": "redskull",
+    "prefix": "RSKU",
+    "steps": [
+      [
+        0,
+        10,
+        0,
+        0
+      ],
+      [
+        1,
+        10,
+        0,
+        1
+      ]
+    ]
+  }
+]

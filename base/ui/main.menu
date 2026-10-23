@@ -1,0 +1,81 @@
+#include "ui/menudef.h"
+{
+    assetGlobalDef {
+        font "fonts/normal" 16
+        smallFont "fonts/smallFont" 12
+        bigFont "fonts/bigFont" 24
+        cursor "ui/assets/3_cursor3"
+        gradientBar "ui/assets/gradientbar2.tga"
+        itemFocusSound "sound/misc/menu2.wav"
+        fadeClamp 1
+        fadeCycle 1
+        fadeAmount .1
+        shadowColor .1 .1 .1 .25
+    }
+    menuDef {
+        name "main"
+        fullScreen 1
+        rect 0 0 640 480
+        visible 1
+        style WINDOW_STYLE_FILLED
+        backcolor .035 .025 .025 1
+        focusColor 1 .75 .3 1
+        itemDef {
+            name title
+            text "DOOM"
+            rect 80 65 480 64
+            textscale 1
+            forecolor .8 .15 .1 1
+            visible 1
+            decoration
+        }
+        itemDef {
+            name subtitle
+            text "Original maps / sector lighting"
+            rect 82 140 480 30
+            textscale .25
+            forecolor .7 .7 .7 1
+            visible 1
+            decoration
+        }
+        itemDef {
+            name play
+            type ITEM_TYPE_BUTTON
+            text "PLAY E1M1"
+            rect 80 220 300 30
+            textscale .4
+            forecolor 1 1 1 1
+            visible 1
+            action { close main ; exec "spmap e1m1" }
+        }
+        itemDef {
+            name options
+            type ITEM_TYPE_BUTTON
+            text "SETTINGS"
+            rect 80 270 300 30
+            textscale .3
+            forecolor 1 1 1 1
+            visible 1
+            action { close main ; open setup_menu }
+        }
+        itemDef {
+            name quit
+            type ITEM_TYPE_BUTTON
+            text "QUIT"
+            rect 80 320 300 30
+            textscale .3
+            forecolor 1 1 1 1
+            visible 1
+            action { exec "quit" }
+        }
+        itemDef {
+            name controls
+            text "WASD move   Mouse look   F / right mouse use   Esc menu"
+            rect 80 425 540 24
+            textscale .2
+            forecolor .6 .6 .6 1
+            visible 1
+            decoration
+        }
+    }
+}

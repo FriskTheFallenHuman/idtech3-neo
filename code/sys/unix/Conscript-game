@@ -1,0 +1,76 @@
+# game
+
+Import qw( BASE_CFLAGS CONFIG_DIR BUILD_DIR BASEGAME CC CXX LINK );
+
+$env = new cons(
+	CC => $CC,
+	CXX => $CXX,
+	LINK => $LINK,
+  CPPPATH => '#../game:#../botai',
+  # NOTE TTimo what about the GAMEDLL define? where is it needed?
+  CFLAGS => $BASE_CFLAGS . '-fPIC -DGAMEDLL -DDOOM_SAVE_CALLBACKS',
+  LDFLAGS => '-shared -ldl -lm'
+);
+
+@FILES = qw( 
+  ../game/ai_cast.cpp
+  ../game/ai_cast_characters.cpp
+  ../game/ai_cast_debug.cpp
+  ../game/ai_cast_events.cpp
+  ../game/ai_cast_fight.cpp
+  ../game/ai_cast_func_attack.cpp
+  ../game/ai_cast_func_boss1.cpp
+  ../game/ai_cast_funcs.cpp
+  ../game/ai_cast_script.cpp
+  ../game/ai_cast_script_actions.cpp
+  ../game/ai_cast_script_ents.cpp
+  ../game/ai_cast_sight.cpp
+  ../game/ai_cast_think.cpp
+  ../botai/ai_chat.cpp
+  ../botai/ai_cmd.cpp
+  ../botai/ai_dmnet.cpp
+  ../botai/ai_dmq3.cpp
+  ../botai/ai_main.cpp
+  ../botai/ai_team.cpp 
+  ../game/bg_animation.cpp
+  ../game/bg_misc.cpp
+  ../game/bg_pmove.cpp
+  ../game/bg_slidemove.cpp
+  ../game/g_active.cpp
+  ../game/g_alarm.cpp
+  ../game/g_bot.cpp
+  ../game/g_client.cpp
+  ../game/g_cmds.cpp
+  ../game/g_combat.cpp
+  ../game/g_items.cpp
+  ../game/g_main.cpp
+  ../game/g_mem.cpp
+  ../game/g_misc.cpp
+  ../game/g_missile.cpp
+  ../game/g_mover.cpp
+  ../game/g_props.cpp
+  ../game/g_save_callbacks.cpp
+  ../game/g_save.cpp
+  ../game/g_script.cpp
+  ../game/g_script_actions.cpp
+  ../game/g_session.cpp
+  ../game/g_spawn.cpp
+  ../game/g_svcmds.cpp
+  ../game/g_syscalls.cpp
+  ../game/g_target.cpp
+  ../game/g_team.cpp
+  ../game/g_tramcar.cpp
+  ../game/g_trigger.cpp
+  ../game/g_utils.cpp
+  ../game/g_weapon.cpp
+  ../game/q_math.cpp
+  ../game/q_shared.cpp
+   );
+$FILESREF = \@FILES;
+
+# FIXME CPU string
+# FIXME wolfgamei386.so ?
+# TODO use an ldd -r after .so build to catch unresolved symbols? (PostBuild command)
+Program $env 'qagamei386.so', @$FILESREF;
+
+Install $env '#' . $CONFIG_DIR . '/out/' . $BASEGAME, 'qagamei386.so';

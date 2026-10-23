@@ -1,0 +1,15 @@
+doommap IBSP 48
+source E:\projects\Doom\base\maps\e3m9.dwd
+wad E:\projects\Doom\base\wad\DOOM.WAD
+sectors 76
+lines 474
+cells 777
+models 29
+surfaces 2161
+brushes 1913
+textures 55
+lightmaps 0
+WARNING Dropped zero-length linedef 104
+WARNING Dropped zero-length linedef 107
+WARNING Dropped zero-length linedef 144
+WARNING Dropped zero-length linedef 145

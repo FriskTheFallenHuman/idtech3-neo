@@ -1,0 +1,11 @@
+doommap IBSP 48
+source E:\projects\Doom\base\maps\e2m8.dwd
+wad E:\projects\Doom\base\wad\DOOM.WAD
+sectors 27
+lines 218
+cells 345
+models 17
+surfaces 1022
+brushes 848
+textures 22
+lightmaps 0

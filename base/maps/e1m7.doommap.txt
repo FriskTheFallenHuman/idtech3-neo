@@ -1,0 +1,13 @@
+doommap IBSP 48
+source E:\projects\Doom\base\maps\e1m7.dwd
+wad E:\projects\Doom\base\wad\DOOM.WAD
+sectors 174
+lines 958
+cells 2574
+models 26
+surfaces 6210
+brushes 5869
+textures 74
+lightmaps 0
+WARNING Dropped zero-length linedef 135
+WARNING 2 decomposition cells have inconsistent source sidedef sectors; lower boundary takes precedence (use --strict to reject)

@@ -1,0 +1,48 @@
+{
+  "version": "0.2.0",
+  "inputs": [
+    {
+      "id": "testBinary",
+      "type": "promptString",
+      "description": "Path of the test binary to debug, for example bin/tests/doom_weapon_tests.exe"
+    }
+  ],
+  "configurations": [
+    {
+      "name": "Debug the engine (Windows, MSVC)",
+      "type": "cppvsdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/bin/Doom.exe",
+      "args": [],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "preLaunchTask": "build debug"
+    },
+    {
+      "name": "Debug the engine (LLDB)",
+      "type": "lldb",
+      "request": "launch",
+      "program": "${workspaceFolder}/bin/Doom.exe",
+      "args": [],
+      "cwd": "${workspaceFolder}",
+      "preLaunchTask": "build debug"
+    },
+    {
+      "name": "Attach to the running engine (Windows)",
+      "type": "cppvsdbg",
+      "request": "attach",
+      "program": "${workspaceFolder}/bin/Doom.exe",
+      "processId": "${command:pickProcess}"
+    },
+    {
+      "name": "Debug a test binary (Windows)",
+      "type": "cppvsdbg",
+      "request": "launch",
+      "program": "${input:testBinary}",
+      "args": [],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "preLaunchTask": "build debug"
+    }
+  ]
+}

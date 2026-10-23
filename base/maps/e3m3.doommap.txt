@@ -1,0 +1,48 @@
+doommap IBSP 48
+source E:\projects\Doom\base\maps\e3m3.dwd
+wad E:\projects\Doom\base\wad\DOOM.WAD
+sectors 239
+lines 1102
+cells 2243
+models 17
+surfaces 5860
+brushes 5321
+textures 149
+lightmaps 0
+WARNING Dropped zero-length linedef 170
+WARNING Dropped zero-length linedef 173
+WARNING Dropped zero-length linedef 244
+WARNING Dropped zero-length linedef 352
+WARNING Dropped zero-length linedef 386
+WARNING Dropped zero-length linedef 445
+WARNING Dropped zero-length linedef 448
+WARNING Dropped zero-length linedef 451
+WARNING Dropped zero-length linedef 454
+WARNING Dropped zero-length linedef 457
+WARNING Dropped zero-length linedef 470
+WARNING Dropped zero-length linedef 471
+WARNING Dropped zero-length linedef 472
+WARNING Dropped zero-length linedef 474
+WARNING Dropped zero-length linedef 560
+WARNING Dropped zero-length linedef 567
+WARNING Dropped zero-length linedef 570
+WARNING Dropped zero-length linedef 573
+WARNING Dropped zero-length linedef 574
+WARNING Dropped zero-length linedef 577
+WARNING Dropped zero-length linedef 601
+WARNING Dropped zero-length linedef 602
+WARNING Dropped zero-length linedef 609
+WARNING Dropped zero-length linedef 613
+WARNING Dropped zero-length linedef 617
+WARNING Dropped zero-length linedef 712
+WARNING Dropped zero-length linedef 724
+WARNING Dropped zero-length linedef 748
+WARNING Dropped zero-length linedef 749
+WARNING Dropped zero-length linedef 816
+WARNING Dropped zero-length linedef 818
+WARNING Dropped zero-length linedef 965
+WARNING Dropped zero-length linedef 968
+WARNING Dropped zero-length linedef 1009
+WARNING Dropped zero-length linedef 1010
+WARNING Dropped zero-length linedef 1026
+WARNING Dropped zero-length linedef 1071

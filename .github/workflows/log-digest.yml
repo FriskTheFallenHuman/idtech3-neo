@@ -1,0 +1,136 @@
+name: Build log digest
+
+# Takes build.log from the root of the repository and turns it into a short
+# report: error count, warning count, the warnings that repeat the most and
+# the first errors with their file and line. The report goes into the job
+# summary, is saved as an artifact and is committed to the repository as
+# build-digest.md, so it can be read without downloading the artifact.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - build.log
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  digest:
+    name: Digest build.log
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Check that build.log exists
+        id: check
+        shell: bash
+        run: |
+          if [ -f build.log ]; then
+            echo "found=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "found=false" >> "$GITHUB_OUTPUT"
+            echo "No build.log in the root of the repository. Put one there and run this again."
+          fi
+
+      - name: Parse build.log
+        if: steps.check.outputs.found == 'true'
+        shell: bash
+        run: |
+          cat > parse_build_log.py << 'EOF'
+          import re
+          import sys
+          from collections import Counter
+
+          log_path = sys.argv[1] if len(sys.argv) > 1 else 'build.log'
+          with open(log_path, 'r', errors='replace') as f:
+              lines = f.read().splitlines()
+
+          # Matches errors from clang, gcc, MSVC, the linker and scons.
+          error_re = re.compile(
+              r'(\berror\b\s*:|fatal error|error C\d{4}|undefined reference|'
+              r'LNK\d{4}|scons: \*\*\*)',
+              re.IGNORECASE)
+          warning_re = re.compile(r'\bwarning\b\s*:|warning C\d{4}', re.IGNORECASE)
+
+          errors = []
+          warnings = []
+          for line in lines:
+              if error_re.search(line):
+                  errors.append(line.strip())
+              elif warning_re.search(line):
+                  warnings.append(line.strip())
+
+          def group(messages):
+              # The same message with the numbers swapped out counts as one.
+              grouped = Counter()
+              for message in messages:
+                  key = re.sub(r'\d+', 'N', message)
+                  key = re.sub(r'[\'"].*?[\'"]', "'file'", key)
+                  grouped[key] += 1
+              return grouped
+
+          warn_groups = group(warnings)
+
+          out = []
+          out.append('# Build log digest')
+          out.append('')
+          out.append('- Log: `%s`' % log_path)
+          out.append('- Lines: %d' % len(lines))
+          out.append('- Errors: %d' % len(errors))
+          out.append('- Warnings: %d' % len(warnings))
+          out.append('')
+          if len(errors) == 0:
+              out.append('**Verdict: no errors found in the log.**')
+          else:
+              out.append('**Verdict: the build failed, the errors are below.**')
+              out.append('')
+              out.append('## Errors, first 40')
+              out.append('')
+              out.append('```')
+              out.extend(errors[:40])
+              out.append('```')
+              err_groups = group(errors)
+              if len(err_groups) > 1:
+                  out.append('')
+                  out.append('## Errors that repeat, top 30')
+                  out.append('')
+                  out.append('| Count | Error |')
+                  out.append('| --- | --- |')
+                  for err, count in err_groups.most_common(30):
+                      out.append('| %d | %s |' % (count, err.replace('|', '\\|')))
+          if warn_groups:
+              out.append('')
+              out.append('## Warnings that repeat, top 30')
+              out.append('')
+              out.append('| Count | Warning |')
+              out.append('| --- | --- |')
+              for warning, count in warn_groups.most_common(30):
+                  out.append('| %d | %s |' % (count, warning.replace('|', '\\|')))
+          out.append('')
+          print('\n'.join(out))
+          EOF
+          python3 parse_build_log.py build.log > build-digest.md
+          cat build-digest.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Save the digest
+        if: steps.check.outputs.found == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-digest
+          path: build-digest.md
+
+      - name: Put the digest in the repository
+        if: steps.check.outputs.found == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add build-digest.md
+          if git diff --cached --quiet; then
+            echo "The digest did not change."
+          else
+            git commit -m "Update the build log digest"
+            git push
+          fi
