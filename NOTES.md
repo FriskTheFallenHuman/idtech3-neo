@@ -52,16 +52,17 @@ them.
   its own copy of the code tree under build/<config>/<module>/code. This way
   the same file compiled with different settings per module never collides.
 - Small files are written into build/<config>/generated while scons starts:
-  OpenAL's config.h (made from config.h.in), version.h, default_hrtf.txt
-  (the HRTF data as a hex list) and compiler-exports.def for the editor.
+  compiler-exports.def for the editor is the only one left.
 - miniz builds as a small static library (doom_miniz) from third-party/miniz
   and replaces the old zlib. The unzip code in qcommon uses its inflate API.
 - Image and font work goes through the stb headers in third-party/stb:
   stb_image decodes PNG and JPEG, stb_image_write writes the JPEG screenshots
   and stb_truetype rasterizes the fonts. No jpeg-6, libpng, zlib or ft2 left.
-- OpenAL 1.23.1 builds as a static library straight from third-party/openal,
-  with the settings the old build forced: WASAPI, WinMM and Wave backends,
-  SSE2 code generation for x86, the HRTF data built in.
+- OpenAL Soft: third-party/openal is the prebuilt Windows package. The engine
+  links its import library (libs/Win32/OpenAL32.lib) and loads the bundled
+  soft_oal.dll, which scons copies next to the binaries as OpenAL32.dll.
+  Non-Windows systems fetch the OpenAL Soft 1.23.1 sources into
+  build/downloads/ instead, see task 9.
 - Useful commands: scons, scons config=debug, scons editor=no, scons tests,
   scons test, scons -c.
 

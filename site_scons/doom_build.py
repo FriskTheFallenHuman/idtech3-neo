@@ -2,7 +2,6 @@
 # the small files the build writes while it sets itself up.
 
 import os
-import re
 import shutil
 
 # Warning and language settings the old build passed to Clang on Windows.
@@ -46,26 +45,6 @@ LEGACY_INCLUDE_PATHS = [
     # through "../timidy/src/x.h" relative to this include path, so it stays.
     '#code/third-party/zlib',
 ]
-
-# What the OpenAL part supports on a Windows x86 build. Anything listed in
-# config.h.in but not here stays undefined.
-OPENAL_CONFIG_DEFINES = [
-    'ALSOFT_EMBED_HRTF_DATA',
-    'HAVE__ALIGNED_MALLOC',
-    'HAVE_SSE',
-    'HAVE_SSE2',
-    'HAVE_SSE3',
-    'HAVE_SSE4_1',
-    'HAVE_WASAPI',
-    'HAVE_WINMM',
-    'HAVE_WAVE',
-    'HAVE_MALLOC_H',
-    'HAVE_INTRIN_H',
-    'HAVE_GUIDDEF_H',
-    'HAVE_CPUID_INTRINSIC',
-    'HAVE_SSE_INTRINSICS',
-]
-
 
 def make_base_env(config):
     """The starting point for every other environment in the build.
@@ -114,16 +93,6 @@ def write_generated_files(build_root, code_dir='code'):
     generated = os.path.join(build_root, 'generated')
     os.makedirs(generated, exist_ok=True)
 
-    # OpenAL is configured by turning config.h.in into config.h.
-    openal_dir = os.path.join(code_dir, 'third-party', 'openal')
-    _write_openal_config(
-        os.path.join(openal_dir, 'config.h.in'),
-        os.path.join(generated, 'config.h'))
-    _write_openal_version(os.path.join(generated, 'version.h'))
-    _write_openal_hrtf_data(
-        os.path.join(openal_dir, 'hrtf', 'Default HRTF.mhr'),
-        os.path.join(generated, 'default_hrtf.txt'))
-
     # The editor DLL exports the compiler callback through this def file.
     with open(os.path.join(code_dir, 'tools', 'compilers', 'exports.def.in')) as f:
         template = f.read()
@@ -137,10 +106,11 @@ def write_generated_files(build_root, code_dir='code'):
 def fetch_openal_soft(download_dir):
     """Download the OpenAL Soft sources for the non-Windows builds.
 
-    The vendored copy in code/third-party/openal is pinned to 1.23.1 and is
-    built straight into the engine on Windows. Other systems fetch the same
-    release here, so the sources are ready before the port actually builds
-    on them. The download is skipped when it already ran once.
+    The vendored copy in code/third-party/openal is the prebuilt Windows
+    package (headers, import libraries and DLLs). Other systems fetch the
+    pinned 1.23.1 release here, so the sources are ready before the port
+    actually builds on them. The download is skipped when it already ran
+    once.
     """
     import tarfile
     import urllib.request
@@ -170,55 +140,6 @@ def fetch_openal_soft(download_dir):
                 'They are used by the non-Windows builds (task 4).\n'
                 % version)
     return extracted
-
-
-def _write_openal_config(in_path, out_path):
-    """Turn config.h.in into config.h using the settings of this build."""
-    enabled = set(OPENAL_CONFIG_DEFINES)
-    with open(in_path) as f:
-        lines = f.readlines()
-
-    out = []
-    for line in lines:
-        match = re.match(r'#cmakedefine (\w+)', line)
-        if match:
-            name = match.group(1)
-            if name in enabled:
-                out.append('#define %s 1\n' % name)
-            else:
-                out.append('/* #undef %s */\n' % name)
-        else:
-            # The only other thing in the file is @NAME@ values that this
-            # build does not use, so they are removed.
-            out.append(re.sub(r'@\w+@', '', line))
-
-    with open(out_path, 'w') as f:
-        f.writelines(out)
-
-
-def _write_openal_version(out_path):
-    """The version header for the pinned OpenAL 1.23.1 sources."""
-    text = (
-        '/* Define to the library version */\n'
-        '#define ALSOFT_VERSION "1.23.1"\n'
-        '#define ALSOFT_VERSION_NUM 1,23,1,0\n'
-        '\n'
-        '/* Define the branch being built */\n'
-        '#define ALSOFT_GIT_BRANCH "UNKNOWN"\n'
-        '\n'
-        '/* Define the hash of the head commit */\n'
-        '#define ALSOFT_GIT_COMMIT_HASH "unknown"\n')
-    with open(out_path, 'w') as f:
-        f.write(text)
-
-
-def _write_openal_hrtf_data(in_path, out_path):
-    """Turn the HRTF data file into the hex list core/hrtf.cpp includes."""
-    with open(in_path, 'rb') as f:
-        data = f.read()
-    with open(out_path, 'w') as f:
-        for byte in data:
-            f.write('    0x%02x,\n' % byte)
 
 
 def run_tests(target, source, env):

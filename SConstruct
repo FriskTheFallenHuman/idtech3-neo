@@ -89,26 +89,11 @@ doom_opl = opl_env.StaticLibrary(
     build_target + '/doom_opl',
     [opl_variant + '/' + p for p in doom_sources.OPL_SOURCES])
 
-# OpenAL Soft, built as a static library from the vendored sources, with the
-# same settings the old build used: WASAPI, WinMM and Wave backends, SSE
-# code generation, and the HRTF data built into the library.
-openal_env, openal_variant = module_env('openal')
-openal_env.Append(
-    CPPDEFINES=[
-        '_WIN32', 'NOMINMAX', 'RESTRICT=__restrict', '_CRT_SECURE_NO_WARNINGS',
-        'AL_BUILD_LIBRARY', 'AL_ALEXT_PROTOTYPES',
-        ('ALC_API', ''), ('AL_API', ''), 'AL_LIBTYPE_STATIC'],
-    CPPPATH=[
-        '#code/third-party/openal',
-        '#code/third-party/openal/common',
-        '#code/third-party/openal/include',
-        generated_target],
-    CCFLAGS=['/arch:SSE2', '/W4', '/w14640', '/wd4065', '/wd4127', '/wd4268',
-             '/wd4324', '/wd5030', '/wd5051'],
-    CXXFLAGS=['/std:c++17', '/permissive-'])
-OpenAL = openal_env.StaticLibrary(
-    build_target + '/OpenAL',
-    [openal_variant + '/' + p for p in doom_sources.openal_sources()])
+# OpenAL Soft: the bundled copy is the prebuilt Windows package, so the
+# engine links its import library and loads the matching DLL at runtime.
+# Non-Windows systems fetch the sources instead, see fetch_openal_soft()
+# in doom_build.py.
+OpenAL32 = env.File('#code/third-party/openal/libs/Win32/OpenAL32.lib')
 
 # --- the engine parts ---
 
@@ -241,8 +226,7 @@ base_copies = env.Install(
 
 wolf_env, wolf_variant = module_env('wolf')
 wolf_env.Append(
-    CPPDEFINES=['_WINDOWS', '__USEA3D', '__A3D_GEOM', 'AL_LIBTYPE_STATIC',
-                'TIMIDITY_STATIC'],
+    CPPDEFINES=['_WINDOWS', '__USEA3D', '__A3D_GEOM', 'TIMIDITY_STATIC'],
     CPPPATH=[
         '#code',
         '#code/third-party/openal/include',
@@ -261,10 +245,17 @@ wolf = wolf_env.Program(
     '#bin/Doom',
     [wolf_variant + '/' + p for p in
      doom_sources.WOLF_SOURCES + doom_sources.WOLF_EXTRA_SOURCES] + [wolf_res],
-    LIBS=[renderer, botlib, splines, OpenAL, doom_timidity, doom_opl,
+    LIBS=[renderer, botlib, splines, OpenAL32, doom_timidity, doom_opl,
           doom_miniz,
           'winmm', 'ole32', 'oleaut32', 'wsock32', 'user32', 'gdi32', 'shell32', 'advapi32'],
     LINKFLAGS=['/STACK:8388608', '/LARGEADDRESSAWARE'])
+
+# The import library binds to OpenAL32.dll, so the bundled soft_oal.dll is
+# copied next to the engine and the tests under the name the linker expects.
+openal_copies = [
+    env.InstallAs('#bin/OpenAL32.dll', '#code/third-party/openal/bin/Win32/soft_oal.dll'),
+    env.InstallAs('#bin/tests/OpenAL32.dll', '#code/third-party/openal/bin/Win32/soft_oal.dll'),
+]
 
 # The engine is not finished until the modules are built too.
 engine_extra = [cgame, qagame, ui_dll] + base_copies
@@ -278,7 +269,7 @@ BUILT_LIBS = {
     'doom_miniz': doom_miniz,
     'doom_timidity': doom_timidity,
     'doom_opl': doom_opl,
-    'OpenAL': OpenAL,
+    'OpenAL': OpenAL32,
     'doomed_core': doomed_core,
     'doomed_imgui': doomed_imgui,
 }
@@ -332,7 +323,7 @@ env.Alias('test', test_run)
 
 # --- the default target ---
 
-default_targets = [wolf] + base_copies
+default_targets = [wolf] + base_copies + openal_copies
 if build_editor:
     default_targets += [editor_dll] + aas_copies
 env.Default(default_targets)

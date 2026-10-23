@@ -15,7 +15,6 @@ _FOLDER_MOVES = {
     'timidy/': 'third-party/timidy/',
 }
 
-
 def fix_path(path):
     """Move one path from the old CMake layout to the real layout."""
     for old, new in _FOLDER_MOVES.items():
@@ -460,119 +459,6 @@ IMGUI_SOURCES = [
     'third-party/imgui/backends/imgui_impl_win32.cpp',
 ]
 
-# OpenAL Soft 1.23.1, built as a static library straight into the engine.
-# Paths are relative to code/third-party/openal.
-OPENAL_COMMON_SOURCES = [
-    'common/alcomplex.cpp',
-    'common/alfstream.cpp',
-    'common/almalloc.cpp',
-    'common/alstring.cpp',
-    'common/dynload.cpp',
-    'common/polyphase_resampler.cpp',
-    'common/ringbuffer.cpp',
-    'common/strutils.cpp',
-    'common/threads.cpp',
-]
-
-OPENAL_CORE_SOURCES = [
-    'core/ambdec.cpp',
-    'core/ambidefs.cpp',
-    'core/bformatdec.cpp',
-    'core/bs2b.cpp',
-    'core/bsinc_tables.cpp',
-    'core/buffer_storage.cpp',
-    'core/context.cpp',
-    'core/converter.cpp',
-    'core/cpu_caps.cpp',
-    'core/cubic_tables.cpp',
-    'core/devformat.cpp',
-    'core/device.cpp',
-    'core/effectslot.cpp',
-    'core/except.cpp',
-    'core/fmt_traits.cpp',
-    'core/fpu_ctrl.cpp',
-    'core/helpers.cpp',
-    'core/hrtf.cpp',
-    'core/logging.cpp',
-    'core/mastering.cpp',
-    'core/mixer.cpp',
-    'core/uhjfilter.cpp',
-    'core/uiddefs.cpp',
-    'core/voice.cpp',
-    'core/filters/biquad.cpp',
-    'core/filters/nfc.cpp',
-    'core/filters/splitter.cpp',
-    'core/mixer/mixer_c.cpp',
-    'core/mixer/mixer_sse.cpp',
-    'core/mixer/mixer_sse2.cpp',
-    'core/mixer/mixer_sse3.cpp',
-    'core/mixer/mixer_sse41.cpp',
-]
-
-OPENAL_API_SOURCES = [
-    'al/auxeffectslot.cpp',
-    'al/buffer.cpp',
-    'al/effect.cpp',
-    'al/effects/autowah.cpp',
-    'al/effects/chorus.cpp',
-    'al/effects/compressor.cpp',
-    'al/effects/convolution.cpp',
-    'al/effects/dedicated.cpp',
-    'al/effects/distortion.cpp',
-    'al/effects/echo.cpp',
-    'al/effects/effects.cpp',
-    'al/effects/equalizer.cpp',
-    'al/effects/fshifter.cpp',
-    'al/effects/modulator.cpp',
-    'al/effects/null.cpp',
-    'al/effects/pshifter.cpp',
-    'al/effects/reverb.cpp',
-    'al/effects/vmorpher.cpp',
-    'al/error.cpp',
-    'al/event.cpp',
-    'al/extension.cpp',
-    'al/filter.cpp',
-    'al/listener.cpp',
-    'al/source.cpp',
-    'al/state.cpp',
-]
-
-OPENAL_ALC_SOURCES = [
-    'alc/alc.cpp',
-    'alc/alu.cpp',
-    'alc/alconfig.cpp',
-    'alc/context.cpp',
-    'alc/device.cpp',
-    'alc/effects/autowah.cpp',
-    'alc/effects/chorus.cpp',
-    'alc/effects/compressor.cpp',
-    'alc/effects/convolution.cpp',
-    'alc/effects/dedicated.cpp',
-    'alc/effects/distortion.cpp',
-    'alc/effects/echo.cpp',
-    'alc/effects/equalizer.cpp',
-    'alc/effects/fshifter.cpp',
-    'alc/effects/modulator.cpp',
-    'alc/effects/null.cpp',
-    'alc/effects/pshifter.cpp',
-    'alc/effects/reverb.cpp',
-    'alc/effects/vmorpher.cpp',
-    'alc/panning.cpp',
-    'alc/backends/base.cpp',
-    'alc/backends/loopback.cpp',
-    'alc/backends/null.cpp',
-    'alc/backends/winmm.cpp',
-    'alc/backends/wasapi.cpp',
-    'alc/backends/wave.cpp',
-]
-
-
-def openal_sources():
-    """All OpenAL source files with the third-party prefix in front."""
-    prefix = 'third-party/openal/'
-    all_sources = (OPENAL_COMMON_SOURCES + OPENAL_CORE_SOURCES
-                   + OPENAL_API_SOURCES + OPENAL_ALC_SOURCES)
-    return [prefix + path for path in all_sources]
 
 
 # The test programs. Each entry is a dictionary:
@@ -743,7 +629,7 @@ TESTS = [
     {
         'name': 'doom_audio_tests',
         'sources': ['sound/tests/audio_tests.cpp', 'sound/snd_wave.cpp'],
-        'defines': ['AL_LIBTYPE_STATIC', 'TIMIDITY_STATIC'],
+        'defines': ['TIMIDITY_STATIC'],
         'libs': ['OpenAL', 'doom_timidity'],
         'syslibs': ['winmm', 'ole32', 'oleaut32'],
     },
@@ -758,7 +644,7 @@ TESTS = [
             'game/q_shared.cpp',
             'game/q_math.cpp',
         ],
-        'defines': ['AL_LIBTYPE_STATIC', 'TIMIDITY_STATIC'],
+        'defines': ['TIMIDITY_STATIC'],
         'libs': ['OpenAL', 'doom_timidity', 'doom_opl'],
         'syslibs': ['winmm', 'ole32', 'oleaut32'],
         'sections': True,

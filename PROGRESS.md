@@ -19,7 +19,11 @@ Plain English only. Update this file as work moves forward.
   the dmap WAD tools, stb_image_write encodes the JPEG screenshots,
   stb_truetype rasterizes the fonts and miniz (doom_miniz) backs the pk3
   unzip code. Running scons on a non-Windows system fetches the pinned
-  OpenAL Soft 1.23.1 sources into build/downloads/ first. Waiting on CI to
+  OpenAL Soft 1.23.1 sources into build/downloads/ first. The bundled
+  OpenAL turned out to be the prebuilt Windows package (headers, import
+  libraries and DLLs, no sources), so the engine now links
+  libs/Win32/OpenAL32.lib and the build copies the bundled soft_oal.dll
+  next to the binaries as OpenAL32.dll. Waiting on CI to
   prove the build green after the swap.
 
 ## In progress
@@ -30,8 +34,9 @@ Plain English only. Update this file as work moves forward.
   - Binaries land in bin/ at the root: Doom.exe, cgamex86.dll, qagamex86.dll,
     uix86.dll, toolsx86.dll, and the tests in bin/tests/.
   - The game modules are copied into base/, where the engine loads them.
-  - OpenAL 1.23.1 builds natively from third-party/openal, no CMake anywhere
-    in the build.
+  - OpenAL Soft: the bundled package is prebuilt, the engine links
+    libs/Win32/OpenAL32.lib and the build ships the bundled DLL as
+    OpenAL32.dll. No CMake anywhere in the build.
   - clang-cl is the preferred compiler, plain MSVC is the fallback. Windows
     x86 only for now (the game module ABI is still 32-bit, see task 4).
   - "scons tests" builds the tests, "scons test" runs them.

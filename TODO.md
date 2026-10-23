@@ -66,7 +66,8 @@ the folder gets renamed.
 
 ## 9. Fetch dependencies automatically instead of bundling them
 
-- What is still bundled in `code/third-party/`: imgui, miniz, openal, qclib, stb, timidy.
+- What is still bundled in `code/third-party/`: imgui, miniz, openal (the prebuilt
+  Windows package: headers, import libraries and DLLs), qclib, stb, timidy.
 - The build should download the dependencies it needs and compile them itself, no vendored copies lying around.
 - Keep the downloads pinned to known versions so builds stay the same over time.
 - Done so far: running scons on a non-Windows system fetches the pinned OpenAL Soft 1.23.1 sources into build/downloads/ before it stops (the build still targets Windows).
