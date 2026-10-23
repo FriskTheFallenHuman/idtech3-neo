@@ -73,18 +73,22 @@ jobs:
           scons test -j "$JOBS" 2>&1 | tee test.log
 
       - name: Report the build errors
-        # The full build log is only in the artifact, so the errors are
+        # The full logs are only in the artifact, so the errors are
         # copied into the job summary where they can be read on the run
         # page without downloading anything.
-        if: failure(
-) && runner.os == 'Windows' && matrix.arch == 'x86'
+        if: failure() && runner.os == 'Windows' && matrix.arch == 'x86'
         shell: bash
         run: |
           {
             echo '### Build errors'
             echo ''
             echo '```'
-            grep -i -E 'error|scons: ***' build.log | head -40 || true
+            grep -i -E 'error|scons: \*\*\*' build.log | head -40 || true
+            echo '```'
+            echo '### Test errors'
+            echo ''
+            echo '```'
+            grep -i -E 'error|scons: \*\*\*' test.log | head -40 || true
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
 
@@ -129,6 +133,13 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: build-log-${{ matrix.os }}-${{ matrix.arch }}
-          path
-: build.log
+          path: build.log
+          if-no-files-found: ignore
+
+      - name: Save test.log
+        if: always() && runner.os == 'Windows' && matrix.arch == 'x86'
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-log-${{ matrix.os }}-${{ matrix.arch }}
+          path: test.log
           if-no-files-found: ignore
