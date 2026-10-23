@@ -4,7 +4,7 @@
 Return to Castle Wolfenstein single player GPL Source Code
 Copyright (C) 1999-2010 id Software LLC, a ZeniMax Media company. 
 
-This file is part of the Return to Castle Wolfenstein single player GPL Source Code (RTCW SP Source Code).  
+This file is part of the Return to Castle Wolfenstein single player GPL Source Code (“RTCW SP Source Code”).  
 
 RTCW SP Source Code is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -21,7 +21,7 @@ along with RTCW SP Source Code.  If not, see <http://www.gnu.org/licenses/>.
 
 In addition, the RTCW SP Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the RTCW SP Source Code.  If not, please request a copy in writing from id Software at the address below.
 
-If you have questions concerning this license or the applicable additional terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
+If you have questions concerning the license or the applicable additional terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 
 ===========================================================================
 */
@@ -159,7 +159,8 @@ qboolean    CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot ) {
 	snapshot->ps = clSnap->ps;
 	count = clSnap->numEntities;
 	if ( count > MAX_ENTITIES_IN_SNAPSHOT ) {
-		Com_DPrintf( "CL_GetSnapshot: truncated %i entities to %i\n", count, MAX_ENTITIES_IN_SNAPSHOT );
+		Com_DPrintf( "CL_GetSnapshot: truncated %i entities to %i
+", count, MAX_ENTITIES_IN_SNAPSHOT );
 		count = MAX_ENTITIES_IN_SNAPSHOT;
 	}
 	snapshot->numEntities = count;
@@ -221,7 +222,7 @@ void CL_ConfigstringModified( void ) {
 		Com_Error( ERR_DROP, "configstring > MAX_CONFIGSTRINGS" );
 	}
 //	s = Cmd_Argv(2);
-	// get everything after "cs <num>"
+	// get everything after the "cs <num>"
 	s = Cmd_ArgsFrom( 2 );
 
 	old = cl.gameState.stringData + cl.gameState.stringOffsets[ index ];
@@ -298,18 +299,20 @@ qboolean CL_GetServerCommand( int serverCommandNumber ) {
 	s = clc.serverCommands[ serverCommandNumber & ( MAX_RELIABLE_COMMANDS - 1 ) ];
 	clc.lastExecutedServerCommand = serverCommandNumber;
 
-	Com_DPrintf( "serverCommand: %i : %s\n", serverCommandNumber, s );
+	Com_DPrintf( "serverCommand: %i : %s
+", serverCommandNumber, s );
 
 rescan:
 	Cmd_TokenizeString( s );
 	cmd = Cmd_Argv( 0 );
 
 	if ( !strcmp( cmd, "disconnect" ) ) {
-		Com_Error( ERR_SERVERDISCONNECT,"Server disconnected\n" );
+		Com_Error( ERR_SERVERDISCONNECT,"Server disconnected
+" );
 	}
 
 	if ( !strcmp( cmd, "bcs0" ) ) {
-		Com_sprintf( bigConfigString, BIG_INFO_STRING, "cs %s \"%s", Cmd_Argv( 1 ), Cmd_Argv( 2 ) );
+		Com_Sprintf( bigConfigString, BIG_INFO_STRING, "cs %s "%s", Cmd_Argv( 1 ), Cmd_Argv( 2 ) );
 		return qfalse;
 	}
 
@@ -328,7 +331,7 @@ rescan:
 			Com_Error( ERR_DROP, "bcs exceeded BIG_INFO_STRING" );
 		}
 		strcat( bigConfigString, s );
-		strcat( bigConfigString, "\"" );
+		strcat( bigConfigString, """ );
 		s = bigConfigString;
 		goto rescan;
 	}
@@ -373,7 +376,8 @@ rescan:
 		// close the console
 		Con_Close();
 		// take a special screenshot next frame
-		Cbuf_AddText( "wait ; wait ; wait ; wait ; screenshot levelshot\n" );
+		Cbuf_AddText( "wait ; wait ; wait ; wait ; screenshot levelshot
+" );
 		return qtrue;
 	}
 
@@ -674,7 +678,7 @@ static void CG_R_AddLightToScene( const vec3_t a1, float a2, float a3, float a4,
 }
 
 static void CG_R_AddCoronaToScene( const vec3_t a1, float a2, float a3, float a4, float a5, int a6, int a7 ) {
-	re.AddCoronaToScene( (const vec_t *)(a1), a2, a3, a4, a5, a6, a7 );
+	re.AddCoronaToScene( a1, a2, a3, a4, a5, a6, a7 );
 }
 
 static void CG_R_SetFog( int a1, int a2, int a3, float a4, float a5, float a6, float a7 ) {
@@ -902,13 +906,13 @@ static int CG_R_LightForPoint( vec3_t a1, vec3_t a2, vec3_t a3, vec3_t a4 ) {
 	static_cast<float *>(a3), static_cast<float *>(a4));
 }
 
-static void CG_R_DrawDoomMap( int a1, int a2, int a3, const byte * a4 ) {
-	if (a3 <= 0 || a3 > 16384 || !a4) {
+static void CG_R_DrawDoomMap( int a1, int a2, int a3, int a4, const byte * a5 ) {
+	if (a3 <= 0 || a4 <= 0 || a3 > 16384 || a4 > 16384 || !a5) {
 	Com_Error(ERR_DROP, "Invalid Doom automap image");
 	}
-	re.DrawStretchRaw(a1, a2, a3, a3, 256, 256,
-	static_cast<const byte *>(a4), 31, qtrue);
-}
+	re.DrawStretchRaw(a1, a2, a3, a4, 256, 256,
+	static_cast<const byte *>(a5), 31, qtrue);
+	}
 
 static const cgameImport_t cgameImportTable = {
 	CGAME_IMPORT_API_VERSION,
@@ -1215,9 +1219,9 @@ CL_AdjustTimeDelta
 
 Adjust the clients view of server time.
 
-We attempt to have cl.serverTime exactly equal the server's view
-of time plus the timeNudge, but with variable latencies over
-the internet it will often need to drift a bit to match conditions.
+We attempt to have cl.serverTime exactly equal to the server's view
+of time plus the timeNudge, but with variable latencies over the
+internet it will often need to drift a bit to match conditions.
 
 Our ideal time would be to have the adjusted time approach, but not pass,
 the very latest snapshot.
@@ -1276,7 +1280,7 @@ void CL_AdjustTimeDelta( void ) {
 	}
 
 	if ( cl_showTimeDelta->integer ) {
-		Com_Printf( "%i ", cl.serverTimeDelta );
+		Com_Printf( "%i ", cl.serverTime );
 	}
 }
 
@@ -1391,7 +1395,7 @@ void CL_SetCGameTime( void ) {
 		cl.oldServerTime = cl.serverTime;
 
 		// note if we are almost past the latest frame (without timeNudge),
-		// so we will try and adjust back a bit when the next snapshot arrives
+		// so we will try to adjust back a bit when the next snapshot arrives
 		if ( cls.realtime + cl.serverTimeDelta >= cl.snap.serverTime - 5 ) {
 			cl.extrapolatedSnapshot = qtrue;
 		}
@@ -1447,5 +1451,4 @@ qboolean CL_GetTag( int clientNum, char *tagname, orientation_t *or ) {
 
 	return cgameExport->GetTag( clientNum, tagname, or );
 }
-
 
