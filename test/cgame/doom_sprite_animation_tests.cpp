@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-#include "cgame/cg_local.h"
-#include "cgame/cg_doomweapons.h"
-#include "game/bg_doomweapons.h"
+#include "../cg_local.h"
+#include "../cg_doomweapons.h"
+#include "../../game/bg_doomweapons.h"
 #include <cstdio>
 #include <stdexcept>
 #include <string>
@@ -58,8 +58,7 @@ int main() {
             for (int animation : {WEAP_IDLE1, WEAP_ATTACK1, WEAP_ATTACK2, WEAP_DROP, WEAP_RAISE}) {
                 memset(&cg.predictedPlayerEntity.pe.weap, 0, sizeof(lerpFrame_t));
                 playerState_t ps{};
-                ps.weapAnim = animation
- | ANIM_TOGGLEBIT;
+                ps.weapAnim = animation | ANIM_TOGGLEBIT;
                 cg.time = 1000;
                 int oldFrame, frame;
                 float backlerp;

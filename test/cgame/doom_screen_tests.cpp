@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-#include "cgame/cg_local.h"
-#include "cgame/cg_doomscreens.h"
-#include "game/bg_doomlevel.h"
+#include "../cg_local.h"
+#include "../cg_doomscreens.h"
+#include "../../game/bg_doomlevel.h"
 #include <cstdio>
 #include <map>
 #include <stdexcept>
@@ -68,8 +68,7 @@ int main() {
         CG_DoomLoadingStage("graphics");
         Q_strncpyz(reinterpret_cast<char *>(cg.infoScreenText), "graphics",
                    sizeof(cg.infoScreenText));
-        Check(CG_DrawDoo
-mLoading() && Drawn("ui/doom/wimap0") && Drawn("ui/doom/wilv01"),
+        Check(CG_DrawDoomLoading() && Drawn("ui/doom/wimap0") && Drawn("ui/doom/wilv01"),
               "Loading uses the original episode background and correct mission title");
         doomlevel::Summary data{1,   1, 1, 2, 3, 6, 4, 10, 1, 3, 65, 30, 1, doomlevel::Statistics,
                                 1000};

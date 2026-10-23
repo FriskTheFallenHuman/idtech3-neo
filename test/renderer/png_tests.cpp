@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-#include "renderer/tr_local.h"
+#include "../tr_local.h"
 #include <algorithm>
 #include <cstdio>
 #include <stdexcept>
@@ -60,8 +60,7 @@ std::vector<byte> ZlibStore(const std::vector<byte> &raw) {
         const uint16_t inverse = uint16_t(~uint16_t(n));
         z.push_back(byte(inverse));
         z.push_back(byte(inverse >> 8));
-        z.insert(z.end(), raw.begin() + start, raw
-.begin() + start + n);
+        z.insert(z.end(), raw.begin() + start, raw.begin() + start + n);
         start += n;
     }
     uint32_t a = 1, b = 0;
@@ -120,8 +119,7 @@ int main() {
         ri.FS_ReadFile = Read;
         ri.FS_FreeFile = Free;
         ri.Printf = Print;
-       
- const std::vector<byte> rgba = {255, 0, 0, 255, 0, 255, 0, 0, 0, 0, 255, 128, 9, 8, 7, 255};
+        const std::vector<byte> rgba = {255, 0, 0, 255, 0, 255, 0, 0, 0, 0, 255, 128, 9, 8, 7, 255};
         Encode(6, 4, 2, 2, rgba);
         Decode(true, 2, 2);
         Check(decoded == rgba, "Exact RGBA values, alpha and top-down orientation");

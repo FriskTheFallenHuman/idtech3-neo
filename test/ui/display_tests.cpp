@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-#include "qcommon/doom_display.h"
+#include "../../qcommon/doom_display.h"
 #include <cstdio>
 #include <limits>
 int main() {

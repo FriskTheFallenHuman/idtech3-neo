@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Exercise the actual first-person damage path with a fake renderer boundary.
-#include "cgame/cg_damageview.cpp"
+#include "../cg_damageview.cpp"
 #include <cstdio>
 #include <stdexcept>
 #include <vector>

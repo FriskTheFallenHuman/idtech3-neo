@@ -1,7 +1,7 @@
 // Exercise the actual effect parser, scheduler, collision and render adapters.
-#include "cgame/fx/common_headers.h"
-#include "cgame/fx/FxScheduler.h"
-#include "cgame/fx/FxFlame.h"
+#include "../fx/common_headers.h"
+#include "../fx/FxScheduler.h"
+#include "../fx/FxFlame.h"
 #include <cstdio>
 #include <cstdlib>
 #include <filesystem>
@@ -49,8 +49,7 @@ void QDECL CG_Printf(const char *format, ...) {
     std::printf("%s", message);
     // Unknown fields and missing files must make the test fail.
     if (strstr(message, "Unknown") || strstr(message, "failed") || strstr(message, "INVALID") ||
-        strstr(message, "Invalid"))
- {
+        strstr(message, "Invalid")) {
         ++failures;
     }
 }
@@ -119,8 +118,7 @@ void trap_R_AddRefEntityToScene(const refEntity_t *entity) {
     Finite(entity->origin);
     CHECK(std::isfinite(entity->radius));
     if (entity->radius > maximumSpriteRadius) {
-        ma
-ximumSpriteRadius = entity->radius;
+        maximumSpriteRadius = entity->radius;
     }
     ++sprites;
     if (entity->reType == RT_SCREEN_FLAME) {
@@ -178,8 +176,7 @@ void QDECL CG_Error(const char *format, ...) {
     va_end(args);
     std::exit(1);
 }
-static voi
-d Frame(int time) {
+static void Frame(int time) {
     int previous = cg.time;
     cg.time = time;
     cg.frametime = time - previous;
@@ -229,8 +226,7 @@ int main() {
     }
     failures = 0; // The invalid registrations above deliberately report diagnostics.
     std::vector<int> effects;
-    for (const auto &entry : std::file
-system::directory_iterator("base/effects/doom")) {
+    for (const auto &entry : std::filesystem::directory_iterator("base/effects/doom")) {
         if (entry.path().extension() != ".efx") {
             continue;
         }
@@ -277,8 +273,7 @@ system::directory_iterator("base/effects/doom")) {
     CHECK(activeFx == 1 && flameDraws > 0);
     float initialTime = lastFlameTime;
     for (int time = 14060; time <= 14400; time += 20) {
-     
-   origin[0] += 2;
+        origin[0] += 2;
         FX_AddFlame(origin, velocity, 4, color, 250, 1);
         Frame(time);
         CHECK(activeFx == 1);
@@ -337,8 +332,7 @@ system::directory_iterator("base/effects/doom")) {
     CHECK(decals == before + 1);
     CG_ImpactMark(1, origin, normal, 0, 1, 1, 1, 1, qtrue, 0, qfalse, 1000);
     CHECK(decals == before + 1);
-    for (int 
-i = 0; i < MAX_MARK_POLYS + 8; ++i) {
+    for (int i = 0; i < MAX_MARK_POLYS + 8; ++i) {
         CG_ImpactMark(1, origin, normal, 0, 1, 1, 1, 1, qtrue, 16, qfalse, 1000);
     }
     before = decals;

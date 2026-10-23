@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-#include "cgame/cg_local.h"
-#include "cgame/cg_doomfx.h"
-#include "game/bg_doomblood.h"
+#include "../cg_local.h"
+#include "../cg_doomfx.h"
+#include "../../game/bg_doomblood.h"
 #include <cstdio>
 #include <limits>
 #include <stdexcept>
@@ -52,8 +52,7 @@ void CG_ImpactMark(qhandle_t shader, const vec3_t origin, const vec3_t normal, f
     lastRadius = radius;
     Check(shader == 17 && origin[0] > lastStart[0] && normal[0] == -1,
           "Wall splat uses actual hit position and normal");
-    Check(rotation >= 0 && rotati
-on <= 360 && red > green && red > blue && alpha > .8f,
+    Check(rotation >= 0 && rotation <= 360 && red > green && red > blue && alpha > .8f,
           "Blood splat is randomized, red and opaque");
     Check(alphaFade && !temporary && duration == 45000, "Large splat persists and fades");
 }
@@ -86,8 +85,7 @@ int main() {
         Check(marks == 1 && lastRadius > 20 && ignoredVictim == 7 && traceMask == MASK_SHOT &&
                   fabs(Distance(lastStart, lastEnd) - 96) < .001f,
               "Short trace starts outside victim and preserves nearby-wall range");
-        wallDista
-nce = 110;
+        wallDistance = 110;
         Check(!CG_DoomFxBloodWall(exit, direction, 7, 17, 24), "Distant wall gets no large splat");
         wallDistance = 24;
         for (int rejected : {SURF_NOIMPACT, SURF_NOMARKS, SURF_SKY}) {

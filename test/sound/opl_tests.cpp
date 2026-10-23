@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-#include "sound/snd_opl.h"
-#include "sound/snd_musicmix.h"
-#include "sound/opl/doom_opl.h"
+#include "../snd_opl.h"
+#include "../snd_musicmix.h"
+#include "../opl/doom_opl.h"
 #include <algorithm>
 #include <cstdio>
 #include <cstring>
@@ -56,8 +56,7 @@ void Pitch() {
         const double frequency = Crossings(pcm) * 44100.0 / (frames - 2049);
         std::printf("OPL tone %d: %.3f Hz, crossings=%d, max=%d\n", tone.note, frequency,
                     Crossings(pcm), *std::max_element(pcm.begin(), pcm.end()));
-        Check(frequency > tone.frequency * 0.99 && frequen
-cy < tone.frequency * 1.01,
+        Check(frequency > tone.frequency * 0.99 && frequency < tone.frequency * 1.01,
               "OPL bass and treble notes must render at the intended pitch and sample rate");
     }
 }
@@ -102,8 +101,7 @@ int main(int argc, char **argv) {
         auto midi = Read("base/music/doom/d_e1m1.mid");
         Check(!doomaudio::OPLLoad(nullptr, 0, bank.data(), bank.size()) &&
                   !doomaudio::OPLLoad(midi.data(), midi.size(), bank.data(), 10),
-          
-    "Truncated inputs reject");
+              "Truncated inputs reject");
         auto invalid = midi;
         invalid[18] = 0x7f;
         Check(!doomaudio::OPLLoad(invalid.data(), invalid.size(), bank.data(), bank.size()),
@@ -132,8 +130,7 @@ int main(int argc, char **argv) {
         std::vector<int16_t> whole(44100 * 2), split(whole.size());
         Check(doomaudio::OPLRender(whole.data(), 44100) == 44100, "One-second sample clock");
         Check(doomaudio::OPLLoad(midi.data(), midi.size(), bank.data(), bank.size()),
-          
-    "Deterministic restart");
+              "Deterministic restart");
         for (size_t offset = 0; offset < 44100;) {
             const size_t count = std::min(size_t(137), size_t(44100) - offset);
             Check(doomaudio::OPLRender(split.data() + offset * 2, count) == count,

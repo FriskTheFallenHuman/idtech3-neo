@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 #include <stdexcept>
-#include "ui/ui_doom.cpp"
+#include "../ui_doom.cpp"
 
 uiInfo_t uiInfo;
 namespace test {
@@ -40,8 +40,7 @@ void trap_Cvar_Set(const char *n,const char *v) { test::cvars[n]=v; }
 float trap_Cvar_VariableValue(const char *n) { return (float)atof(test::cvars[n].c_str()); }
 void trap_Cvar_VariableStringBuffer(const char *n,char *b,int size) { Q_strncpyz(b,test::cvars[n].c_str(),size); }
 void trap_Key_SetCatcher(int value) { test::catcher=value; }
-void trap_Key_GetBindingBuf(int key, c
-har *b, int size) {
+void trap_Key_GetBindingBuf(int key, char *b, int size) {
     Q_strncpyz(b, test::bindings[key].c_str(), size);
 }
 void trap_Key_SetBinding(int key, const char *binding) {
@@ -80,8 +79,7 @@ int main() {
         bindings['6'] = "custom_plasma_key";
         cvars["g_gametype"] = "2";
         UI_DoomInit(); Open(); Draw();
-        Require(bindings['5'] == "weaponb
-ank 5" && bindings['7'] == "weaponbank 7" &&
+        Require(bindings['5'] == "weaponbank 5" && bindings['7'] == "weaponbank 7" &&
                     bindings['6'] == "custom_plasma_key",
                 "New Doom weapon keys must retain custom bindings");
         Require(Drawn("ui/doom/titlepic") && Drawn("ui/doom/m_doom") && Drawn("ui/doom/m_ngame"),"Main must draw original title and patches");
@@ -101,8 +99,7 @@ ank 5" && bindings['7'] == "weaponbank 7" &&
         Key(K_DOWNARROW); Key(K_DOWNARROW); Key(K_DOWNARROW); Key(K_DOWNARROW); Key(K_RIGHTARROW);
         Require(cvars["sensitivity"]=="5","Options arrows must adjust sensitivity and skip spacers");
         Key(K_F4); cvars["s_volume"]="1"; Key(K_RIGHTARROW);
-        Require(trap_Cvar_VariableValue("s_volume")==1,"Sound slider 
-must clamp at maximum");
+        Require(trap_Cvar_VariableValue("s_volume")==1,"Sound slider must clamp at maximum");
         Key(K_LEFTARROW); Require(trap_Cvar_VariableValue("s_volume")<1,"Sound slider must update engine volume");
         Open(); Key('s'); Key(K_ENTER); Key('q'); Draw();
         Require(Drawn("ui/doom/m_doom") && commands.back()!="quit\n","Cannot save from title and notice must consume its dismissal key");
@@ -124,8 +121,7 @@ must clamp at maximum");
         Require(selected[Main] == 1 && menus[Main].count == 7, "Multiplayer must be between New Game and Options");
         Key(K_ENTER); Require(screen == Multiplayer, "Multiplayer row must open host/join settings");
         selected[Multiplayer] = 0; Key(K_RIGHTARROW);
-        Require(cvars["ui_doomMpTeam"] 
-== "1", "Mode must toggle to team deathmatch");
+        Require(cvars["ui_doomMpTeam"] == "1", "Mode must toggle to team deathmatch");
         cvars["ui_doomMpMap"] = "13"; cvars["ui_doomMpBots"] = "5";
         selected[Multiplayer] = 6; Key(K_ENTER);
         Require(commands.back() == "map e2m5\n" && cvars["g_gametype"] == "3" &&
@@ -157,8 +153,7 @@ must clamp at maximum");
                     "Demo must keep the registered episodes visible like original Doom");
             const auto before = commands.size();
             Key(K_ENTER);
-            Require(promp
-t == Notice && screen == Help && commands.size() == before &&
+            Require(prompt == Notice && screen == Help && commands.size() == before &&
                         std::string(message) ==
                             "THIS IS THE SHAREWARE VERSION OF DOOM.\n\n"
                             "YOU NEED TO ORDER THE ENTIRE TRILOGY.\n\nPRESS A KEY.",
@@ -203,8 +198,7 @@ t == Notice && screen == Help && commands.size() == before &&
         cvars["ui_doomMpMap"] = "8";
         Key(K_ENTER);
         Require(commands.back() == "map e1m9\n", "Demo must still host episode 1 multiplayer");
-       
- cvars["doom_demo"] = "0";
+        cvars["doom_demo"] = "0";
         Open();
         Go(Episode);
         selected[Episode] = 2;

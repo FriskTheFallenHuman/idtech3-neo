@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 #include <stdexcept>
-#include "cgame/cg_doomhud.cpp"
+#include "../cg_doomhud.cpp"
 
 cg_t cg;
 cgs_t cgs;
@@ -52,8 +52,7 @@ weapon_t BG_FindClipForWeapon(weapon_t weapon) { return weapon==WP_SILENCER ? WP
 int main() {
     using namespace test;
     try {
-        snapshot_t snap={
-}; cg.snap=&snap;
+        snapshot_t snap={}; cg.snap=&snap;
         cg_draw2D.integer=cg_drawStatus.integer=1;
         cgs.glconfig.vidWidth=1280; cgs.glconfig.vidHeight=720;
         auto &ps=snap.ps; ps.stats[STAT_HEALTH]=100; ps.weapon=WP_LUGER;
@@ -85,8 +84,7 @@ int main() {
                           fabs(rectangle.height - resolution[1] * 0.16f) < 0.01f,
                       "HUD background fills only the bottom margins");
                 Check(fabs((rectangle.s2 - rectangle.s1) * 64 * sx - rectangle.width) < 0.01f &&
-                          fabs((rectangle.t2 - rectangle.t1) * 64 *
- sy - rectangle.height) < 0.01f,
+                          fabs((rectangle.t2 - rectangle.t1) * 64 * sy - rectangle.height) < 0.01f,
                       "HUD background preserves original tile scale without stretching");
                 Check(rectangle.x + rectangle.width <= originX + 0.01f ||
                           rectangle.x >= originX + 320 * sx - 0.01f,
@@ -118,8 +116,7 @@ int main() {
         ps.stats[STAT_HEALTH]=0; Draw();
         Check(Drawn("ui/doom/stfdead0"),"Death face must remain visible even during invulnerability");
         cg_drawStatus.integer=0; Draw(); Check(draws.empty() && CG_DoomHudHeight()==0,"Hidden HUD must release its viewport area");
-        cg_drawStatus.integer=1; cg.levelShot=qtrue; Check(!CG_DoomHudVisible(
-),"Levelshots must hide HUD");
+        cg_drawStatus.integer=1; cg.levelShot=qtrue; Check(!CG_DoomHudVisible(),"Levelshots must hide HUD");
         cg.levelShot=qfalse; cg.cameraMode=qtrue; Check(!CG_DoomHudVisible(),"Cinematics must hide HUD");
         cg.cameraMode=qfalse; ps.pm_type=PM_INTERMISSION; Check(!CG_DoomHudVisible(),"Intermissions must retain their own layout");
         ps.pm_type = PM_NORMAL;

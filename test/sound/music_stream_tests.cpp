@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #define AL_ALEXT_PROTOTYPES
-#include "client/client.h"
-#include "sound/snd_local.h"
-#include "sound/snd_musicmix.h"
-#include "openal/include/AL/al.h"
-#include "openal/include/AL/alc.h"
-#include "openal/include/AL/alext.h"
+#include "../../client/client.h"
+#include "../snd_local.h"
+#include "../snd_musicmix.h"
+#include "../../openal/include/AL/al.h"
+#include "../../openal/include/AL/alc.h"
+#include "../../openal/include/AL/alext.h"
 #include <algorithm>
 #include <cstdio>
 #include <cmath>
@@ -65,8 +65,7 @@ void CheckMusicMix() {
     for (int frequency : {55, 1000}) {
         for (size_t frame = 0; frame < frames; ++frame) {
             input[frame * 2] = static_cast<int16_t>(
-                2000 * std::
-sin(2 * 3.14159265358979323846 * frequency * frame / 44100));
+                2000 * std::sin(2 * 3.14159265358979323846 * frequency * frame / 44100));
             input[frame * 2 + 1] = 0;
         }
         auto output = input;
@@ -106,8 +105,7 @@ sin(2 * 3.14159265358979323846 * frequency * frame / 44100));
           "Maximum gain and bass must never wrap or invert loud PCM");
     std::fill(output.begin(), output.end(), -32768);
     mix.Reset();
-    mix.Process(output.data(),
- frames, 2);
+    mix.Process(output.data(), frames, 2);
     Check(std::all_of(output.begin(), output.end(), [](int16_t sample) { return sample < 0; }),
           "Negative peaks must remain negative under maximum boost");
     std::fill(output.begin(), output.end(), 0);
@@ -148,8 +146,7 @@ int main(int argc, char **argv) {
         Check(sscanf(report.c_str(),
                      "Doom music: track=%*s playing=%d queued=%d position=%u loops=%d", &playing,
                      &queued, &position, &loops) == 4 &&
-                  playing && queued > 0 && loops > 0 &
-& energy > 0,
+                  playing && queued > 0 && loops > 0 && energy > 0,
               "Real music streaming must remain audible through title-track loops and repeated "
               "requests");
         std::vector<int16_t> stall(44100 * 2);
@@ -184,8 +181,7 @@ int main(int argc, char **argv) {
         std::puts("Real music backend passed: sustained playback, repeated requests, complete "
                   "loops, starvation recovery, stop and level-track replacement.");
     } catch (const std::exception &error) {
-        std::fprintf(stder
-r, "%s\n", error.what());
+        std::fprintf(stderr, "%s\n", error.what());
         return 1;
     }
 }

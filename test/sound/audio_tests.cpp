@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #define AL_ALEXT_PROTOTYPES
-#include "sound/snd_local.h"
-#include "openal/include/AL/al.h"
-#include "openal/include/AL/alc.h"
-#include "openal/include/AL/alext.h"
-#include "sound/snd_fluidsynth.h"
+#include "../snd_local.h"
+#include "../../openal/include/AL/al.h"
+#include "../../openal/include/AL/alc.h"
+#include "../../openal/include/AL/alext.h"
+#include "../snd_fluidsynth.h"
 #include <algorithm>
 #include <chrono>
 #include <cstdio>
@@ -49,8 +49,7 @@ int main() {
         Check(settings && fs.settings_setnum(settings, "synth.sample-rate", 44100.0) == FLUID_OK &&
                   fs.settings_setstr(settings, "player.timing-source", "sample") == FLUID_OK,
               "FluidSynth settings apply");
-       
- auto *synth = fs.new_synth(settings);
+        auto *synth = fs.new_synth(settings);
         Check(synth && fs.sfload(synth, "base/sound/timidity/TimGM6mb.sf2", 1) >= 0,
               "TimGM6mb SoundFont loads");
         int scores = 0;
@@ -86,8 +85,7 @@ int main() {
         Check(scores == 32, "All original Doom scores present");
         auto *device = alcLoopbackOpenDeviceSOFT(nullptr);
         Check(device != nullptr, "Statically linked OpenAL loopback device opens");
-  
-      const ALCint attributes[] = {
+        const ALCint attributes[] = {
             ALC_FREQUENCY,  44100, ALC_FORMAT_CHANNELS_SOFT, ALC_STEREO_SOFT, ALC_FORMAT_TYPE_SOFT,
             ALC_SHORT_SOFT, 0};
         auto *context = alcCreateContext(device, attributes);

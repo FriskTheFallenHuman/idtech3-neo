@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Exercise the renderer's actual definition traversal with forced hash collisions.
-#include "renderer/tr_shaderindex.h"
+#include "../tr_shaderindex.h"
 #include <cstdio>
 #include <cstdlib>
 #include <stdexcept>
@@ -53,8 +53,7 @@ int main() {
         char malformed[] = "broken/shader\n{\n{\nmap missing\n}\n";
         char isolated[] = "textures/check/floor\n{\ncull none\n{\nmap floor.png\n}\n}\n";
         R_BuildShaderTextIndex(
-            malformed, shade
-rChecksumLookup, 4096, [](const char *) { return 1u; }, Allocate);
+            malformed, shaderChecksumLookup, 4096, [](const char *) { return 1u; }, Allocate);
         R_BuildShaderTextIndex(
             isolated, shaderChecksumLookup, 4096, [](const char *) { return 1u; }, Allocate, false);
         bool found = false;

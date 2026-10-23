@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-#include "cgame/cg_doomfx_materials.h"
-#include "qcommon/doom_bsp.h"
+#include "../cg_doomfx_materials.h"
+#include "../../qcommon/doom_bsp.h"
 #include <cstdio>
 #include <cstring>
 #include <limits>
@@ -46,8 +46,7 @@ std::vector<unsigned char> Fixture() {
     models[1].numSurfaces = 1;
     Append(data, dbsp::Models, models);
     const float points[9][3] = {{0, 0, 0},   {128, 0, 0}, {0, 128, 0},  {128, 128, 0}, {0, 128, 0},
-                                {128, 0, 0}, {0,
- 0, 16},  {128, 0, 16}, {0, 128, 16}};
+                                {128, 0, 0}, {0, 0, 16},  {128, 0, 16}, {0, 128, 16}};
     std::vector<dbsp::Vertex> vertices(9);
     for (int vertex = 0; vertex < 9; ++vertex) {
         std::memcpy(vertices[vertex].xyz, points[vertex], sizeof(points[vertex]));
@@ -94,8 +93,7 @@ int main() {
         doomfx::MaterialMap map;
         const char *error = nullptr;
         Check(map.Load(data.data(), static_cast<int>(data.size()), &error),
-              error ? error : "Fixture lo
-ad");
+              error ? error : "Fixture load");
         const float up[] = {0, 0, 1}, side[] = {1, 0, 0};
         const float slime[] = {30, 30, 0.125f}, wall[] = {100, 100, 0};
         const float outside[] = {-30, -30, 0}, above[] = {30, 30, 10};
@@ -125,8 +123,7 @@ ad");
         std::memset(data.data() + header->lumps[dbsp::Shaders].offset, 'X', 64);
         Check(!map.Load(data.data(), static_cast<int>(data.size()), &error),
               "Unterminated shader name rejected");
-        da
-ta = Fixture();
+        data = Fixture();
         header = reinterpret_cast<dbsp::Header *>(data.data());
         *reinterpret_cast<int32_t *>(data.data() + header->lumps[dbsp::Indices].offset) = 999;
         Check(!map.Load(data.data(), static_cast<int>(data.size()), &error),

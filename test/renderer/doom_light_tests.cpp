@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-#include "renderer/tr_doomlighting.h"
+#include "../tr_doomlighting.h"
 #include <cstdio>
 int main() {
     using namespace doomlight;
