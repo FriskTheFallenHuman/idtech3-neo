@@ -1,7 +1,7 @@
 # Build log digest
 
 - Log: `build.log`
-- Lines: 9
+- Lines: 7
 - Errors: 0
 - Warnings: 0
 
