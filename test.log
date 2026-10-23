@@ -1,10 +1,60 @@
 scons: Reading SConscript files ...
-OSError: Cannot call rmtree on a symbolic link:
-  File "D:\a\project-neo\project-neo\SConstruct", line 93:
-    shutil.rmtree(bin_base)
-  File "C:\hostedtoolcache\windows\Python\3.15.1\x64\Lib\shutil.py", line 859:
-    _rmtree_impl(path, dir_fd, onexc)
-  File "C:\hostedtoolcache\windows\Python\3.15.1\x64\Lib\shutil.py", line 682:
-    onexc(os.path.islink, path, err)
-  File "C:\hostedtoolcache\windows\Python\3.15.1\x64\Lib\shutil.py", line 680:
-    raise OSError("Cannot call rmtree on a symbolic link")
+Config: release, arch: x86, editor: True
+Binaries go to bin/, the build files live in build/release/
+The game modules go to base/, bin/base links to it.
+scons: done reading SConscript files.
+scons: Building targets ...
+clang-cl /Fotest\dmap\format_tests.obj /c test\dmap\format_tests.cpp /std:c++17 /EHsc --target=i686-pc-windows-msvc /W3 /clang:-ferror-limit=0 /clang:-Wno-writable-strings /clang:-Wno-deprecated-declarations /clang:-Wno-microsoft-enum-value /clang:-fno-operator-names /clang:-fno-strict-aliasing /clang:-fwrapv /MT /O2 /DWIN32 /DC_ONLY /D_USE_32BIT_TIME_T /D_CRT_SECURE_NO_WARNINGS /D_CRT_NONSTDC_NO_WARNINGS /DNOMINMAX /DNDEBUG /Icode\game /Icode\game\cgame /Icode\game\game /Icode\game\game\tests /Icode\client /Icode\sys /Icode\sys\win32 /Icode\third-party /Icode /Icode\tools\editor /Icode\third-party\openal\include /Icode\third-party\fluidsynth\include /Icode\third-party\stb /Icode\third-party\miniz /Icode\third-party\imgui /Icode\third-party\imgui\backends /Ibuild\release\generated
+clang-cl /Fotest\ui\doom_menu_tests.obj /c test\ui\doom_menu_tests.cpp /std:c++17 /EHsc --target=i686-pc-windows-msvc /W3 /clang:-ferror-limit=0 /clang:-Wno-writable-strings /clang:-Wno-deprecated-declarations /clang:-Wno-microsoft-enum-value /clang:-fno-operator-names /clang:-fno-strict-aliasing /clang:-fwrapv /MT /O2 /DWIN32 /DC_ONLY /D_USE_32BIT_TIME_T /D_CRT_SECURE_NO_WARNINGS /D_CRT_NONSTDC_NO_WARNINGS /DNOMINMAX /DNDEBUG /Icode\game /Icode\game\cgame /Icode\game\game /Icode\game\game\tests /Icode\client /Icode\sys /Icode\sys\win32 /Icode\third-party /Icode /Icode\tools\editor /Icode\third-party\openal\include /Icode\third-party\fluidsynth\include /Icode\third-party\stb /Icode\third-party\miniz /Icode\third-party\imgui /Icode\third-party\imgui\backends /Ibuild\release\generated
+clang-cl /Fotest\qcommon\doom_content_tests.obj /c test\qcommon\doom_content_tests.cpp /std:c++17 /EHsc --target=i686-pc-windows-msvc /W3 /clang:-ferror-limit=0 /clang:-Wno-writable-strings /clang:-Wno-deprecated-declarations /clang:-Wno-microsoft-enum-value /clang:-fno-operator-names /clang:-fno-strict-aliasing /clang:-fwrapv /MT /O2 /DWIN32 /DC_ONLY /D_USE_32BIT_TIME_T /D_CRT_SECURE_NO_WARNINGS /D_CRT_NONSTDC_NO_WARNINGS /DNOMINMAX /DNDEBUG /Icode\game /Icode\game\cgame /Icode\game\game /Icode\game\game\tests /Icode\client /Icode\sys /Icode\sys\win32 /Icode\third-party /Icode /Icode\tools\editor /Icode\third-party\openal\include /Icode\third-party\fluidsynth\include /Icode\third-party\stb /Icode\third-party\miniz /Icode\third-party\imgui /Icode\third-party\imgui\backends /Ibuild\release\generated
+clang-cl /Fobuild\release\tests\doom_content_tests\code\qcommon\doom_content.obj /c code\qcommon\doom_content.cpp /std:c++17 /EHsc --target=i686-pc-windows-msvc /W3 /clang:-ferror-limit=0 /clang:-Wno-writable-strings /clang:-Wno-deprecated-declarations /clang:-Wno-microsoft-enum-value /clang:-fno-operator-names /clang:-fno-strict-aliasing /clang:-fwrapv /MT /O2 /DWIN32 /DC_ONLY /D_USE_32BIT_TIME_T /D_CRT_SECURE_NO_WARNINGS /D_CRT_NONSTDC_NO_WARNINGS /DNOMINMAX /DNDEBUG /Icode\game /Icode\game\cgame /Icode\game\game /Icode\game\game\tests /Icode\client /Icode\sys /Icode\sys\win32 /Icode\third-party /Icode /Icode\tools\editor /Icode\third-party\openal\include /Icode\third-party\fluidsynth\include /Icode\third-party\stb /Icode\third-party\miniz /Icode\third-party\imgui /Icode\third-party\imgui\backends /Ibuild\release\generated
+clang-cl /Fotest\cgame\doom_damage_view_tests.obj /c test\cgame\doom_damage_view_tests.cpp /std:c++17 /EHsc --target=i686-pc-windows-msvc /W3 /clang:-ferror-limit=0 /clang:-Wno-writable-strings /clang:-Wno-deprecated-declarations /clang:-Wno-microsoft-enum-value /clang:-fno-operator-names /clang:-fno-strict-aliasing /clang:-fwrapv /MT /O2 /Gy /DWIN32 /DC_ONLY /D_USE_32BIT_TIME_T /D_CRT_SECURE_NO_WARNINGS /D_CRT_NONSTDC_NO_WARNINGS /DNOMINMAX /DNDEBUG /Icode\game /Icode\game\cgame /Icode\game\game /Icode\game\game\tests /Icode\client /Icode\sys /Icode\sys\win32 /Icode\third-party /Icode /Icode\tools\editor /Icode\third-party\openal\include /Icode\third-party\fluidsynth\include /Icode\third-party\stb /Icode\third-party\miniz /Icode\third-party\imgui /Icode\third-party\imgui\backends /Ibuild\release\generated
+test\ui\doom_menu_tests.cpp(43,38): error: unknown type name 'c'
+   43 | void trap_Key_GetBindingBuf(int key, c
+      |                                      ^
+test\ui\doom_menu_tests.cpp(44,5): error: expected ')'
+   44 | har *b, int size) {
+      |     ^
+test\ui\doom_menu_tests.cpp(43,28): note: to match this '('
+   43 | void trap_Key_GetBindingBuf(int key, c
+      |                            ^
+test\ui\doom_menu_tests.cpp(45,16): error: use of undeclared identifier 'b'
+   45 |     Q_strncpyz(b, test::bindings[key].c_str(), size);
+      |                ^
+test\ui\doom_menu_tests.cpp(45,48): error: use of undeclared identifier 'size'
+   45 |     Q_strncpyz(b, test::bindings[key].c_str(), size);
+      |                                                ^~~~
+test\ui\doom_menu_tests.cpp(83,34): warning: missing terminating '"' character [-Winvalid-pp-token]
+   83 |         Require(bindings['5'] == "weaponb
+      |                                  ^
+test\ui\doom_menu_tests.cpp(83,34): error: expected expression
+test\ui\doom_menu_tests.cpp(84,29): warning: invalid suffix on literal; C++11 requires a space between literal and identifier [-Wreserved-user-defined-literal]
+   84 | ank 5" && bindings['7'] == "weaponbank 7" &&
+      |                             ^
+      |                              
+test\ui\doom_menu_tests.cpp(84,41): warning: missing terminating '"' character [-Winvalid-pp-token]
+   84 | ank 5" && bindings['7'] == "weaponbank 7" &&
+      |                                         ^
+test\ui\doom_menu_tests.cpp(104,56): warning: missing terminating '"' character [-Winvalid-pp-token]
+  104 |         Require(trap_Cvar_VariableValue("s_volume")==1,"Sound slider 
+      |                                                        ^
+test\ui\doom_menu_tests.cpp(104,56): error: expected expression
+test\ui\doom_menu_tests.cpp(105,22): warning: missing terminating '"' character [-Winvalid-pp-token]
+  105 | must clamp at maximum");
+      |                      ^
+test\ui\doom_menu_tests.cpp(160,21): error: use of undeclared identifier 'promp'; did you mean 'prompt'?
+  160 |             Require(promp
+      |                     ^~~~~
+      |                     prompt
+code\game\ui/ui_doom.cpp(39,8): note: 'prompt' declared here
+   39 | Prompt prompt = NoPrompt;
+      |        ^
+test\ui\doom_menu_tests.cpp(161,1): error: expected ')'
+  161 | t == Notice && screen == Help && commands.size() == before &&
+      | ^
+test\ui\doom_menu_tests.cpp(160,20): note: to match this '('
+  160 |             Require(promp
+      |                    ^
+5 warnings and 8 errors generated.
+scons: *** [test\ui\doom_menu_tests.obj] Error 1
+scons: building terminated because of errors.
