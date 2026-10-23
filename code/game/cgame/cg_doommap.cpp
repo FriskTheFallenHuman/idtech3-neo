@@ -141,10 +141,14 @@ void CG_DrawDoomMap() {
         return;
     }
     // The original automap covers the whole view area above the status bar and
-    // keeps Doom's 1.2 horizontal stretch of its 4:3 display.
+    // keeps Doom's 1.2 horizontal stretch of its 4:3 display. The 256x256 buffer
+    // is stretched over the whole view, so a widescreen view would stretch the
+    // map lines a second time. Counter-scale the buffer so the on-screen line
+    // slopes match the original 4:3 look at any window aspect.
+    const float stretchX = ( 4.0f / 3.0f ) * 1.2f * viewHeight / viewWidth;
     const float pixelsPerUnitY =
-        0.97f * min(viewHeight / mapHeight, viewWidth / (mapWidth * 1.2f));
-    const float pixelsPerUnitX = pixelsPerUnitY * 1.2f;
+        0.97f * min( viewHeight / mapHeight, viewWidth / ( mapWidth * stretchX ) );
+    const float pixelsPerUnitX = pixelsPerUnitY * stretchX;
     scaleX = 256.0f * pixelsPerUnitX / viewWidth;
     scaleY = 256.0f * pixelsPerUnitY / viewHeight;
     memset(pixels, 0, sizeof(pixels));
