@@ -68,8 +68,7 @@ WOLF_SOURCES = fix_paths([
     'win32/win_main.cpp',
     'win32/win_net.cpp',
     'win32/win_shared.cpp',
-    'win32/win
-_syscon.cpp',
+    'win32/win_syscon.cpp',
     'win32/win_wndproc.cpp',
 ])
 
@@ -136,8 +135,7 @@ CGAME_SOURCES = fix_paths([
     'cgame/cg_event.cpp',
     'cgame/cg_flamethrower.cpp',
     'cgame/cg_info.cpp',
-    'cga
-me/cg_localents.cpp',
+    'cgame/cg_localents.cpp',
     'cgame/cg_main.cpp',
     'cgame/cg_marks.cpp',
     'cgame/cg_newDraw.cpp',
@@ -211,8 +209,7 @@ GAME_SOURCES = fix_paths([
     'game/g_script_actions.cpp',
     'game/g_session.cpp',
     'game/g_spawn.cpp',
-    'game/
-g_svcmds.cpp',
+    'game/g_svcmds.cpp',
     'game/g_import.cpp',
     'game/g_target.cpp',
     'game/g_team.cpp',
@@ -292,8 +289,7 @@ RENDERER_EXTRA_SOURCES = fix_paths([
     'renderer/tr_glprogs.cpp',
     'renderer/tr_vfx.cpp',
     'renderer/tr_decals.cpp',
-    'renderer/tr_hbao.cp
-p',
+    'renderer/tr_hbao.cpp',
     'renderer/tr_editor.cpp',
     'win32/win_png.cpp',
 ])
@@ -358,8 +354,7 @@ AASBUILD_SOURCES = fix_paths([
     'tools/compilers/aasbuild/csg.cpp',
     'tools/compilers/aasbuild/glfile.cpp',
     'tools/compilers/aasbuild/l_bsp_ent.cpp',
-    'to
-ols/compilers/aasbuild/l_bsp_hl.cpp',
+    'tools/compilers/aasbuild/l_bsp_hl.cpp',
     'tools/compilers/aasbuild/l_bsp_q1.cpp',
     'tools/compilers/aasbuild/l_bsp_q2.cpp',
     'tools/compilers/aasbuild/l_bsp_q3.cpp',
@@ -413,8 +408,7 @@ EDITOR_CORE_SOURCES = [
     'tools/editor/DoomProject.cpp',
     'tools/editor/MapTextures.cpp',
     'tools/editor/idfunctions.cpp',
-    't
-ools/editor/pathops.cpp',
+    'tools/editor/pathops.cpp',
     'tools/editor/lbmfunctions.cpp',
     'tools/editor/SpecialList.cpp',
     'tools/editor/Timing.cpp',
@@ -476,8 +470,7 @@ TESTS = [
     },
     {
         'name': 'doom_damage_view_tests',
-        'sources':
- ['test/cgame/doom_damage_view_tests.cpp'],
+        'sources': ['test/cgame/doom_damage_view_tests.cpp'],
         'sections': True,
     },
     {
@@ -546,8 +539,7 @@ TESTS = [
     },
     {
         'name': 'doom_shader_index_tests',
-      
-  'sources': [
+        'sources': [
             'test/renderer/shader_index_tests.cpp',
             'game/q_shared.cpp',
             'game/q_math.cpp',
@@ -617,8 +609,7 @@ TESTS = [
             'test/cgame/doom_screen_tests.cpp',
             'cgame/cg_doomscreens.cpp',
             'game/q_shared.cpp',
-            'game/q_math.cp
-p',
+            'game/q_math.cpp',
         ],
         'sections': True,
     },
@@ -688,8 +679,7 @@ p',
     },
     {
         'name': 'doom_netchan_tests',
-        'sources': 
-[
+        'sources': [
             'test/game/doom_netchan_tests.cpp',
             'qcommon/net_chan.cpp',
             'qcommon/msg.cpp',
