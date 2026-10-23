@@ -103,11 +103,11 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add build.log
+          git add build.log test.log
           if git diff --cached --quiet; then
             echo "build.log did not change."
           else
-            git commit -m "Save the Windows x86 build log"
+            git commit -m "Save the Windows x86 build and test logs"
             git push
           fi
 
