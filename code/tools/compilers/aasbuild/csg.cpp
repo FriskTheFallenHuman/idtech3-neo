@@ -570,7 +570,6 @@ bspbrush_t *MakeBspBrushList( int startbrush, int endbrush,
 	bspbrush_t  *brushlist, *newbrush;
 	int i, j;
 	int numsides;
-	int vis;
 	vec3_t normal;
 	float dist;
 
@@ -595,13 +594,14 @@ bspbrush_t *MakeBspBrushList( int startbrush, int endbrush,
 			continue;
 		}
 
+#if 0
 		// make sure the brush has at least one face showing
+		int vis;
 		vis = 0;
 		for ( j = 0 ; j < numsides ; j++ )
 			if ( ( mb->original_sides[j].flags & SFL_VISIBLE ) && mb->original_sides[j].winding ) {
 				vis++;
 			}
-#if 0
 		if ( !vis ) {
 			continue;   // no faces at all
 		}
