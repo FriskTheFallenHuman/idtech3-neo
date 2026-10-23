@@ -58,3 +58,15 @@ Plain English only. Update this file as work moves forward.
   non-Windows systems.
 - All warnings fixed in the Windows x86 clang-cl build.
 - Project planning docs (TODO.md, PROGRESS.md, NOTES.md, CLAUDE.md, COPILOT.md).
+- Doom automap: the map fills the whole view area above the status bar
+  (with Doom's 1.2 horizontal stretch) and the weapon sprite is hidden
+  while the map is up, like the original game. The automap trap takes a
+  width and a height now.
+- Editor object catalog: the imgui SetCursorScreenPos assert is gone.
+  A zero-size dummy item is submitted after the cursor move that ends
+  each clipper row.
+- Doom weapon sprite: no longer full bright. CG_DrawDoomWeapon tints it
+  with the sector light at the player position through
+  trap_R_LightForPoint. The invisibility powerup keeps its 0.3 shadow
+  tint on top. Monster and item sprites were already lit and did not
+  change.

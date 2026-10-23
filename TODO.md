@@ -108,6 +108,15 @@ the folder gets renamed.
   ABI included.
 - Turn warnings into errors in the build once every platform is warning-free.
 
+## 13. Draw the menu and HUD into their own framebuffer
+
+- The 2D pass (menus, HUD, console) renders straight into the screen
+  framebuffer today.
+- Render it into a separate framebuffer instead, then blit it over the 3D
+  view. The renderer already has idGLFramebuffer for this.
+- First step is a 1:1 blit behind a cvar so nothing changes by default.
+  Scaling and other 2D post effects come after that.
+
 ## Priority order
 
 1. Auto download and replacement of dependencies (tasks 9 and 10).

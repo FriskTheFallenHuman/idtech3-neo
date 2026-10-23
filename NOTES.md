@@ -123,6 +123,32 @@ and from mod folders set with fs_game.
   GENMIDI tunes, "fluidsynth" plays the MIDI files through FluidSynth.
   WAV-like PCM tracks decode the same way on both backends.
 
+## How the Doom automap and the weapon sprite work
+
+- The automap rasterizes a 256x256 pixel buffer in cgame (cg_doommap.cpp)
+  and hands it to the engine with trap_R_DrawDoomMap(x, y, width, height,
+  pixels), which goes to re.DrawStretchRaw. The map fills the whole view
+  area above the status bar and keeps Doom's 1.2 horizontal stretch.
+- CG_DoomMapVisible() tells the rest of the cgame when the map is up.
+  The weapon sprite is not drawn then, like the original game.
+- The weapon sprite is tinted with the sector light at the player
+  position (trap_R_LightForPoint in CG_DrawDoomWeapon), so it is no
+  longer full bright. The invisibility powerup multiplies the tint by
+  0.3 and uses 0.35 alpha, the old shadow values.
+- Monster, item and effect sprites were already lit through the Doom
+  sector light (R_LightDoomPoly); the weapon was the one full bright
+  sprite.
+
+## Menu and HUD framebuffer (planned, task 13)
+
+- Today the 2D elements draw straight into the screen framebuffer.
+- The plan: draw the 2D pass into its own framebuffer (the renderer
+  already has idGLFramebuffer, used by the VFX, HBAO and the editor)
+  and blit it over the 3D view. That opens the door to scaling and other
+  2D post effects later.
+- First step: a screen-size framebuffer with a 1:1 blit behind a cvar,
+  so the default look does not change.
+
 ## What each task means in practice
 
 1. SCons: done. The SConstruct is at the root, the CMake files are removed
