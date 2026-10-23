@@ -1,0 +1,10 @@
+scons: Reading SConscript files ...
+OSError: Cannot call rmtree on a symbolic link:
+  File "D:\a\project-neo\project-neo\SConstruct", line 93:
+    shutil.rmtree(bin_base)
+  File "C:\hostedtoolcache\windows\Python\3.15.1\x64\Lib\shutil.py", line 859:
+    _rmtree_impl(path, dir_fd, onexc)
+  File "C:\hostedtoolcache\windows\Python\3.15.1\x64\Lib\shutil.py", line 682:
+    onexc(os.path.islink, path, err)
+  File "C:\hostedtoolcache\windows\Python\3.15.1\x64\Lib\shutil.py", line 680:
+    raise OSError("Cannot call rmtree on a symbolic link")
