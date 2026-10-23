@@ -16,19 +16,21 @@ fallback, and 32-bit only: the game module ABI is still 32-bit until task 4
 does the 64-bit work (the old bytecode VM that also forced this is gone,
 task 2 removed it). The engine executable is Doom.exe (the
 old CMake target was "wolf"). Everything the build makes lands in bin/ at the
-root, and the game modules are also copied into base/, where the engine loads
-them.
+root, and the game modules and the aas profiles are copied into bin/base, the
+only base directory the build writes to. The engine loads the modules from
+the exe folder's base directory.
 
 ## Folder map
 
 - base/ - game data (maps, wads, libraries loaded by the engine)
+- bin/ - the finished binaries (Doom.exe, the game modules, toolsx86.dll, tests);
+  the game modules and the aas profiles sit in bin/base
 - code/ - the engine and the game. The plan calls this src/, the rename is still open.
 - code/game/ - game, cgame, ui and botlib
 - code/idLib/ - idLib from Doom 3 BFG, already vendored
-- code/third-party/ - bundled dependencies (imgui, miniz, openal, qclib, stb, timidy)
+- code/third-party/ - bundled dependencies (fluidsynth, imgui, miniz, openal, qclib, stb)
 - references/DOOM-3-BFG - Doom 3 BFG source, used as reference
 - references/doom3.gpl - Doom 3 GPL source, used for the audio system
-- bin/ - the finished binaries (Doom.exe, the game modules, toolsx86.dll, tests)
 - build/ - object files and generated files, one folder per config
 
 ## How the SCons build works
@@ -63,6 +65,15 @@ them.
   soft_oal.dll, which scons copies next to the binaries as OpenAL32.dll.
   Non-Windows systems fetch the OpenAL Soft 1.23.1 sources into
   build/downloads/ instead, see task 9.
+- FluidSynth: third-party/fluidsynth ships the 2.6.1 headers and the CMake
+  and pkgconfig files. The engine links no import library; snd_fluidsynth.cpp
+  loads libfluidsynth-3.dll at runtime with LoadLibrary and resolves the
+  entry points with GetProcAddress, the same pattern as the optional OpenAL
+  extension entry points. When the prebuilt DLL is present under
+  third-party/fluidsynth/Win32/bin, scons copies it next to the engine and
+  the tests. Missing DLL means no synth: the engine still boots and plays
+  OPL2 and PCM music. Non-Windows systems fetch the 2.6.1 sources into
+  build/downloads/ like OpenAL Soft.
 - Useful commands: scons, scons config=debug, scons editor=no, scons tests,
   scons test, scons -c.
 
@@ -89,11 +100,26 @@ them.
   disk again. There is no state left inside the engine to reset.
 - The UI module still checks apiVersion on load; game and cgame do not need
   it because the struct layout is fixed at build time now.
+- Sys_LoadDll searches in order: the working directory, the exe folder's
+  base directory (bin/base), then fs_basepath and fs_cdpath with the game
+  dir. The build only puts the modules into bin/base.
+
+## How the music playback works (after the FluidSynth swap)
+
+- TiMidity is gone. snd_music.cpp drives FluidSynth through the runtime
+  loader in snd_fluidsynth.cpp.
+- The SoundFont is base/sound/timidity/TimGM6mb.sf2, read from fs_basepath.
+- The player timing source is "sample", so rendering audio pulls the MIDI
+  timeline along; the streaming logic keeps working the way it did with
+  TiMidity's offline rendering.
+- s_musicBackend picks the backend: "opl" (default) plays the original OPL2
+  GENMIDI tunes, "fluidsynth" plays the MIDI files through FluidSynth.
+  WAV-like PCM tracks decode the same way on both backends.
 
 ## What each task means in practice
 
-1. SCons: the SConstruct is at the root and the CMake files are removed. The
-   build still needs its first green run on CI, then it is closed.
+1. SCons: done. The SConstruct is at the root, the CMake files are removed
+   and CI builds Windows x86. The Linux and x64 parts live in task 4.
 2. Q3VM: done. The VM code is deleted and the modules use the import/export
    structs described above. The 32-bit lock from the VM is gone; what is
    left is the module ABI itself, which task 4 handles.
@@ -102,7 +128,8 @@ them.
    move into the engine, everything else becomes a DLL the engine loads. The
    engine's bot import table (EA, AI functions) becomes the DLL boundary.
 4. Warnings: gcc/clang on Linux, clang on Windows. Fix warnings for real, then
-   switch the build to warnings-as-errors.
+   switch the build to warnings-as-errors. The Windows x86 build is
+   warning-free now.
 5. idLib: already vendored in code/idLib (BFG edition, GPLv3). id Software started
    hooking it into their RTCW branch and reverted it because they ran out of
    time, so the port is finishable from their known direction. Start with the
@@ -121,7 +148,7 @@ them.
 10. stb: stb_image replaces jpeg-6 and libpng for image loading, stb_truetype can
     replace freetype (ft2) if the font code allows it. stb is public domain / MIT,
     so it mixes with the GPL engine without problems.
-11. QuakeC: code/third-party/qclib is the FTE QuakeC library. It gets implemented
+11. QuakeC: code/third-party/qclib is the FTE QuakeWorld library. It gets implemented
     and then drives cgame, game, ui and botlib. It only lives inside those
     modules and is loaded dynamically, never inside the engine.
 
@@ -130,6 +157,9 @@ them.
 - Engine (RTCW / ET code) and references/doom3.gpl: GPL.
 - idLib (Doom 3 BFG): GPLv3.
 - qclib (FTE QuakeWorld): GPL, check the exact version text before shipping.
+- FluidSynth: LGPL 2.1. It is loaded at runtime as a separate DLL and the
+  headers are not compiled into the engine, which is the intended way to
+  combine it with a GPL program.
 - stb headers: public domain / MIT.
 Not legal advice, but nothing here obviously clashes. Double check qclib.
 
@@ -138,4 +168,6 @@ Not legal advice, but nothing here obviously clashes. Double check qclib.
 - Rename code/ to src/ to match the plan, or keep code/ and update the docs?
 - extractfuncs: pull the original tool from the RTCW / ET sources in as reference
   and adapt it, or write a fresh one?
-
+- The prebuilt libfluidsynth-3.dll is not in the repository yet. Drop it into
+  code/third-party/fluidsynth/Win32/bin/ to have scons ship it next to the
+  engine, or keep it out of git on purpose.

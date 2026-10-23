@@ -163,14 +163,14 @@ int main(int argc, char **argv) {
         alcRenderSamplesSOFT(device, output.data(), 4096);
         doomaudio::MusicInfo();
         Check(report.find("playing=1") != std::string::npos, "Destination music starts after stop");
-        Q_strncpyz(backend, !std::strcmp(backend, "timidity") ? "opl" : "timidity",
+        Q_strncpyz(backend, !std::strcmp(backend, "fluidsynth") ? "opl" : "fluidsynth",
                    sizeof(backend));
         doomaudio::MusicStart("music/doom/d_e1m2.mid", "music/doom/d_e1m2.mid");
         doomaudio::MusicUpdate(0.5f);
         alcRenderSamplesSOFT(device, output.data(), 4096);
         doomaudio::MusicInfo();
         const char *expectedBackend =
-            !std::strcmp(backend, "timidity") ? "backend=timidity" : "backend=opl2";
+            !std::strcmp(backend, "fluidsynth") ? "backend=fluidsynth" : "backend=opl2";
         Check(report.find("playing=1") != std::string::npos &&
                   report.find(expectedBackend) != std::string::npos,
               "Changing backend restarts the same track with the requested synthesizer");
@@ -185,3 +185,4 @@ int main(int argc, char **argv) {
         return 1;
     }
 }
+

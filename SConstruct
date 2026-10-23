@@ -7,7 +7,7 @@
 #   scons -c            remove the build files
 #
 # Everything the build produces lands in bin/ at the repository root. The
-# engine loads the game modules from base/, so they are copied there too.
+# engine loads the game modules from bin/base, so they are copied there.
 
 import os
 
@@ -21,14 +21,20 @@ arch = ARGUMENTS.get('arch', 'x86')
 build_editor = ARGUMENTS.get('editor', 'yes') != 'no'
 
 if os.name != 'nt':
-    # The build itself still targets Windows, but fetch the OpenAL Soft
-    # sources now so they are ready for the non-Windows port (task 4).
+    # The build itself still targets Windows, but fetch the OpenAL Soft and
+    # FluidSynth sources now so they are ready for the non-Windows port.
     try:
         doom_build.fetch_openal_soft(os.path.join('build', 'downloads'))
         print('OpenAL Soft sources were fetched into build/downloads/,')
         print('see build/downloads/README-openal-soft.txt.')
     except Exception as error:
         print('Could not fetch OpenAL Soft sources: %s' % error)
+    try:
+        doom_build.fetch_fluidsynth(os.path.join('build', 'downloads'))
+        print('FluidSynth sources were fetched into build/downloads/,')
+        print('see build/downloads/README-fluidsynth.txt.')
+    except Exception as error:
+        print('Could not fetch FluidSynth sources: %s' % error)
     print('This port builds on Windows only for now.')
     print('Building on other systems is planned, see task 4 in TODO.md.')
     Exit(1)
@@ -75,14 +81,6 @@ miniz_env.Append(CPPPATH=['#code/third-party/miniz'])
 doom_miniz = miniz_env.StaticLibrary(
     build_target + '/doom_miniz',
     [miniz_variant + '/' + p for p in doom_sources.MINIZ_SOURCES])
-
-timidity_env, timidity_variant = module_env('doom_timidity')
-timidity_env.Append(
-    CPPDEFINES=['TIMIDITY_BUILD', 'TIMIDITY_STATIC'],
-    CPPPATH=['#code/third-party/timidy/src'])
-doom_timidity = timidity_env.StaticLibrary(
-    build_target + '/doom_timidity',
-    [timidity_variant + '/' + p for p in doom_sources.TIMIDITY_SOURCES])
 
 opl_env, opl_variant = module_env('doom_opl')
 doom_opl = opl_env.StaticLibrary(
@@ -184,7 +182,7 @@ if build_editor:
 
     # The navigation profiles are plain data files the game reads from base/.
     aas_copies = env.Install(
-        '#base/aas', ['#code/' + cfg for cfg in doom_sources.AAS_CONFIG_FILES])
+        '#bin/base/aas', ['#code/' + cfg for cfg in doom_sources.AAS_CONFIG_FILES])
 
 # --- the game modules ---
 
@@ -213,12 +211,12 @@ ui_dll = ui_env.SharedLibrary(
     [ui_variant + '/' + p for p in
      doom_sources.UI_SOURCES + doom_sources.UI_EXTRA_SOURCES])
 
-# The engine loads the game modules from base/, so they are copied there.
+# The engine loads the game modules from bin/base, so they are copied there.
 # The Program/SharedLibrary calls above return a list of nodes that also
 # carries the .lib and .exp files built next to each dll, so only the .dll
 # files are listed here.
 base_copies = env.Install(
-    '#base',
+    '#bin/base',
     [env.File('#bin/' + name + '.dll')
      for name in ('cgamex86', 'qagamex86', 'uix86')])
 
@@ -226,11 +224,11 @@ base_copies = env.Install(
 
 wolf_env, wolf_variant = module_env('wolf')
 wolf_env.Append(
-    CPPDEFINES=['_WINDOWS', '__USEA3D', '__A3D_GEOM', 'TIMIDITY_STATIC'],
+    CPPDEFINES=['_WINDOWS', '__USEA3D', '__A3D_GEOM'],
     CPPPATH=[
         '#code',
         '#code/third-party/openal/include',
-        '#code/third-party/timidy/src',
+        '#code/third-party/fluidsynth/include',
         '#code/third-party/stb',
         '#code/third-party/miniz',
         generated_target])
@@ -245,7 +243,7 @@ wolf = wolf_env.Program(
     '#bin/Doom',
     [wolf_variant + '/' + p for p in
      doom_sources.WOLF_SOURCES + doom_sources.WOLF_EXTRA_SOURCES] + [wolf_res],
-    LIBS=[renderer, botlib, splines, OpenAL32, doom_timidity, doom_opl,
+    LIBS=[renderer, botlib, splines, OpenAL32, doom_opl,
           doom_miniz,
           'winmm', 'ole32', 'oleaut32', 'wsock32', 'user32', 'gdi32', 'shell32', 'advapi32'],
     LINKFLAGS=['/STACK:8388608', '/LARGEADDRESSAWARE'])
@@ -257,6 +255,17 @@ openal_copies = [
     env.InstallAs('#bin/tests/OpenAL32.dll', '#code/third-party/openal/bin/Win32/soft_oal.dll'),
 ]
 
+# FluidSynth is loaded at runtime, so its DLL ships next to the engine and
+# the tests when the prebuilt package is present. The library itself is
+# optional: the engine still boots without it.
+fluidsynth_dll = 'code/third-party/fluidsynth/Win32/bin/libfluidsynth-3.dll'
+fluidsynth_copies = []
+if os.path.exists(fluidsynth_dll):
+    fluidsynth_copies = [
+        env.InstallAs('#bin/libfluidsynth-3.dll', '#' + fluidsynth_dll),
+        env.InstallAs('#bin/tests/libfluidsynth-3.dll', '#' + fluidsynth_dll),
+    ]
+
 # The engine is not finished until the modules are built too.
 engine_extra = [cgame, qagame, ui_dll] + base_copies
 if build_editor:
@@ -267,7 +276,6 @@ env.Depends(wolf, engine_extra)
 
 BUILT_LIBS = {
     'doom_miniz': doom_miniz,
-    'doom_timidity': doom_timidity,
     'doom_opl': doom_opl,
     'OpenAL': OpenAL32,
     'doomed_core': doomed_core,
@@ -278,7 +286,7 @@ test_include_paths = [
     '#code',
     '#code/tools/editor',
     '#code/third-party/openal/include',
-    '#code/third-party/timidy/src',
+    '#code/third-party/fluidsynth/include',
     '#code/third-party/stb',
     '#code/third-party/miniz',
     '#code/third-party/imgui',
@@ -323,7 +331,7 @@ env.Alias('test', test_run)
 
 # --- the default target ---
 
-default_targets = [wolf] + base_copies + openal_copies
+default_targets = [wolf] + base_copies + openal_copies + fluidsynth_copies
 if build_editor:
     default_targets += [editor_dll] + aas_copies
 env.Default(default_targets)
@@ -343,5 +351,6 @@ Options:
 
 print('Config: %s, arch: %s, editor: %s' % (config, arch, build_editor))
 print('Binaries go to bin/, the build files live in build/%s/' % config)
+
 
 

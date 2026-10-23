@@ -3,12 +3,14 @@
 #include "snd_local.h"
 #include "snd_opl.h"
 #include "snd_musicmix.h"
+#include "snd_fluidsynth.h"
 #include "../openal/include/AL/al.h"
-#include "../timidy/src/timidity.h"
 #include <vector>
 namespace doomaudio {
 namespace {
-MidSong *song;
+fluid_settings_t *settings;
+fluid_synth_t *synth;
+fluid_player_t *player;
 ALuint source;
 bool synthesizer;
 char introName[MAX_QPATH], loopName[MAX_QPATH];
@@ -19,9 +21,9 @@ int loops, chunks;
 MusicMix musicMix;
 bool Load(const char *name) {
     OPLStop();
-    if (song) {
-        mid_song_free(song);
-        song = nullptr;
+    if (player) {
+        fluidsynth.delete_player(player);
+        player = nullptr;
     }
     wave = {};
     wavePosition = 0;
@@ -40,7 +42,7 @@ bool Load(const char *name) {
     }
     const auto *data = static_cast<const byte *>(bytes);
     if (length >= 4 && !memcmp(data, "MThd", 4) &&
-        Q_stricmp(Cvar_VariableString("s_musicBackend"), "timidity")) {
+        Q_stricmp(Cvar_VariableString("s_musicBackend"), "fluidsynth")) {
         void *instruments = nullptr;
         const int instrumentLength = FS_ReadFile("sound/doom/genmidi.op2", &instruments);
         const bool valid =
@@ -60,18 +62,18 @@ bool Load(const char *name) {
     if (length >= 4 && !memcmp(data, "MThd", 4) && synthesizer) {
         midi.assign(data, data + length);
         FS_FreeFile(bytes);
-        auto *stream = mid_istream_open_mem(midi.data(), midi.size());
-        MidSongOptions options{44100, MID_AUDIO_S16LSB, 2, 0, 4096, 0};
-        if (stream) {
-            song = mid_song_load(stream, &options);
-            mid_istream_close(stream);
-        }
-        if (!song) {
-            Com_Printf("TiMidity: cannot decode %s\n", name);
+        player = fluidsynth.new_player(synth);
+        if (!player || fluidsynth.player_add_mem(player, midi.data(), midi.size()) != FLUID_OK) {
+            if (player) {
+                fluidsynth.delete_player(player);
+                player = nullptr;
+            }
+            Com_Printf("FluidSynth: cannot decode %s\n", name);
             return false;
         }
-        mid_song_start(song);
-        Com_Printf("TiMidity music: %s (%u ms)\n", name, mid_song_get_total_time(song));
+        fluidsynth.player_play(player);
+        Com_Printf("FluidSynth music: %s (%d ticks)\n", name,
+                   fluidsynth.player_get_total_ticks(player));
         return true;
     }
     const bool decoded = DecodeWave(data, length, wave);
@@ -87,21 +89,45 @@ void MusicInit() {
     Cvar_Get("s_musicGain", "6", CVAR_ARCHIVE);
     Cvar_Get("s_musicBass", "4", CVAR_ARCHIVE);
     source = NewStreamSource();
-    char path[MAX_OSPATH];
-    Com_sprintf(path, sizeof(path), "%s/base/sound/timidity/timidity.cfg",
-                Cvar_VariableString("fs_basepath"));
-    synthesizer = mid_init(path) == 0;
+    if (fluidsynth.Load()) {
+        settings = fluidsynth.new_settings();
+        if (settings) {
+            fluidsynth.settings_setnum(settings, "synth.sample-rate", 44100.0);
+            // The sample clock drives the MIDI player, so rendering pulls
+            // the timeline along with the audio instead of wall time.
+            fluidsynth.settings_setstr(settings, "player.timing-source", "sample");
+        }
+        synth = settings ? fluidsynth.new_synth(settings) : nullptr;
+    }
+    if (synth) {
+        char path[MAX_OSPATH];
+        Com_sprintf(path, sizeof(path), "%s/base/sound/timidity/TimGM6mb.sf2",
+                    Cvar_VariableString("fs_basepath"));
+        if (fluidsynth.sfload(synth, path, 1) == FLUID_FAILED) {
+            Com_Printf("FluidSynth: cannot read SoundFont %s\n", path);
+        } else {
+            synthesizer = true;
+        }
+    }
     if (!synthesizer) {
-        Com_Printf("TiMidity: cannot read instrument configuration %s\n", path);
+        if (synth) {
+            fluidsynth.delete_synth(synth);
+            synth = nullptr;
+        }
+        if (settings) {
+            fluidsynth.delete_settings(settings);
+            settings = nullptr;
+        }
+        fluidsynth.Unload();
     }
 }
 void MusicStop() {
     OPLStop();
     musicMix.Reset();
     ClearStream(source);
-    if (song) {
-        mid_song_free(song);
-        song = nullptr;
+    if (player) {
+        fluidsynth.delete_player(player);
+        player = nullptr;
     }
     wave = {};
     midi.clear();
@@ -115,15 +141,21 @@ void MusicShutdown() {
         alDeleteSources(1, &source);
     }
     source = 0;
-    if (synthesizer) {
-        mid_exit();
+    if (synth) {
+        fluidsynth.delete_synth(synth);
+        synth = nullptr;
     }
+    if (settings) {
+        fluidsynth.delete_settings(settings);
+        settings = nullptr;
+    }
+    fluidsynth.Unload();
     synthesizer = false;
 }
 void MusicStart(const char *intro, const char *loop) {
     const char *repeat = loop && *loop ? loop : intro;
-    const bool wantsOPL = Q_stricmp(Cvar_VariableString("s_musicBackend"), "timidity") != 0;
-    const bool sameBackend = wantsOPL ? OPLLoaded() : song != nullptr;
+    const bool wantsOPL = Q_stricmp(Cvar_VariableString("s_musicBackend"), "fluidsynth") != 0;
+    const bool sameBackend = wantsOPL ? OPLLoaded() : player != nullptr;
     if (intro && repeat && (sameBackend || !wave.samples.empty()) && !Q_stricmp(introName, intro) &&
         !Q_stricmp(loopName, repeat)) {
         return;
@@ -146,10 +178,10 @@ void MusicInfo() {
     Com_Printf("Doom music: track=%s playing=%d queued=%d position=%u loops=%d backend=%s "
                "gain=%.1fdB bass=%.1fdB\n",
                introName, state == AL_PLAYING, queued,
-               song ? mid_song_get_time(song) : OPLPosition(), loops,
+               player ? (unsigned)fluidsynth.player_get_current_tick(player) : OPLPosition(), loops,
                OPLLoaded() ? "opl2"
-               : song      ? "timidity"
-                           : "pcm",
+               : player   ? "fluidsynth"
+                          : "pcm",
                OPLLoaded() ? Cvar_VariableValue("s_musicGain") : 0,
                OPLLoaded() ? Cvar_VariableValue("s_musicBass") : 0);
 }
@@ -163,14 +195,21 @@ void MusicUpdate(float volume) {
     alGetSourcei(source, AL_BUFFERS_PROCESSED, &processed);
     int emptyLoops = 0;
     for (int count = queued - processed;
-         count < 4 && (song || OPLLoaded() || !wave.samples.empty()); ++count) {
+         count < 4 && (player || OPLLoaded() || !wave.samples.empty()); ++count) {
         int16_t pcm[8192];
         size_t size = 0;
         int rate = 44100, channels = 2;
         if (OPLLoaded()) {
             size = OPLRender(pcm, sizeof(pcm) / (sizeof(pcm[0]) * 2)) * sizeof(pcm[0]) * 2;
-        } else if (song) {
-            size = mid_song_read_wave(song, reinterpret_cast<sint8 *>(pcm), sizeof(pcm));
+        } else if (player) {
+            if (fluidsynth.player_get_status(player) != FLUID_PLAYER_PLAYING) {
+                size = 0;
+            } else {
+                // Render interleaved stereo straight into the buffer.
+                fluidsynth.write_s16(synth, sizeof(pcm) / (sizeof(pcm[0]) * 2), pcm, 0, 2, pcm, 1,
+                                     2);
+                size = sizeof(pcm);
+            }
         } else {
             rate = wave.rate;
             channels = wave.channels;
@@ -204,7 +243,7 @@ void MusicUpdate(float volume) {
         QueuePCM(source, pcm, static_cast<int>(size), rate, channels, 2);
         ++chunks;
     }
-    if ((song || OPLLoaded() || !wave.samples.empty()) && queued > 0) {
+    if ((player || OPLLoaded() || !wave.samples.empty()) && queued > 0) {
         ALint state;
         alGetSourcei(source, AL_SOURCE_STATE, &state);
         if (state != AL_PLAYING) {

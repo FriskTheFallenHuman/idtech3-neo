@@ -4,7 +4,7 @@
 Return to Castle Wolfenstein single player GPL Source Code
 Copyright (C) 1999-2010 id Software LLC, a ZeniMax Media company. 
 
-This file is part of the Return to Castle Wolfenstein single player GPL Source Code (RTCW SP Source Code).  
+This file is part of the Return to Castle Wolfenstein single player GPL Source Code (“RTCW SP Source Code”).  
 
 RTCW SP Source Code is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -77,7 +77,7 @@ Sys_ShellExecute
 
 	Performs an operation on a specified file.
 
-	See info on ShellExecute() for details
+	See info on ShellExecute() for details.
 
 ==============
 */
@@ -644,6 +644,22 @@ void * QDECL Sys_LoadDll( const char *name, void **dllHandle, const char *entryN
 		libHandle = LoadLibrary( filename );
 		if ( libHandle ) {
 			goto found_dll;
+		}
+	}
+
+	// the build puts the modules into bin/base, next to the engine
+	{
+		char exePath[MAX_OSPATH];
+		if ( GetModuleFileName( NULL, exePath, sizeof( exePath ) ) ) {
+			char *lastSlash = strrchr( exePath, '\\' );
+			if ( lastSlash ) {
+				Com_sprintf( lastSlash + 1, sizeof( exePath ) - ( lastSlash + 1 - exePath ),
+							 "base\\%s", filename );
+				libHandle = LoadLibrary( exePath );
+				if ( libHandle ) {
+					goto found_dll;
+				}
+			}
 		}
 	}
 
@@ -1348,7 +1364,3 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 
 	// never gets here
 }
-
-
-
-

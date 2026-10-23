@@ -17,6 +17,8 @@ the folder gets renamed.
 - Put every finished binary in `bin/` at the root of the repository (engine exe, game dlls, tools).
 - Build on both Windows and Linux, in both x86 and x64.
 - Priority 1 together with the GitHub auto builds.
+- Done. The SCons build replaces CMake and CI runs it on Windows x86, saving
+  build.log every run. The Linux and x64 parts live in task 4.
 
 ## 2. Remove Q3VM, use plain C import/export
 
@@ -24,6 +26,9 @@ the folder gets renamed.
 - Delete the VM side of the game code too (vmMain entry points, syscall tables, `bg_lib.cpp`, `cg_syscalls.cpp`, `g_syscalls.cpp` and `ui_syscalls.cpp`).
 - The game, cgame and ui become normal native libraries that import engine functions and export their own, no bytecode in between, no weird enum base export/import tables.
 - This also removes the reason the engine is locked to 32-bit today.
+- Done. Each module exports one entry point (GetGameAPI, GetCGameAPI,
+  GetUIAPI) and the engine passes it a plain C import struct. The modules
+  load from bin/base, and a module restart is an unload plus a fresh load.
 
 ## 3. Botlib becomes a DLL, the parser moves into the engine
 
@@ -38,6 +43,8 @@ the folder gets renamed.
 - Fix every warning the compilers print on the way, do not just hide them.
 - Turn warnings into errors in the build once the warning count is zero.
 - The 32-bit lock exists because of the old VM, task 2 removes it.
+- Done so far: the Windows x86 build compiles warning-free with clang-cl.
+  The 64-bit builds and the Linux builds are still open.
 
 ## 5. Port Doom 3's idLib
 
@@ -66,11 +73,15 @@ the folder gets renamed.
 
 ## 9. Fetch dependencies automatically instead of bundling them
 
-- What is still bundled in `code/third-party/`: imgui, miniz, openal (the prebuilt
-  Windows package: headers, import libraries and DLLs), qclib, stb, timidy.
+- What is still bundled in `code/third-party/`: fluidsynth, imgui, miniz,
+  openal (the prebuilt Windows package: headers, import libraries and DLLs),
+  qclib, stb.
 - The build should download the dependencies it needs and compile them itself, no vendored copies lying around.
 - Keep the downloads pinned to known versions so builds stay the same over time.
-- Done so far: running scons on a non-Windows system fetches the pinned OpenAL Soft 1.23.1 sources into build/downloads/ before it stops (the build still targets Windows).
+- Done so far: running scons on a non-Windows system fetches the pinned
+  OpenAL Soft 1.23.1 and FluidSynth 2.6.1 sources into build/downloads/ before
+  it stops (the build still targets Windows). timidy is gone, FluidSynth
+  replaced it.
 
 ## 10. Replace the heavy dependencies with stb
 

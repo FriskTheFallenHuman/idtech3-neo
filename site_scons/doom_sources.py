@@ -12,7 +12,6 @@ _FOLDER_MOVES = {
     'ui/': 'game/ui/',
     'botlib/': 'game/botlib/',
     'win32/': 'sys/win32/',
-    'timidy/': 'third-party/timidy/',
 }
 
 def fix_path(path):
@@ -82,6 +81,7 @@ WOLF_EXTRA_SOURCES = fix_paths([
     'win32/win_editor.cpp',
     'sound/snd_openal.cpp',
     'sound/snd_music.cpp',
+    'sound/snd_fluidsynth.cpp',
     'sound/snd_musicmix.cpp',
     'sound/snd_wave.cpp',
     'sound/snd_stream.cpp',
@@ -316,21 +316,6 @@ OPL_SOURCES = fix_paths([
 MINIZ_SOURCES = [
     'third-party/miniz/miniz.c',
 ]
-
-TIMIDITY_SOURCES = fix_paths([
-    'timidy/src/common.c',
-    'timidy/src/instrum.c',
-    'timidy/src/mix.c',
-    'timidy/src/output.c',
-    'timidy/src/playmidi.c',
-    'timidy/src/readmidi.c',
-    'timidy/src/resample.c',
-    'timidy/src/stream.c',
-    'timidy/src/tables.c',
-    'timidy/src/timidity.c',
-    'timidy/src/readsbk.c',
-    'timidy/src/sndfont.c',
-])
 
 DMAP_SOURCES = fix_paths([
     'tools/compilers/dmap/main.cpp',
@@ -628,9 +613,12 @@ TESTS = [
     },
     {
         'name': 'doom_audio_tests',
-        'sources': ['sound/tests/audio_tests.cpp', 'sound/snd_wave.cpp'],
-        'defines': ['TIMIDITY_STATIC'],
-        'libs': ['OpenAL', 'doom_timidity'],
+        'sources': [
+            'sound/tests/audio_tests.cpp',
+            'sound/snd_fluidsynth.cpp',
+            'sound/snd_wave.cpp',
+        ],
+        'libs': ['OpenAL'],
         'syslibs': ['winmm', 'ole32', 'oleaut32'],
     },
     {
@@ -638,14 +626,14 @@ TESTS = [
         'sources': [
             'sound/tests/music_stream_tests.cpp',
             'sound/snd_music.cpp',
+            'sound/snd_fluidsynth.cpp',
             'sound/snd_musicmix.cpp',
             'sound/snd_stream.cpp',
             'sound/snd_wave.cpp',
             'game/q_shared.cpp',
             'game/q_math.cpp',
         ],
-        'defines': ['TIMIDITY_STATIC'],
-        'libs': ['OpenAL', 'doom_timidity', 'doom_opl'],
+        'libs': ['OpenAL', 'doom_opl'],
         'syslibs': ['winmm', 'ole32', 'oleaut32'],
         'sections': True,
     },
@@ -753,5 +741,6 @@ TESTS = [
         'syslibs': ['windowscodecs', 'ole32'],
     },
 ]
+
 
 

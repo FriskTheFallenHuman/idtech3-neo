@@ -40,10 +40,7 @@ LEGACY_INCLUDE_PATHS = [
     '#code/client',            # "../qcommon/x.h", "../renderer/x.h", ... from moved files
     '#code/sys',               # "win32/x.h"
     '#code/sys/win32',         # "../win32/x.h"
-    '#code/third-party',       # "timidy/src/x.h", "openal/x.h", ...
-    # The old zlib folder is gone, but the sound code still reaches timidy
-    # through "../timidy/src/x.h" relative to this include path, so it stays.
-    '#code/third-party/zlib',
+    '#code/third-party',       # "openal/x.h", "fluidsynth/x.h", ...
 ]
 
 def make_base_env(config):
@@ -142,6 +139,44 @@ def fetch_openal_soft(download_dir):
     return extracted
 
 
+def fetch_fluidsynth(download_dir):
+    """Download the FluidSynth sources for the non-Windows builds.
+
+    The vendored copy in code/third-party/fluidsynth ships the headers on
+    every system and the Windows binaries are loaded at runtime, so only the
+    non-Windows builds need the sources. They fetch the pinned 2.6.1 release
+    here. The download is skipped when it already ran once.
+    """
+    import tarfile
+    import urllib.request
+
+    version = '2.6.1'
+    extracted = os.path.join(download_dir, 'fluidsynth-' + version)
+    if os.path.isdir(extracted):
+        return extracted
+
+    os.makedirs(download_dir, exist_ok=True)
+    url = ('https://github.com/FluidSynth/fluidsynth/archive/refs/tags/'
+           'v' + version + '.tar.gz')
+    archive = os.path.join(download_dir, 'fluidsynth-' + version + '.tar.gz')
+    print('Fetching FluidSynth %s from %s' % (version, url))
+    urllib.request.urlretrieve(url, archive)
+
+    with tarfile.open(archive) as tar:
+        # Python 3.12 warns about unsafe member paths; older versions do
+        # not know the filter argument yet.
+        try:
+            tar.extractall(download_dir, filter='data')
+        except TypeError:
+            tar.extractall(download_dir)
+
+    with open(os.path.join(download_dir, 'README-fluidsynth.txt'), 'w') as f:
+        f.write('FluidSynth %s sources, fetched automatically by SCons.\n'
+                'They are used by the non-Windows builds (task 4).\n'
+                % version)
+    return extracted
+
+
 def run_tests(target, source, env):
     """Run every test program in source, called by "scons test"."""
     import subprocess
@@ -160,3 +195,4 @@ def run_tests(target, source, env):
     with open(target[0].abspath, 'w') as f:
         f.write('All tests passed.\n')
     return None
+

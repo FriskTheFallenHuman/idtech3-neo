@@ -1,8 +1,8 @@
 name: Build
 
 # Compiles the project and saves build.log as an artifact for every platform.
-# Only the Windows x86 build compiles today: the old bytecode VM locks the
-# port to 32-bit (task 2 removes it) and the build needs the MSVC tools
+# Only the Windows x86 build compiles today: the game module ABI is still
+# 32-bit (task 4 opens the 64-bit builds) and the build needs the MSVC tools
 # (other systems are task 4). The other jobs write a short note instead.
 
 on:
@@ -108,8 +108,8 @@ jobs:
           else
             {
               echo "This platform does not build yet."
-              echo "Only 32-bit builds work right now, the old bytecode VM locks the"
-              echo "port to x86. Task 2 in TODO.md removes the VM."
+              echo "Only 32-bit builds work right now, the game module ABI is"
+              echo "still 32-bit. Task 4 in TODO.md opens the 64-bit builds."
             } | tee build.log
           fi
 
@@ -120,4 +120,3 @@ jobs:
           name: build-log-${{ matrix.os }}-${{ matrix.arch }}
           path: build.log
           if-no-files-found: ignore
-

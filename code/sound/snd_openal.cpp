@@ -171,7 +171,7 @@ void MusicCommand() {
 }
 void InfoCommand() {
     Com_Printf("Doom audio: OpenAL Soft dynamic, %d sources, %d registered sounds; Doom OPL2 "
-               "and TiMidity music\n",
+               "and FluidSynth music\n",
                SourceCount, soundCount - 1);
     int playing = 0, sampleOffset = 0;
     for (const auto &voice : voices) {
@@ -595,3 +595,4 @@ void SNDDMA_Activate() {
 void S_ClearSoundBuffer(qboolean killStreaming) {
     S_ClearSounds(killStreaming, killStreaming);
 }
+

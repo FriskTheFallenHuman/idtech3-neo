@@ -4,12 +4,14 @@
 #include "../../openal/include/AL/al.h"
 #include "../../openal/include/AL/alc.h"
 #include "../../openal/include/AL/alext.h"
-#include "../../timidy/src/timidity.h"
+#include "../snd_fluidsynth.h"
 #include <algorithm>
+#include <chrono>
 #include <cstdio>
 #include <filesystem>
 #include <fstream>
 #include <stdexcept>
+#include <thread>
 #include <vector>
 namespace {
 void Check(bool condition, const char *message) {
@@ -41,36 +43,45 @@ int main() {
         Check(!doomaudio::DecodeWave(bytes.data(), 20, wave) &&
                   !doomaudio::DecodeWave(nullptr, 0, wave),
               "Truncated input rejects");
-        Check(mid_init("base/sound/timidity/timidity.cfg") == 0,
-              "TiMidity patch configuration loads");
+        auto &fs = doomaudio::fluidsynth;
+        Check(fs.Load(), "FluidSynth loads from libfluidsynth-3.dll");
+        auto *settings = fs.new_settings();
+        Check(settings && fs.settings_setnum(settings, "synth.sample-rate", 44100.0) == FLUID_OK &&
+                  fs.settings_setstr(settings, "player.timing-source", "sample") == FLUID_OK,
+              "FluidSynth settings apply");
+        auto *synth = fs.new_synth(settings);
+        Check(synth && fs.sfload(synth, "base/sound/timidity/TimGM6mb.sf2", 1) >= 0,
+              "TimGM6mb SoundFont loads");
         int scores = 0;
         for (const auto &entry : std::filesystem::directory_iterator("base/music/doom")) {
             if (entry.path().extension() != ".mid") {
                 continue;
             }
             auto midi = Read(entry.path());
-            auto *stream = mid_istream_open_mem(midi.data(), midi.size());
-            MidSongOptions options{44100, MID_AUDIO_S16LSB, 2, 0, 4096, 0};
-            auto *song = mid_song_load(stream, &options);
-            mid_istream_close(stream);
-            Check(song && mid_song_get_total_time(song) > 1000,
+            auto *player = fs.new_player(synth);
+            Check(player && fs.player_add_mem(player, midi.data(), midi.size()) == FLUID_OK &&
+                      fs.player_get_total_ticks(player) > 0,
                   "Converted MIDI parses with a valid duration");
-            mid_song_start(song);
+            Check(fs.player_play(player) == FLUID_OK, "FluidSynth playback starts");
             std::vector<int16_t> output(44100 * 2 * 3);
-            const auto count = mid_song_read_wave(song, reinterpret_cast<sint8 *>(output.data()),
-                                                  output.size() * 2);
-            Check(count > 0 && std::any_of(output.begin(), output.end(),
-                                           [](int16_t sample) { return sample != 0; }),
-                  "TiMidity produces audible PCM for every Doom score");
-            mid_song_seek(song, mid_song_get_total_time(song) - 500);
-            Check(mid_song_read_wave(song, reinterpret_cast<sint8 *>(output.data()), 4096) > 0,
-                  "TiMidity seek near track end");
-            mid_song_start(song);
-            Check(mid_song_get_time(song) == 0, "TiMidity loop restarts at beginning");
-            mid_song_free(song);
+            // The player dispatches events on the render thread's sample
+            // clock, so render in small chunks and give it time to run.
+            for (size_t offset = 0; offset < output.size() / 2; offset += 512) {
+                const int frames =
+                    static_cast<int>(std::min<size_t>(512, output.size() / 2 - offset));
+                fs.write_s16(synth, frames, output.data() + offset * 2, 0, 2,
+                              output.data() + offset * 2 + 1, 0, 2);
+                std::this_thread::sleep_for(std::chrono::milliseconds(2));
+            }
+            Check(std::any_of(output.begin(), output.end(),
+                             [](int16_t sample) { return sample != 0; }),
+                  "FluidSynth produces audible PCM for every Doom score");
+            fs.delete_player(player);
             ++scores;
         }
-        mid_exit();
+        fs.delete_synth(synth);
+        fs.delete_settings(settings);
+        fs.Unload();
         Check(scores == 32, "All original Doom scores present");
         auto *device = alcLoopbackOpenDeviceSOFT(nullptr);
         Check(device != nullptr, "Statically linked OpenAL loopback device opens");
@@ -101,7 +112,7 @@ int main() {
         alcMakeContextCurrent(nullptr);
         alcDestroyContext(context);
         alcCloseDevice(device);
-        std::printf("Audio passed: WAV bounds/PCM decoding, %d TiMidity scores/seeks/loops and "
+        std::printf("Audio passed: WAV bounds/PCM decoding, %d FluidSynth scores and "
                     "static OpenAL spatial output.\n",
                     scores);
     } catch (const std::exception &error) {
@@ -109,3 +120,4 @@ int main() {
         return 1;
     }
 }
+
