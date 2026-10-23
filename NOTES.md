@@ -25,7 +25,7 @@ them.
 - code/ - the engine and the game. The plan calls this src/, the rename is still open.
 - code/game/ - game, cgame, ui and botlib
 - code/idLib/ - idLib from Doom 3 BFG, already vendored
-- code/third-party/ - bundled dependencies (ft2, imgui, jpeg-6, libpng, openal, qclib, timidy, zlib)
+- code/third-party/ - bundled dependencies (imgui, miniz, openal, qclib, stb, timidy)
 - references/DOOM-3-BFG - Doom 3 BFG source, used as reference
 - references/doom3.gpl - Doom 3 GPL source, used for the audio system
 - bin/ - the finished binaries (Doom.exe, the game modules, toolsx86.dll, tests)
@@ -52,9 +52,13 @@ them.
   its own copy of the code tree under build/<config>/<module>/code. This way
   the same file compiled with different settings per module never collides.
 - Small files are written into build/<config>/generated while scons starts:
-  pnglibconf.h (copied from the libpng scripts), OpenAL's config.h (made from
-  config.h.in), version.h, default_hrtf.txt (the HRTF data as a hex list) and
-  compiler-exports.def for the editor.
+  OpenAL's config.h (made from config.h.in), version.h, default_hrtf.txt
+  (the HRTF data as a hex list) and compiler-exports.def for the editor.
+- miniz builds as a small static library (doom_miniz) from third-party/miniz
+  and replaces the old zlib. The unzip code in qcommon uses its inflate API.
+- Image and font work goes through the stb headers in third-party/stb:
+  stb_image decodes PNG and JPEG, stb_image_write writes the JPEG screenshots
+  and stb_truetype rasterizes the fonts. No jpeg-6, libpng, zlib or ft2 left.
 - OpenAL 1.23.1 builds as a static library straight from third-party/openal,
   with the settings the old build forced: WASAPI, WinMM and Wave backends,
   SSE2 code generation for x86, the HRTF data built in.

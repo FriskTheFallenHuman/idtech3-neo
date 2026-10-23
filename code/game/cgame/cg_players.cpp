@@ -98,6 +98,7 @@ CG_CustomSound
 */
 sfxHandle_t CG_CustomSound( int clientNum, const char *soundName ) {
 	int i;
+	clientInfo_t *ci;
 
 	if ( soundName[0] != '*' ) {
 		return trap_S_RegisterSound( soundName );
@@ -1449,6 +1450,7 @@ CG_NewClientInfo
 */
 void CG_NewClientInfo( int clientNum ) {
 	clientInfo_t newInfo;
+	clientInfo_t *ci;
 	const char  *configstring;
 	const char  *v;
 	char        *slash;
@@ -2458,6 +2460,7 @@ static void CG_PlayerAngles( centity_t *cent, vec3_t legs[3], vec3_t torso[3], v
 	float speed;
 	float clampTolerance;
 	int legsSet;
+	clientInfo_t *ci;
 	ci = &cgs.clientinfo[ cent->currentState.number ];
 
 	// special case (female zombie while climbing wall)
@@ -2653,6 +2656,7 @@ CG_BreathPuffs
 static void CG_BreathPuffs( centity_t *cent, refEntity_t *head ) {
 	vec3_t up, forward;
 	int contents;
+	clientInfo_t *ci;
 
 	vec3_t mang, morg, maxis[3]; //, mang;
 

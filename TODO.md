@@ -66,9 +66,10 @@ the folder gets renamed.
 
 ## 9. Fetch dependencies automatically instead of bundling them
 
-- Today everything is bundled in `code/third-party/` (ft2, imgui, jpeg-6, libpng, openal, timidy, zlib).
+- What is still bundled in `code/third-party/`: imgui, miniz, openal, qclib, stb, timidy.
 - The build should download the dependencies it needs and compile them itself, no vendored copies lying around.
 - Keep the downloads pinned to known versions so builds stay the same over time.
+- Done so far: running scons on a non-Windows system fetches the pinned OpenAL Soft 1.23.1 sources into build/downloads/ before it stops (the build still targets Windows).
 
 ## 10. Replace the heavy dependencies with stb
 
@@ -76,6 +77,9 @@ the folder gets renamed.
 - stb_image replaces jpeg-6 and libpng for image loading.
 - stb_truetype replaces freetype (ft2) if the font rendering allows it.
 - Only swap what can be swapped without losing features. Anything left stays on the auto-fetch list from task 9.
+- Done: jpeg-6, libpng, zlib and ft2 are gone. stb_image decodes PNG/JPEG, stb_image_write
+  encodes the JPEG screenshots, stb_truetype rasterizes the fonts and miniz backs the
+  pk3 unzip code.
 
 ## 11. Implement QuakeC and drive the game code with it
 

@@ -1,8 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// Decode through vendored libpng into the renderer's reusable image allocation.
+// Decode through vendored stb_image into the renderer's reusable image allocation.
 #include "../renderer/tr_local.h"
 #include <limits.h>
-#include <png.h>
+#include <stdlib.h>
+
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
 
 void R_LoadPNG(const char *name, byte **pic, int *width, int *height) {
     *pic = nullptr;
@@ -15,27 +18,31 @@ void R_LoadPNG(const char *name, byte **pic, int *width, int *height) {
         }
         return;
     }
-    png_image image{};
-    image.version = PNG_IMAGE_VERSION;
-    if (png_image_begin_read_from_memory(&image, file, static_cast<size_t>(length))) {
-        const uint64_t bytes = uint64_t(image.width) * image.height * 4;
-        if (image.width && image.height && image.width <= 16384 && image.height <= 16384 &&
-            bytes <= INT_MAX) {
-            image.format = PNG_FORMAT_RGBA;
-            byte *rgba = R_AllocateImagePixels(static_cast<int>(bytes));
-            if (png_image_finish_read(&image, nullptr, rgba, 0, nullptr)) {
-                *pic = rgba;
-                *width = static_cast<int>(image.width);
-                *height = static_cast<int>(image.height);
-            }
-        } else {
-            ri.Printf(PRINT_WARNING, "PNG %s has unsupported dimensions %u x %u\n", name,
-                      image.width, image.height);
-        }
+    int w = 0, h = 0, comp = 0;
+    // Check the dimensions before anything is allocated so oversized
+    // images are rejected without touching the renderer's image memory.
+    if (!stbi_info_from_memory(file, length, &w, &h, &comp) || w <= 0 || h <= 0) {
+        ri.Printf(PRINT_WARNING, "Could not decode PNG %s: not a valid PNG\n", name);
+        ri.FS_FreeFile(file);
+        return;
     }
-    if (!*pic) {
-        ri.Printf(PRINT_WARNING, "Could not decode PNG %s: %s\n", name, image.message);
+    const uint64_t bytes = uint64_t(w) * h * 4;
+    if (w > 16384 || h > 16384 || bytes > INT_MAX) {
+        ri.Printf(PRINT_WARNING, "PNG %s has unsupported dimensions %d x %d\n", name, w, h);
+        ri.FS_FreeFile(file);
+        return;
     }
-    png_image_free(&image);
+    stbi_uc *rgba = stbi_load_from_memory(file, length, &w, &h, &comp, 4);
     ri.FS_FreeFile(file);
+    if (!rgba) {
+        ri.Printf(PRINT_WARNING, "Could not decode PNG %s: %s\n", name,
+                  stbi_failure_reason());
+        return;
+    }
+    byte *pixels = R_AllocateImagePixels(static_cast<int>(bytes));
+    memcpy(pixels, rgba, static_cast<size_t>(bytes));
+    free(rgba);
+    *pic = pixels;
+    *width = w;
+    *height = h;
 }

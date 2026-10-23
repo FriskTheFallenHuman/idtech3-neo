@@ -14,6 +14,13 @@ Plain English only. Update this file as work moves forward.
 - Task 2 (Q3VM removal): the code change is done and pushed. The engine and
   the game modules now talk through plain C import and export tables. The
   first CI run after the change will show whether it compiles clean.
+- Tasks 9 and 10 (dependency replacement): jpeg-6, libpng, zlib and ft2 are
+  out of third-party. stb_image decodes PNG and JPEG in the renderer and in
+  the dmap WAD tools, stb_image_write encodes the JPEG screenshots,
+  stb_truetype rasterizes the fonts and miniz (doom_miniz) backs the pk3
+  unzip code. Running scons on a non-Windows system fetches the pinned
+  OpenAL Soft 1.23.1 sources into build/downloads/ first. Waiting on CI to
+  prove the build green after the swap.
 
 ## In progress
 

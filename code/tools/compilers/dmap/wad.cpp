@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "doommap.h"
-#include <png.h>
+
+// Texture PNGs are decoded with the vendored stb_image. The implementation
+// lives here because the dmap library is linked on its own.
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+
 
 namespace dm {
 namespace {
@@ -255,23 +260,21 @@ Image Assets::image(const std::string &name, bool flat) const {
         const auto path = sourceTextures / (lower(name) + ".png");
         if (fs::is_regular_file(path)) {
             const auto bytes = readFile(path);
-            png_image png{};
-            png.version = PNG_IMAGE_VERSION;
-            struct PngScope {
-                png_image &value;
-                ~PngScope() { png_image_free(&value); }
-            } scope{png};
-            require(png_image_begin_read_from_memory(&png, bytes.data(), bytes.size()) != 0,
-                    "Cannot read PNG " + path.string() + ": " + png.message);
-            require(png.width && png.height && png.width <= 4096 && png.height <= 4096,
-                    "PNG dimensions must be 1..4096: " + path.string());
-            png.format = PNG_FORMAT_RGBA;
+            int width = 0, height = 0, comp = 0;
+            stbi_uc *rgba =
+                stbi_load_from_memory(bytes.data(), bytes.size(), &width, &height, &comp, 4);
+            if (!rgba) {
+                require(false, "Cannot read PNG " + path.string() + ": " + stbi_failure_reason());
+            }
+            if (width <= 0 || height <= 0 || width > 4096 || height > 4096) {
+                stbi_image_free(rgba);
+                require(false, "PNG dimensions must be 1..4096: " + path.string());
+            }
             Image result;
-            result.width = static_cast<int>(png.width);
-            result.height = static_cast<int>(png.height);
-            result.pixels.resize(PNG_IMAGE_SIZE(png));
-            require(png_image_finish_read(&png, nullptr, result.pixels.data(), 0, nullptr) != 0,
-                    "Cannot decode PNG " + path.string() + ": " + png.message);
+            result.width = width;
+            result.height = height;
+            result.pixels.assign(rgba, rgba + size_t(width) * height * 4);
+            stbi_image_free(rgba);
             for (size_t i = 3; i < result.pixels.size(); i += 4) {
                 result.masked |= result.pixels[i] != 255;
             }

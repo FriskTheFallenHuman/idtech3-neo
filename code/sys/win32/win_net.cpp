@@ -526,6 +526,7 @@ void NET_OpenSocks( int port ) {
 	struct sockaddr_in address;
 	struct hostent      *h;
 	int len;
+	int err;
 	qboolean rfc1929;
 	unsigned char buf[64];
 

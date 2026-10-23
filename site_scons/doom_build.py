@@ -42,7 +42,9 @@ LEGACY_INCLUDE_PATHS = [
     '#code/sys',               # "win32/x.h"
     '#code/sys/win32',         # "../win32/x.h"
     '#code/third-party',       # "timidy/src/x.h", "openal/x.h", ...
-    '#code/third-party/zlib',  # "../timidy/src/x.h" from the sound code
+    # The old zlib folder is gone, but the sound code still reaches timidy
+    # through "../timidy/src/x.h" relative to this include path, so it stays.
+    '#code/third-party/zlib',
 ]
 
 # What the OpenAL part supports on a Windows x86 build. Anything listed in
@@ -112,11 +114,6 @@ def write_generated_files(build_root, code_dir='code'):
     generated = os.path.join(build_root, 'generated')
     os.makedirs(generated, exist_ok=True)
 
-    # libpng ships a ready made config, it only needs a plain copy.
-    shutil.copyfile(
-        os.path.join(code_dir, 'third-party', 'libpng', 'scripts', 'pnglibconf.h.prebuilt'),
-        os.path.join(generated, 'pnglibconf.h'))
-
     # OpenAL is configured by turning config.h.in into config.h.
     openal_dir = os.path.join(code_dir, 'third-party', 'openal')
     _write_openal_config(
@@ -135,6 +132,44 @@ def write_generated_files(build_root, code_dir='code'):
         f.write(text)
 
     return generated
+
+
+def fetch_openal_soft(download_dir):
+    """Download the OpenAL Soft sources for the non-Windows builds.
+
+    The vendored copy in code/third-party/openal is pinned to 1.23.1 and is
+    built straight into the engine on Windows. Other systems fetch the same
+    release here, so the sources are ready before the port actually builds
+    on them. The download is skipped when it already ran once.
+    """
+    import tarfile
+    import urllib.request
+
+    version = '1.23.1'
+    extracted = os.path.join(download_dir, 'openal-soft-' + version)
+    if os.path.isdir(extracted):
+        return extracted
+
+    os.makedirs(download_dir, exist_ok=True)
+    url = ('https://github.com/kcat/openal-soft/archive/refs/tags/'
+           + version + '.tar.gz')
+    archive = os.path.join(download_dir, 'openal-soft-' + version + '.tar.gz')
+    print('Fetching OpenAL Soft %s from %s' % (version, url))
+    urllib.request.urlretrieve(url, archive)
+
+    with tarfile.open(archive) as tar:
+        # Python 3.12 warns about unsafe member paths; older versions do
+        # not know the filter argument yet.
+        try:
+            tar.extractall(download_dir, filter='data')
+        except TypeError:
+            tar.extractall(download_dir)
+
+    with open(os.path.join(download_dir, 'README-openal-soft.txt'), 'w') as f:
+        f.write('OpenAL Soft %s sources, fetched automatically by SCons.\n'
+                'They are used by the non-Windows builds (task 4).\n'
+                % version)
+    return extracted
 
 
 def _write_openal_config(in_path, out_path):

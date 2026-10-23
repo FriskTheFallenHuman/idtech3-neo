@@ -21,6 +21,14 @@ arch = ARGUMENTS.get('arch', 'x86')
 build_editor = ARGUMENTS.get('editor', 'yes') != 'no'
 
 if os.name != 'nt':
+    # The build itself still targets Windows, but fetch the OpenAL Soft
+    # sources now so they are ready for the non-Windows port (task 4).
+    try:
+        doom_build.fetch_openal_soft(os.path.join('build', 'downloads'))
+        print('OpenAL Soft sources were fetched into build/downloads/,')
+        print('see build/downloads/README-openal-soft.txt.')
+    except Exception as error:
+        print('Could not fetch OpenAL Soft sources: %s' % error)
     print('This port builds on Windows only for now.')
     print('Building on other systems is planned, see task 4 in TODO.md.')
     Exit(1)
@@ -60,20 +68,13 @@ def module_env(name):
 
 # --- the small support libraries ---
 
-zlib_env, zlib_variant = module_env('doom_zlib')
-zlib_env.Append(CPPDEFINES=['Z_PREFIX'], CPPPATH=['#code/third-party/zlib'])
-doom_zlib = zlib_env.StaticLibrary(
-    build_target + '/doom_zlib',
-    [zlib_variant + '/' + p for p in doom_sources.ZLIB_SOURCES])
-
-png_env, png_variant = module_env('doom_png')
-png_env.Append(
-    CPPDEFINES=['Z_PREFIX'],
-    CPPPATH=['#code/third-party/libpng', '#code/third-party/zlib',
-             generated_target])
-doom_png = png_env.StaticLibrary(
-    build_target + '/doom_png',
-    [png_variant + '/' + p for p in doom_sources.PNG_SOURCES])
+# miniz replaces the old bundled zlib (and the libpng build that sat on top
+# of it). One C file, no configuration needed.
+miniz_env, miniz_variant = module_env('doom_miniz')
+miniz_env.Append(CPPPATH=['#code/third-party/miniz'])
+doom_miniz = miniz_env.StaticLibrary(
+    build_target + '/doom_miniz',
+    [miniz_variant + '/' + p for p in doom_sources.MINIZ_SOURCES])
 
 timidity_env, timidity_variant = module_env('doom_timidity')
 timidity_env.Append(
@@ -113,10 +114,9 @@ OpenAL = openal_env.StaticLibrary(
 
 renderer_env, renderer_variant = module_env('renderer')
 renderer_env.Append(
-    CPPDEFINES=['__USEA3D', '__A3D_GEOM', 'BUILD_FREETYPE'],
+    CPPDEFINES=['__USEA3D', '__A3D_GEOM'],
     CPPPATH=[
-        '#code', '#code/third-party/jpeg-6', '#code/third-party/ft2',
-        '#code/third-party/libpng', '#code/third-party/zlib',
+        '#code', '#code/third-party/stb', '#code/third-party/miniz',
         generated_target])
 renderer = renderer_env.StaticLibrary(
     build_target + '/renderer',
@@ -154,8 +154,7 @@ doomed_imgui = imgui_env.StaticLibrary(
 
 dmap_env, dmap_variant = module_env('dmap')
 dmap_env.Append(
-    CPPPATH=['#code', '#code/third-party/libpng', '#code/third-party/zlib',
-             generated_target])
+    CPPPATH=['#code', '#code/third-party/stb'])
 dmap = dmap_env.StaticLibrary(
     build_target + '/dmap',
     [dmap_variant + '/' + p for p in doom_sources.DMAP_SOURCES])
@@ -163,7 +162,7 @@ dmap = dmap_env.StaticLibrary(
 aasbuild_env, aasbuild_variant = module_env('aasbuild')
 aasbuild_env.Append(
     CPPDEFINES=['BSPC', 'strcasecmp=_stricmp'],
-    CPPPATH=['#code', '#code/third-party/zlib'])
+    CPPPATH=['#code', '#code/third-party/miniz'])
 aasbuild = aasbuild_env.StaticLibrary(
     build_target + '/aasbuild',
     [aasbuild_variant + '/' + p for p in doom_sources.AASBUILD_SOURCES])
@@ -186,8 +185,7 @@ if build_editor:
     editor_env.Append(
         CCFLAGS=['/utf-8'],
         CPPDEFINES=['WIN32_LEAN_AND_MEAN', 'WINVER=0x0A00', '_WIN32_WINNT=0x0A00'],
-        CPPPATH=['#code/tools/editor', '#code', '#code/third-party/libpng',
-                 '#code/third-party/zlib', '#code/third-party/imgui',
+        CPPPATH=['#code/tools/editor', '#code', '#code/third-party/imgui',
                  '#code/third-party/imgui/backends', generated_target])
     editor_sources = [editor_variant + '/' + p for p in
                       editor_cpp + doom_sources.EDITOR_EXTRA_SOURCES]
@@ -195,7 +193,7 @@ if build_editor:
     editor_dll = editor_env.SharedLibrary(
         '#bin/toolsx86',
         editor_sources,
-        LIBS=[doomed_core, doomed_imgui, dmap, aasbuild, doom_png, doom_zlib,
+        LIBS=[doomed_core, doomed_imgui, dmap, aasbuild, doom_miniz,
               'comdlg32', 'shell32', 'advapi32', 'windowscodecs', 'ole32',
               'dwmapi', 'winmm'])
 
@@ -249,10 +247,8 @@ wolf_env.Append(
         '#code',
         '#code/third-party/openal/include',
         '#code/third-party/timidy/src',
-        '#code/third-party/jpeg-6',
-        '#code/third-party/ft2',
-        '#code/third-party/libpng',
-        '#code/third-party/zlib',
+        '#code/third-party/stb',
+        '#code/third-party/miniz',
         generated_target])
 wolf_env['SUBSYSTEM'] = 'WINDOWS'
 # SCons hands file types it does not know to the linker, and the linker
@@ -266,7 +262,7 @@ wolf = wolf_env.Program(
     [wolf_variant + '/' + p for p in
      doom_sources.WOLF_SOURCES + doom_sources.WOLF_EXTRA_SOURCES] + [wolf_res],
     LIBS=[renderer, botlib, splines, OpenAL, doom_timidity, doom_opl,
-          doom_png, doom_zlib,
+          doom_miniz,
           'winmm', 'ole32', 'oleaut32', 'wsock32', 'user32', 'gdi32', 'shell32', 'advapi32'],
     LINKFLAGS=['/STACK:8388608', '/LARGEADDRESSAWARE'])
 
@@ -279,8 +275,7 @@ env.Depends(wolf, engine_extra)
 # --- the tests ---
 
 BUILT_LIBS = {
-    'doom_png': doom_png,
-    'doom_zlib': doom_zlib,
+    'doom_miniz': doom_miniz,
     'doom_timidity': doom_timidity,
     'doom_opl': doom_opl,
     'OpenAL': OpenAL,
@@ -293,9 +288,8 @@ test_include_paths = [
     '#code/tools/editor',
     '#code/third-party/openal/include',
     '#code/third-party/timidy/src',
-    '#code/third-party/libpng',
-    '#code/third-party/zlib',
-    '#code/third-party/jpeg-6',
+    '#code/third-party/stb',
+    '#code/third-party/miniz',
     '#code/third-party/imgui',
     '#code/third-party/imgui/backends',
     generated_target]
