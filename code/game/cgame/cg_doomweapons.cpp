@@ -252,7 +252,7 @@ void CG_DrawDoomWeapon() {
     const auto &sprite = set.frames[frame];
     if (cg_debugAnim.integer & 4) {
         CG_Printf("Doom weapon=%d state=%d anim=%d time=%d delay=%d frame=%d offset=%d ammo=%d\n",
-                  ps.weapon, ps.weaponstate, ps.weapAnim, cg.weaponTime, cg.weaponDelay, frame,
+                  ps.weapon, ps.weaponstate, ps.weapAnim, ps.weaponTime, ps.weaponDelay, frame,
                   sprite.offsetY,
                   doomweapon::Get(ps.weapon)->cost ? ps.ammo[doomweapon::Get(ps.weapon)->ammo] : 0);
     }
@@ -387,3 +387,4 @@ void CG_DoomExplosion(localEntity_t *effect) {
         Billboard(*patch, effect->refEntity.origin, true);
     }
 }
+

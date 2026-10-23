@@ -104,11 +104,11 @@ typedef struct {
 	clipHandle_t (*CM_TempCapsuleModel)( const vec3_t mins, const vec3_t maxs );
 	int (*CM_PointContents)( const vec3_t p, clipHandle_t model );
 	int (*CM_TransformedPointContents)( const vec3_t p, clipHandle_t model, const vec3_t origin, const vec3_t angles );
-	void (*CM_BoxTrace)( trace_t * results, const vec3_t * start, const vec3_t * end, const vec3_t * mins, const vec3_t * maxs, clipHandle_t model, int brushmask );
-	void (*CM_TransformedBoxTrace)( trace_t * results, const vec3_t * start, const vec3_t * end, const vec3_t * mins, const vec3_t * maxs, clipHandle_t model, int brushmask, const vec3_t * origin, const vec3_t * angles );
-	void (*CM_CapsuleTrace)( trace_t * results, const vec3_t * start, const vec3_t * end, const vec3_t * mins, const vec3_t * maxs, clipHandle_t model, int brushmask );
-	void (*CM_TransformedCapsuleTrace)( trace_t * results, const vec3_t * start, const vec3_t * end, const vec3_t * mins, const vec3_t * maxs, clipHandle_t model, int brushmask, const vec3_t * origin, const vec3_t * angles );
-	int (*CM_MarkFragments)( int numPoints, const vec3_t * points, const vec3_t * projection, int maxPoints, vec3_t pointBuffer, int maxFragments, markFragment_t * fragmentBuffer );
+	void (*CM_BoxTrace)( trace_t * results, const vec3_t start, const vec3_t end, const vec3_t mins, const vec3_t maxs, clipHandle_t model, int brushmask );
+	void (*CM_TransformedBoxTrace)( trace_t * results, const vec3_t start, const vec3_t end, const vec3_t mins, const vec3_t maxs, clipHandle_t model, int brushmask, const vec3_t origin, const vec3_t angles );
+	void (*CM_CapsuleTrace)( trace_t * results, const vec3_t start, const vec3_t end, const vec3_t mins, const vec3_t maxs, clipHandle_t model, int brushmask );
+	void (*CM_TransformedCapsuleTrace)( trace_t * results, const vec3_t start, const vec3_t end, const vec3_t mins, const vec3_t maxs, clipHandle_t model, int brushmask, const vec3_t origin, const vec3_t angles );
+	int (*CM_MarkFragments)( int numPoints, const vec3_t * points, const vec3_t projection, int maxPoints, vec3_t pointBuffer, int maxFragments, markFragment_t * fragmentBuffer );
 	void (*S_StartSound)( vec3_t origin, int entityNum, int entchannel, sfxHandle_t sfx );
 	void (*S_StartSoundEx)( vec3_t origin, int entityNum, int entchannel, sfxHandle_t sfx, int flags );
 	void (*S_StartLocalSound)( sfxHandle_t sfx, int channelNum );
@@ -217,4 +217,5 @@ typedef struct {
 //----------------------------------------------
 
 #endif
+
 

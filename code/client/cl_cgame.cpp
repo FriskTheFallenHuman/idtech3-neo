@@ -159,8 +159,7 @@ qboolean    CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot ) {
 	snapshot->ps = clSnap->ps;
 	count = clSnap->numEntities;
 	if ( count > MAX_ENTITIES_IN_SNAPSHOT ) {
-		Com_DPrintf( "CL_GetSnapshot: truncated %i entities to %i
-", count, MAX_ENTITIES_IN_SNAPSHOT );
+		Com_DPrintf( "CL_GetSnapshot: truncated %i entities to %i\n", count, MAX_ENTITIES_IN_SNAPSHOT );
 		count = MAX_ENTITIES_IN_SNAPSHOT;
 	}
 	snapshot->numEntities = count;
@@ -299,20 +298,18 @@ qboolean CL_GetServerCommand( int serverCommandNumber ) {
 	s = clc.serverCommands[ serverCommandNumber & ( MAX_RELIABLE_COMMANDS - 1 ) ];
 	clc.lastExecutedServerCommand = serverCommandNumber;
 
-	Com_DPrintf( "serverCommand: %i : %s
-", serverCommandNumber, s );
+	Com_DPrintf( "serverCommand: %i : %s\n", serverCommandNumber, s );
 
 rescan:
 	Cmd_TokenizeString( s );
 	cmd = Cmd_Argv( 0 );
 
 	if ( !strcmp( cmd, "disconnect" ) ) {
-		Com_Error( ERR_SERVERDISCONNECT,"Server disconnected
-" );
+		Com_Error( ERR_SERVERDISCONNECT,"Server disconnected\n" );
 	}
 
 	if ( !strcmp( cmd, "bcs0" ) ) {
-		Com_Sprintf( bigConfigString, BIG_INFO_STRING, "cs %s "%s", Cmd_Argv( 1 ), Cmd_Argv( 2 ) );
+		Com_Sprintf( bigConfigString, BIG_INFO_STRING, "cs %s \"%s", Cmd_Argv( 1 ), Cmd_Argv( 2 ) );
 		return qfalse;
 	}
 
@@ -331,7 +328,7 @@ rescan:
 			Com_Error( ERR_DROP, "bcs exceeded BIG_INFO_STRING" );
 		}
 		strcat( bigConfigString, s );
-		strcat( bigConfigString, """ );
+		strcat( bigConfigString, "\"" );
 		s = bigConfigString;
 		goto rescan;
 	}
@@ -376,8 +373,7 @@ rescan:
 		// close the console
 		Con_Close();
 		// take a special screenshot next frame
-		Cbuf_AddText( "wait ; wait ; wait ; wait ; screenshot levelshot
-" );
+		Cbuf_AddText( "wait ; wait ; wait ; wait ; screenshot levelshot\n" );
 		return qtrue;
 	}
 
@@ -1280,7 +1276,7 @@ void CL_AdjustTimeDelta( void ) {
 	}
 
 	if ( cl_showTimeDelta->integer ) {
-		Com_Printf( "%i ", cl.serverTime );
+		Com_Printf( "%i ", cl.serverTimeDelta );
 	}
 }
 
@@ -1451,4 +1447,5 @@ qboolean CL_GetTag( int clientNum, char *tagname, orientation_t *or ) {
 
 	return cgameExport->GetTag( clientNum, tagname, or );
 }
+
 
