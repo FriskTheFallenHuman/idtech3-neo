@@ -309,7 +309,7 @@ rescan:
 	}
 
 	if ( !strcmp( cmd, "bcs0" ) ) {
-		Com_Sprintf( bigConfigString, BIG_INFO_STRING, "cs %s \"%s", Cmd_Argv( 1 ), Cmd_Argv( 2 ) );
+		Com_sprintf( bigConfigString, BIG_INFO_STRING, "cs %s \"%s", Cmd_Argv( 1 ), Cmd_Argv( 2 ) );
 		return qfalse;
 	}
 
