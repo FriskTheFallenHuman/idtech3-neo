@@ -1024,15 +1024,13 @@ side_t *SelectSplitSide( bspbrush_t *brushes, node_t *node ) {
 	//int			j;
 	int pnum;
 	int s;
-	int front, back, both, facing, splits;
+	int front, back, facing, splits;
 	int bsplits;
-	int bestsplits;
 	int epsilonbrush;
 	qboolean hintsplit = false;
 
 	bestside = NULL;
 	bestvalue = -99999;
-	bestsplits = 0;
 
 	// the search order goes: visible-structural, visible-detail,
 	// nonvisible-structural, nonvisible-detail.
@@ -1082,7 +1080,6 @@ side_t *SelectSplitSide( bspbrush_t *brushes, node_t *node ) {
                 }
                 front = 0;
 				back = 0;
-				both = 0;
 				facing = 0;
 				splits = 0;
 				epsilonbrush = 0;
@@ -1107,9 +1104,6 @@ side_t *SelectSplitSide( bspbrush_t *brushes, node_t *node ) {
 					if ( s & PSIDE_BACK ) {
 						back++;
 					}
-					if ( s == PSIDE_BOTH ) {
-						both++;
-					}
 				} //end for
 
 				// give a value estimate for using this plane
@@ -1133,7 +1127,6 @@ side_t *SelectSplitSide( bspbrush_t *brushes, node_t *node ) {
 				if ( value > bestvalue ) {
 					bestvalue = value;
 					bestside = side;
-					bestsplits = splits;
 					for ( test = brushes; test ; test = test->next )
 						test->side = test->testside;
 				} //end if
@@ -1924,5 +1917,6 @@ tree_t *BrushBSP( bspbrush_t *brushlist, vec3_t mins, vec3_t maxs ) {
   */
 	return tree;
 } //end of the function BrushBSP
+
 
 

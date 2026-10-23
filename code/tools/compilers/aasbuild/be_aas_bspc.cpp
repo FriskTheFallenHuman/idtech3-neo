@@ -165,7 +165,7 @@ void BotImport_Print( int type, char *fmt, ... ) {
 
 	va_start( argptr, fmt );
 	vsnprintf(buf, sizeof(buf), fmt, argptr);
-	printf( buf );
+	printf( "%s", buf );
 	if ( buf[0] != '\r' ) {
 		Log_Write( buf );
 	}
@@ -217,7 +217,7 @@ void Com_DPrintf(const char *fmt, ...) {
 
 	va_start( argptr, fmt );
 	vsnprintf(buf, sizeof(buf), fmt, argptr);
-	printf( buf );
+	printf( "%s", buf );
 	if ( buf[0] != '\r' ) {
 		Log_Write( buf );
 	}
@@ -312,4 +312,5 @@ void AAS_SetWorldPointer( aas_t *newaasworld ) {
 	aasworld = newaasworld;
 }
 // done.
+
 

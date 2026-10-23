@@ -292,11 +292,11 @@ int Q1_SolidTree_r( int nodenum ) {
 		case Q1_CONTENTS_SOLID:
 #ifdef HLCONTENTS
 		case Q1_CONTENTS_CLIP:
-#endif HLCONTENTS
+#endif // HLCONTENTS
 		case Q1_CONTENTS_SKY:
 #ifdef HLCONTENTS
 		case Q1_CONTENTS_TRANSLUCENT:
-#endif HLCONTENTS
+#endif // HLCONTENTS
 			{
 				return true;
 			} //end case
@@ -312,7 +312,7 @@ int Q1_SolidTree_r( int nodenum ) {
 		case Q1_CONTENTS_CURRENT_270:
 		case Q1_CONTENTS_CURRENT_UP:
 		case Q1_CONTENTS_CURRENT_DOWN:
-#endif HLCONTENTS
+#endif // HLCONTENTS
 		default:
 		{
 			return false;
@@ -357,11 +357,11 @@ bspbrush_t *Q1_CreateBrushes_r( bspbrush_t *brush, int nodenum ) {
 		case Q1_CONTENTS_SOLID:
 #ifdef HLCONTENTS
 		case Q1_CONTENTS_CLIP:
-#endif HLCONTENTS
+#endif // HLCONTENTS
 		case Q1_CONTENTS_SKY:
 #ifdef HLCONTENTS
 		case Q1_CONTENTS_TRANSLUCENT:
-#endif HLCONTENTS
+#endif // HLCONTENTS
 			{
 				brush->side = CONTENTS_SOLID;
 				return brush;
@@ -394,7 +394,7 @@ bspbrush_t *Q1_CreateBrushes_r( bspbrush_t *brush, int nodenum ) {
 			Error( "Q1_CreateBrushes_r: found contents %d in Half-Life BSP", leaf->contents );
 			return NULL;
 		}     //end case
-#endif HLCONTENTS
+#endif // HLCONTENTS
 		default:
 		{
 			Error( "Q1_CreateBrushes_r: unknown contents %d in Half-Life BSP", leaf->contents );
@@ -1203,3 +1203,4 @@ void Q1_LoadMapFromBSP( char *filename, int offset, int length ) {
 	qprintf( "%5d map brushes\n", nummapbrushes );
 	qprintf( "%5d clip brushes\n", q1_numclipbrushes );
 } //end of the function Q1_LoadMapFromBSP
+

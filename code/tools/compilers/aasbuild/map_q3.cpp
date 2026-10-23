@@ -440,10 +440,7 @@ void Q3_ParseBSPBrushes( entity_t *mapent ) {
 qboolean Q3_ParseBSPEntity( int entnum ) {
 	entity_t *mapent;
 	char *model;
-	int startbrush, startsides;
 
-	startbrush = nummapbrushes;
-	startsides = nummapbrushsides;
 
 	mapent = &entities[entnum]; //num_entities];
 	mapent->firstbrush = nummapbrushes;
@@ -728,5 +725,6 @@ void Q3_ResetMapLoading( void ) {
 	nodestacksize = 0;
 	memset( brushmodelnumbers, 0, MAX_MAPFILE_BRUSHES * sizeof( int ) );
 } //end of the function Q3_ResetMapLoading
+
 
 

@@ -91,7 +91,7 @@ ID_INLINE mat3_t::mat3_t() {
 }
 
 ID_INLINE mat3_t::mat3_t( float src[ 3 ][ 3 ] ) {
-	memcpy( mat, src, sizeof( src ) );
+	memcpy( mat, src, sizeof( mat ) );
 }
 
 ID_INLINE mat3_t::mat3_t( idVec3 const &x, idVec3 const &y, idVec3 const &z ) {
@@ -228,3 +228,4 @@ ID_INLINE mat3_t SkewSymmetric( idVec3 const &src ) {
 extern mat3_t mat3_default;
 
 #endif /* !__MATH_MATRIX_H__ */
+

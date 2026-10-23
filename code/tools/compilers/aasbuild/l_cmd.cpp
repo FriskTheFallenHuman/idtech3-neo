@@ -296,7 +296,7 @@ char *ExpandArg( char *path ) {
 
 char *ExpandPath( char *path ) {
 	static char full[1024];
-	if ( !qdir ) {
+	if ( !qdir[0] ) {
 		Error( "ExpandPath called without qdir set" );
 	}
 	if ( path[0] == '/' || path[0] == '\\' || path[1] == ':' ) {
@@ -1163,3 +1163,4 @@ int FS_FOpenFileRead( const char *filename, FILE **file, qboolean uniqueFILE ) {
 	*file = compilerOpenFile( filename, "rb" );
 	return ( *file != NULL );
 } //end of the function FS_FOpenFileRead
+

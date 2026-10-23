@@ -365,7 +365,7 @@ void AAS_CheckArea( tmp_area_t *tmparea ) {
 			Log_Write( "AAS_CheckArea: area %d face %d: %s\r\n", tmparea->areanum,
 					   face->num, WindingErrorString() );
 		} //end if
-#endif L_DEBUG
+#endif // L_DEBUG
 
 		plane = &mapplanes[face->planenum ^ side];
 
@@ -384,7 +384,7 @@ void AAS_CheckArea( tmp_area_t *tmparea ) {
 			Log_Write( "AAS_CheckArea: area %d face %d winding plane unequal to face plane\r\n",
 					   tmparea->areanum, face->num );
 		} //end if
-#endif L_DEBUG
+#endif // L_DEBUG
 	} //end for
 } //end of the function AAS_CheckArea
 //===========================================================================
@@ -591,14 +591,17 @@ void AAS_RemoveTinyFaces( void ) {
 // Changes Globals:		-
 //===========================================================================
 void AAS_CreateAreaSettings( void ) {
-	int i, flags, side, numgrounded, numladderareas, numliquidareas;
+	int i, flags, side;
 	tmp_face_t *face;
 	tmp_area_t *tmparea;
 	int count;
+#ifdef AASINFO
+	int numgrounded, numladderareas, numliquidareas;
 
 	numgrounded = 0;
 	numladderareas = 0;
 	numliquidareas = 0;
+#endif
 	Log_Write( "AAS_CreateAreaSettings\r\n" );
 	i = 0;
 	qprintf( "%6d areas provided with settings", i );
@@ -635,17 +638,23 @@ void AAS_CreateAreaSettings( void ) {
 		tmparea->settings->areaflags = 0;
 		if ( flags & FACE_GROUND ) {
 			tmparea->settings->areaflags |= AREA_GROUNDED;
+#ifdef AASINFO
 			numgrounded++;
+#endif
 		} //end if
 		if ( flags & FACE_LADDER ) {
 			tmparea->settings->areaflags |= AREA_LADDER;
+#ifdef AASINFO
 			numladderareas++;
+#endif
 		} //end if
 		if ( tmparea->contents & ( AREACONTENTS_WATER |
 								   AREACONTENTS_SLIME |
 								   AREACONTENTS_LAVA ) ) {
 			tmparea->settings->areaflags |= AREA_LIQUID;
+#ifdef AASINFO
 			numliquidareas++;
+#endif
 		} //end if
 		  //presence type of the area
 		tmparea->settings->presencetype = tmparea->presencetype;
@@ -669,7 +678,6 @@ void AAS_CreateAreaSettings( void ) {
 //portal_t *globalPortalDebug;
 tmp_node_t *AAS_CreateArea( node_t *node ) {
 	int pside;
-	int areafaceflags;
 	portal_t    *p;
 	tmp_face_t *tmpface;
 	tmp_area_t *tmparea;
@@ -679,8 +687,6 @@ tmp_node_t *AAS_CreateArea( node_t *node ) {
 	//create an area from this leaf
 	tmparea = AAS_AllocTmpArea();
 	tmparea->tmpfaces = NULL;
-	//clear the area face flags
-	areafaceflags = 0;
 	//make aas faces from the portals
 	for ( p = node->portals; p; p = p->next[pside] )
 	{
@@ -739,7 +745,6 @@ tmp_node_t *AAS_CreateArea( node_t *node ) {
 				tmpface->faceflags |= FACE_GROUND;
 			} //end if
 			  //
-			areafaceflags |= tmpface->faceflags;
 			//no aas face number yet (zero is a dummy in the aasworld faces)
 			tmpface->aasfacenum = 0;
 			//add the front side of the face to the area
@@ -1178,4 +1183,5 @@ void AAS_Create( char *aasfile ) {
 	//display creation time
 	Log_Print( "\nAAS created in %5.0f seconds\n", I_FloatTime() - start_time );
 } //end of the function AAS_Create
+
 

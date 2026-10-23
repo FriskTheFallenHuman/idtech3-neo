@@ -569,8 +569,6 @@ bspbrush_t *MakeBspBrushList( int startbrush, int endbrush,
 	mapbrush_t  *mb;
 	bspbrush_t  *brushlist, *newbrush;
 	int i, j;
-	int c_faces;
-	int c_brushes;
 	int numsides;
 	int vis;
 	vec3_t normal;
@@ -587,8 +585,6 @@ bspbrush_t *MakeBspBrushList( int startbrush, int endbrush,
 	}
 
 	brushlist = NULL;
-	c_faces = 0;
-	c_brushes = 0;
 
 	for ( i = startbrush ; i < endbrush ; i++ )
 	{
@@ -647,8 +643,6 @@ bspbrush_t *MakeBspBrushList( int startbrush, int endbrush,
 			continue;
 		}
 
-		c_faces += vis;
-		c_brushes++;
 
 		newbrush->next = brushlist;
 		brushlist = newbrush;
@@ -1051,3 +1045,4 @@ tree_t *ProcessWorldBrushes( int brush_start, int brush_end ) {
 	  //return the tree
 	return tree;
 } //end of the function ProcessWorldBrushes
+

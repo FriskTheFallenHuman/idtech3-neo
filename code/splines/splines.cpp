@@ -1145,6 +1145,7 @@ void idFixedPosition::parse( const char *( *text )  ) {
 				idCameraPosition::parseToken( key.c_str(), text );
 			}
 			token = Com_Parse( text );
+			(void)token;
 
 		} while ( 1 );
 
@@ -1193,6 +1194,7 @@ void idInterpolatedPosition::parse( const char *( *text )  ) {
 				idCameraPosition::parseToken( key.c_str(), text );
 			}
 			token = Com_Parse( text );
+			(void)token;
 
 		} while ( 1 );
 
@@ -1238,6 +1240,7 @@ void idSplinePosition::parse( const char *( *text )  ) {
 				idCameraPosition::parseToken( key.c_str(), text );
 			}
 			token = Com_Parse( text );
+			(void)token;
 
 		} while ( 1 );
 
@@ -1414,6 +1417,7 @@ const idVec3 *idSplinePosition::getPosition( long t ) {
 	return &interpolatedPos;
 
 }
+
 
 
 

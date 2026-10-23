@@ -1079,7 +1079,7 @@ void Sin_BSPBrushToMapBrush( sin_dbrush_t *bspbrush, entity_t *mapent ) {
 //===========================================================================
 //===========================================================================
 void Sin_ParseBSPBrushes( entity_t *mapent ) {
-	int i, testnum = 0;
+	int i;
 
 	//give all the brushes that belong to this entity the number of the
 	//BSP model used by this entity
@@ -1088,7 +1088,6 @@ void Sin_ParseBSPBrushes( entity_t *mapent ) {
 	for ( i = 0; i < sin_numbrushes; i++ )
 	{
 		if ( brushmodelnumbers[i] == mapent->modelnum ) {
-			testnum++;
 			Sin_BSPBrushToMapBrush( &sin_dbrushes[i], mapent );
 		} //end if
 	} //end for
@@ -1098,10 +1097,7 @@ void Sin_ParseBSPBrushes( entity_t *mapent ) {
 qboolean Sin_ParseBSPEntity( int entnum ) {
 	entity_t    *mapent;
 	char *model;
-	int startbrush, startsides;
 
-	startbrush = nummapbrushes;
-	startsides = nummapbrushsides;
 
 	mapent = &entities[entnum]; //num_entities];
 	mapent->firstbrush = nummapbrushes;
@@ -1199,3 +1195,4 @@ void Sin_ResetMapLoading( void ) {
 //End MAP loading from BSP file
 
 #endif //ME
+

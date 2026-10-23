@@ -442,6 +442,8 @@ void idStr::snprintf
 	va_end( argptr );
 
 	assert( len < size );
+	// the assert is empty in release builds, so len would be unused otherwise
+	(void) len;
 
 	strncpy( dst, buffer, size - 1 );
 }
@@ -563,9 +565,16 @@ void TestStringClass
 	a = b;
 
 	a[1] = '1';                 // a.data = "t1st", b.data = "test"
+
+	// these variables only document the expected results, mark them used
+	(void)ch;
+	(void)i;
+	(void)s1;
+	(void)s2;
 }
 
 #ifdef _WIN32
 #pragma warning(default : 4189) // local variable is initialized but not referenced
 #pragma warning(disable : 4514) // unreferenced inline function has been removed
 #endif
+

@@ -1654,7 +1654,6 @@ int PC_EvaluateTokens( source_t *source, token_t *tokens, signed long int *intva
 	int questmarkintvalue = 0;
 	double questmarkfloatvalue = 0;
 	int gotquestmarkvalue = qfalse;
-	int lastoperatortype = 0;
 	//
 	operator_t operator_heap[MAX_OPERATORS];
 	int numoperators = 0;
@@ -2042,7 +2041,6 @@ int PC_EvaluateTokens( source_t *source, token_t *tokens, signed long int *intva
 		if ( error ) {
 			break;
 		}
-		lastoperatortype = o->operator_value;
 		//if not an operator with arity 1
 		if ( o->operator_value != P_LOGIC_NOT
 			 && o->operator_value != P_BIN_NOT ) {
@@ -2434,7 +2432,7 @@ int PC_Directive_eval( source_t *source ) {
 	token.whitespace_p = source->scriptstack->script_p;
 	token.endwhitespace_p = source->scriptstack->script_p;
 	token.linescrossed = 0;
-	sprintf( token.string, "%d", abs( value ) );
+	sprintf( token.string, "%ld", labs( value ) );
 	token.type = TT_NUMBER;
 	token.subtype = TT_INTEGER | TT_LONG | TT_DECIMAL;
 	PC_UnreadSourceToken( source, &token );
@@ -2540,7 +2538,7 @@ int PC_DollarDirective_evalint( source_t *source ) {
 	token.whitespace_p = source->scriptstack->script_p;
 	token.endwhitespace_p = source->scriptstack->script_p;
 	token.linescrossed = 0;
-	sprintf( token.string, "%d", abs( value ) );
+	sprintf( token.string, "%ld", labs( value ) );
 	token.type = TT_NUMBER;
 	token.subtype = TT_INTEGER | TT_LONG | TT_DECIMAL;
 #ifdef NUMBERVALUE
@@ -3228,3 +3226,4 @@ void PC_CheckOpenSourceHandles( void ) {
 		} //end if
 	} //end for
 } //end of the function PC_CheckOpenSourceHandles
+

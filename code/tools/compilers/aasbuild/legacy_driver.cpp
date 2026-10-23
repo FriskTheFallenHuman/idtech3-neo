@@ -573,10 +573,6 @@ int AasBuildLegacyMain(int argc, char **argv) {
 	char filename[MAX_PATH] = "unknown";
 	quakefile_t *qfiles = NULL, *qf; // TTimo: init
 
-	// Ridah, allow to specify an extension for multiple AAS files per map
-	int has_ext = 0;
-	// done.
-
 	// Ridah, set the world pointer up for reachabilities
 	aasworld = aasworlds;
 	AAS_SetWorldPointer( &( *aasworld ) );
@@ -810,7 +806,6 @@ int AasBuildLegacyMain(int argc, char **argv) {
 				i = 0; break;
 			}
 			strcpy( aas_extension, argv[++i] );
-			has_ext = 1;
 
 		} //end else if
 		  // done.
@@ -1117,4 +1112,5 @@ int AasBuildLegacyMain(int argc, char **argv) {
 	Log_Close();                        //close the log file
 	return 0;
 } //end of the function main
+
 
