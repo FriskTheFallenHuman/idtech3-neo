@@ -6,18 +6,16 @@ Plain English only. Update this file as work moves forward.
 ## Working on right now
 
 - Task 2 (Q3VM removal): done. The engine and the game modules talk through
-  plain C import and export tables (GetGameAPI, GetCGameAPI, GetUIAPI), CI
-  compiles everything and the only build error left is the sound swap below.
+  plain C import and export tables (GetGameAPI, GetCGameAPI, GetUIAPI) and
+  CI compiles everything warning-free.
 - FluidSynth swap: TiMidity is out and FluidSynth 2.6.1 replaces it. The
   engine loads libfluidsynth-3.dll at runtime through GetProcAddress, so the
   DLL is optional and the engine still boots without it (OPL2 and PCM music
   keep working). The SoundFont is base/sound/timidity/TimGM6mb.sf2 and the
-  MIDI backend cvar value is "fluidsynth" now. Waiting on CI to prove the
-  build green.
+  MIDI backend cvar value is "fluidsynth" now. The CI build is green with
+  no warnings.
 - bin/base layout: the game modules and the aas profiles are copied into
-  bin/base only, no longer into the repository base/. Sys_LoadDll searches
-  the exe folder's base directory, so bin/Doom.exe finds the modules next to
-  itself.
+  bin/base, no longer into the repository base/.
 
 ## In progress
 
@@ -35,7 +33,8 @@ Plain English only. Update this file as work moves forward.
   - clang-cl is the preferred compiler, plain MSVC is the fallback. Windows
     x86 only for now (the game module ABI is still 32-bit, see task 4).
   - "scons tests" builds the tests, "scons test" runs them.
-  - What is missing: a green build after the FluidSynth swap.
+  - The CI build is green after the FluidSynth swap, with no warnings.
+    What is left is opening the other platforms (task 4).
 
 - Task 4 (warnings): the Windows x86 build compiles warning-free with
   clang-cl. The 64-bit and Linux builds are still open.
