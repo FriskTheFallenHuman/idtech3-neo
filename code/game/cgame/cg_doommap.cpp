@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "cg_local.h"
 #include "cg_doommap.h"
+#include "cg_doomhud.h"
 #include "../qcommon/doom_bsp.h"
 #include <cstdlib>
 #include <initializer_list>
@@ -12,13 +13,13 @@ dbsp::Side sides[MaxSides];
 dbsp::Sector sectors[MaxSectors];
 byte discovered[MaxLines], pixels[256 * 256 * 4];
 int lineCount, nextUpdate;
-float centerX, centerY, scale;
+float centerX, centerY, scaleX, scaleY, mapWidth, mapHeight;
 
 void Line(float ax, float ay, float bx, float by, byte red, byte green, byte blue) {
-    int x = static_cast<int>(128 + (ax - centerX) * scale);
-    int y = static_cast<int>(128 - (ay - centerY) * scale);
-    const int endX = static_cast<int>(128 + (bx - centerX) * scale);
-    const int endY = static_cast<int>(128 - (by - centerY) * scale);
+    int x = static_cast<int>(128 + (ax - centerX) * scaleX);
+    int y = static_cast<int>(128 - (ay - centerY) * scaleY);
+    const int endX = static_cast<int>(128 + (bx - centerX) * scaleX);
+    const int endY = static_cast<int>(128 - (by - centerY) * scaleY);
     const int dx = abs(endX - x), dy = -abs(endY - y);
     const int sx = x < endX ? 1 : -1, sy = y < endY ? 1 : -1;
     int error = dx + dy;
@@ -96,7 +97,8 @@ void CG_DoomMapInit() {
     }
     centerX = (left + right) * 0.5f;
     centerY = (bottom + top) * 0.5f;
-    scale = 240.0f / max(1.0f, max(right - left, top - bottom));
+    mapWidth = max(1.0f, right - left);
+    mapHeight = max(1.0f, top - bottom);
 }
 void CG_DoomMapUpdate() {
     if (!cg.snap || !cg.snap->ps.stats[STAT_DOOM_WEAPONS] || cg.time < nextUpdate) {
@@ -122,10 +124,29 @@ void CG_DoomMapUpdate() {
         }
     }
 }
-void CG_DrawDoomMap() {
+qboolean CG_DoomMapVisible() {
     if (!cg.showScores || !cg.snap || !cg.snap->ps.stats[STAT_DOOM_WEAPONS] || !lineCount) {
+        return qfalse;
+    }
+    return qtrue;
+}
+void CG_DrawDoomMap() {
+    if (!CG_DoomMapVisible()) {
         return;
     }
+    const int viewWidth = cgs.glconfig.vidWidth;
+    const int viewHeight =
+        cgs.glconfig.vidHeight - (CG_DoomHudVisible() ? CG_DoomHudHeight() : 0);
+    if (viewWidth <= 0 || viewHeight <= 0) {
+        return;
+    }
+    // The original automap covers the whole view area above the status bar and
+    // keeps Doom's 1.2 horizontal stretch of its 4:3 display.
+    const float pixelsPerUnitY =
+        0.97f * min(viewHeight / mapHeight, viewWidth / (mapWidth * 1.2f));
+    const float pixelsPerUnitX = pixelsPerUnitY * 1.2f;
+    scaleX = 256.0f * pixelsPerUnitX / viewWidth;
+    scaleY = 256.0f * pixelsPerUnitY / viewHeight;
     memset(pixels, 0, sizeof(pixels));
     for (int i = 0; i < 256 * 256; ++i) {
         pixels[i * 4 + 3] = 255;
@@ -154,12 +175,11 @@ void CG_DrawDoomMap() {
     const auto &ps = cg.predictedPlayerState;
     vec3_t forward, right;
     AngleVectors(ps.viewangles, forward, right, nullptr);
-    const float size = 4.0f / scale;
+    const float sizeX = 10.0f / pixelsPerUnitX, sizeY = 10.0f / pixelsPerUnitY;
     for (int side : {-1, 1}) {
-        Line(ps.origin[0] + forward[0] * size, ps.origin[1] + forward[1] * size,
-             ps.origin[0] - forward[0] * size + right[0] * size * side,
-             ps.origin[1] - forward[1] * size + right[1] * size * side, 255, 255, 255);
+        Line(ps.origin[0] + forward[0] * sizeX, ps.origin[1] + forward[1] * sizeY,
+             ps.origin[0] - forward[0] * sizeX + right[0] * sizeX * side,
+             ps.origin[1] - forward[1] * sizeY + right[1] * sizeY * side, 255, 255, 255);
     }
-    const int sizePixels = static_cast<int>(cgs.glconfig.vidHeight * 0.82f);
-    trap_R_DrawDoomMap((cgs.glconfig.vidWidth - sizePixels) / 2, 0, sizePixels, pixels);
+    trap_R_DrawDoomMap(0, 0, viewWidth, viewHeight, pixels);
 }
