@@ -36,12 +36,12 @@ if os.name != 'nt':
     except Exception as error:
         print('Could not fetch FluidSynth sources: %s' % error)
     print('This port builds on Windows only for now.')
-    print('Building on other systems is planned, see task 4 in TODO.md.')
+    print('Building on other systems is planned, see task 12 in TODO.md.')
     Exit(1)
 
 if arch != 'x86':
     print('Only x86 builds work right now. The game module ABI is still')
-    print('32-bit. Task 4 in TODO.md opens the door to 64-bit.')
+    print('32-bit. Task 12 in TODO.md opens the door to 64-bit.')
     Exit(1)
 
 if config not in ('debug', 'release'):

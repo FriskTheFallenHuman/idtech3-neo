@@ -31,6 +31,8 @@ running on the id Tech 3 branch that Enemy Territory uses.
 11. Implement QuakeC (vendored in third-party/qclib) and drive most of the game
     code through it. It must work for cgame, game, ui and botlib modules, and it
     must only live inside those modules or be loaded dynamically.
+12. Open the x64 and Linux builds: the engine compiles and runs on Windows x86
+    only today.
 
 ## Repository layout
 
@@ -53,6 +55,7 @@ running on the id Tech 3 branch that Enemy Territory uses.
 
 ## Priority order
 
-1. GitHub auto builds + SCons.
-2. Auto download and replacement of dependencies.
+1. Auto download and replacement of dependencies.
+2. Botlib as a DLL.
 3. Removal of C style code, full C++ plus idLib (GPLv3 compatible).
+4. The x64 and Linux builds.

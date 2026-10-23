@@ -10,9 +10,9 @@ sits a port of classic Doom (by Justin Marshall): a modified q3map (now DoomMap)
 reads Doom dwd map files and builds Quake 3 BSPs, and the game boots into a
 shareware demo mode until a doom.wad is placed in base/wad/.
 
-The build is SCons (task 1). It builds on Windows only for now (task 4 opens
+The build is SCons (task 1). It builds on Windows only for now (task 12 opens
 other systems), with clang-cl when it is in the PATH and plain MSVC as the
-fallback, and 32-bit only: the game module ABI is still 32-bit until task 4
+fallback, and 32-bit only: the game module ABI is still 32-bit until task 12
 does the 64-bit work (the old bytecode VM that also forced this is gone,
 task 2 removed it). The engine executable is Doom.exe (the
 old CMake target was "wolf"). Everything the build makes lands in bin/ at the
@@ -119,17 +119,17 @@ the exe folder's base directory.
 ## What each task means in practice
 
 1. SCons: done. The SConstruct is at the root, the CMake files are removed
-   and CI builds Windows x86. The Linux and x64 parts live in task 4.
+   and CI builds Windows x86. The Linux and x64 parts live in task 12.
 2. Q3VM: done. The VM code is deleted and the modules use the import/export
    structs described above. The 32-bit lock from the VM is gone; what is
-   left is the module ABI itself, which task 4 handles.
+   left is the module ABI itself, which task 12 handles.
 3. Botlib: code/game/botlib is a static library linked into the engine today. The
    parser side is l_script, l_precomp and l_struct (the l_ prefix files). Those
    move into the engine, everything else becomes a DLL the engine loads. The
    engine's bot import table (EA, AI functions) becomes the DLL boundary.
-4. Warnings: gcc/clang on Linux, clang on Windows. Fix warnings for real, then
-   switch the build to warnings-as-errors. The Windows x86 build is
-   warning-free now.
+4. Warnings: done on Windows x86, the build is warning-free with clang-cl
+   and CI keeps it that way. The Linux side and the warnings-as-errors
+   switch are task 12.
 5. idLib: already vendored in code/idLib (BFG edition, GPLv3). id Software started
    hooking it into their RTCW branch and reverted it because they ran out of
    time, so the port is finishable from their known direction. Start with the
@@ -151,6 +151,9 @@ the exe folder's base directory.
 11. QuakeC: code/third-party/qclib is the FTE QuakeWorld library. It gets implemented
     and then drives cgame, game, ui and botlib. It only lives inside those
     modules and is loaded dynamically, never inside the engine.
+12. x64 and Linux: the engine compiles and runs on Windows x86 only today. This
+    task opens the 64-bit builds and the Linux builds, the game module ABI
+    included, and turns warnings into errors once every platform is clean.
 
 ## Licenses, short version
 

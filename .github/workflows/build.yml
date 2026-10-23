@@ -2,8 +2,8 @@ name: Build
 
 # Compiles the project and saves build.log as an artifact for every platform.
 # Only the Windows x86 build compiles today: the game module ABI is still
-# 32-bit (task 4 opens the 64-bit builds) and the build needs the MSVC tools
-# (other systems are task 4). The other jobs write a short note instead.
+# 32-bit (task 12 opens the 64-bit builds) and the build needs the MSVC tools
+# (other systems are task 12). The other jobs write a short note instead.
 
 on:
   push:
@@ -103,13 +103,13 @@ jobs:
           if [ "${{ runner.os }}" != "Windows" ]; then
             {
               echo "This platform does not build yet."
-              echo "The port builds on Windows only for now, see task 4 in TODO.md."
+              echo "The port builds on Windows only for now, see task 12 in TODO.md."
             } | tee build.log
           else
             {
               echo "This platform does not build yet."
               echo "Only 32-bit builds work right now, the game module ABI is"
-              echo "still 32-bit. Task 4 in TODO.md opens the 64-bit builds."
+              echo "still 32-bit. Task 12 in TODO.md opens the 64-bit builds."
             } | tee build.log
           fi
 

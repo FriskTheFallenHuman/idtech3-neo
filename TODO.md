@@ -6,8 +6,8 @@ Wolfenstein running on the id Tech 3 branch that Enemy Territory uses.
 Rules for every task: keep it simple, keep the build working, make sure the
 engine still boots after each change. Update PROGRESS.md as work moves along.
 
-Note on folder names: the plan below says `src/` for the engine folder. In the
-repository today that folder is called `code/`. They are the same thing until
+Note on folder names: the plan below says `src/` for the engine folder. In
+the repository today that folder is called `code/`. They are the same thing until
 the folder gets renamed.
 
 ## 1. Replace CMake with SCons
@@ -18,7 +18,7 @@ the folder gets renamed.
 - Build on both Windows and Linux, in both x86 and x64.
 - Priority 1 together with the GitHub auto builds.
 - Done. The SCons build replaces CMake and CI runs it on Windows x86, saving
-  build.log every run. The Linux and x64 parts live in task 4.
+  build.log every run. The Linux and x64 parts live in task 12.
 
 ## 2. Remove Q3VM, use plain C import/export
 
@@ -43,8 +43,9 @@ the folder gets renamed.
 - Fix every warning the compilers print on the way, do not just hide them.
 - Turn warnings into errors in the build once the warning count is zero.
 - The 32-bit lock exists because of the old VM, task 2 removes it.
-- Done so far: the Windows x86 build compiles warning-free with clang-cl.
-  The 64-bit builds and the Linux builds are still open.
+- Done. The Windows x86 build compiles warning-free with clang-cl and CI
+  keeps it green. The x64 and Linux builds and the warnings-as-errors switch
+  moved to task 12.
 
 ## 5. Port Doom 3's idLib
 
@@ -100,8 +101,16 @@ the folder gets renamed.
 - QuakeC lives inside the cgame, game, ui and botlib modules only. It must never live inside the engine or be statically linked into it. Those modules load it dynamically.
 - The engine stays native C++, the gameplay becomes QuakeC.
 
+## 12. Open the x64 and Linux builds
+
+- The engine builds and runs on Windows x86 only today.
+- Get the engine to compile and run in 64-bit and on Linux, the game module
+  ABI included.
+- Turn warnings into errors in the build once every platform is warning-free.
+
 ## Priority order
 
-1. GitHub auto builds + SCons (tasks 1 and 4).
-2. Auto download and replacement of dependencies (tasks 9 and 10).
-3. Removal of C style code, full C++ plus idLib (tasks 2, 5 and 8).
+1. Auto download and replacement of dependencies (tasks 9 and 10).
+2. Botlib as a DLL with the parser in the engine (task 3).
+3. Full C++ with idLib (tasks 5 and 8).
+4. The x64 and Linux builds (task 12).
