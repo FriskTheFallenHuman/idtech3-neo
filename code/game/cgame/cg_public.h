@@ -4,7 +4,7 @@
 Return to Castle Wolfenstein single player GPL Source Code
 Copyright (C) 1999-2010 id Software LLC, a ZeniMax Media company. 
 
-This file is part of the Return to Castle Wolfenstein single player GPL Source Code (RTCW SP Source Code).  
+This file is part of the Return to Castle Wolfenstein single player GPL Source Code (“RTCW SP Source Code”).  
 
 RTCW SP Source Code is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -21,7 +21,7 @@ along with RTCW SP Source Code.  If not, see <http://www.gnu.org/licenses/>.
 
 In addition, the RTCW SP Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the RTCW SP Source Code.  If not, please request a copy in writing from id Software at the address below.
 
-If you have questions concerning this license or the applicable additional terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
+If you have questions concerning the license or the applicable additional terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 
 ===========================================================================
 */
@@ -32,7 +32,7 @@ If you have questions concerning this license or the applicable additional terms
 #define CMD_BACKUP          64
 #define CMD_MASK            ( CMD_BACKUP - 1 )
 // allow a lot of command backups for very fast systems
-// multiple commands may be combined into a single packet, so this
+// multiple commands may be combined in a single packet, so this
 // needs to be larger than PACKET_BACKUP
 
 #define MAX_ENTITIES_IN_SNAPSHOT MAX_GENTITIES
@@ -55,8 +55,8 @@ typedef struct {
 	int numEntities;                        // all of the entities that need to be presented
 	entityState_t entities[MAX_ENTITIES_IN_SNAPSHOT];   // at the time of this snapshot
 
-	int numServerCommands;                  // text based server commands to execute when this
-	int serverCommandSequence;              // snapshot becomes current
+	int numServerCommands;                 // text based server commands to execute when this
+	int serverCommandSequence;             // snapshot becomes current
 } snapshot_t;
 
 enum {
@@ -104,11 +104,11 @@ typedef struct {
 	clipHandle_t (*CM_TempCapsuleModel)( const vec3_t mins, const vec3_t maxs );
 	int (*CM_PointContents)( const vec3_t p, clipHandle_t model );
 	int (*CM_TransformedPointContents)( const vec3_t p, clipHandle_t model, const vec3_t origin, const vec3_t angles );
-	void (*CM_BoxTrace)( trace_t * results, const vec3_t start, const vec3_t end, const vec3_t mins, const vec3_t maxs, clipHandle_t model, int brushmask );
-	void (*CM_TransformedBoxTrace)( trace_t * results, const vec3_t start, const vec3_t end, const vec3_t mins, const vec3_t maxs, clipHandle_t model, int brushmask, const vec3_t origin, const vec3_t angles );
-	void (*CM_CapsuleTrace)( trace_t * results, const vec3_t start, const vec3_t end, const vec3_t mins, const vec3_t maxs, clipHandle_t model, int brushmask );
-	void (*CM_TransformedCapsuleTrace)( trace_t * results, const vec3_t start, const vec3_t end, const vec3_t mins, const vec3_t maxs, clipHandle_t model, int brushmask, const vec3_t origin, const vec3_t angles );
-	int (*CM_MarkFragments)( int numPoints, const vec3_t * points, const vec3_t projection, int maxPoints, vec3_t pointBuffer, int maxFragments, markFragment_t * fragmentBuffer );
+	void (*CM_BoxTrace)( trace_t * results, const vec3_t * start, const vec3_t * end, const vec3_t * mins, const vec3_t * maxs, clipHandle_t model, int brushmask );
+	void (*CM_TransformedBoxTrace)( trace_t * results, const vec3_t * start, const vec3_t * end, const vec3_t * mins, const vec3_t * maxs, clipHandle_t model, int brushmask, const vec3_t * origin, const vec3_t * angles );
+	void (*CM_CapsuleTrace)( trace_t * results, const vec3_t * start, const vec3_t * end, const vec3_t * mins, const vec3_t * maxs, clipHandle_t model, int brushmask );
+	void (*CM_TransformedCapsuleTrace)( trace_t * results, const vec3_t * start, const vec3_t * end, const vec3_t * mins, const vec3_t * maxs, clipHandle_t model, int brushmask, const vec3_t * origin, const vec3_t * angles );
+	int (*CM_MarkFragments)( int numPoints, const vec3_t * points, const vec3_t * projection, int maxPoints, vec3_t pointBuffer, int maxFragments, markFragment_t * fragmentBuffer );
 	void (*S_StartSound)( vec3_t origin, int entityNum, int entchannel, sfxHandle_t sfx );
 	void (*S_StartSoundEx)( vec3_t origin, int entityNum, int entchannel, sfxHandle_t sfx, int flags );
 	void (*S_StartLocalSound)( sfxHandle_t sfx, int channelNum );
@@ -186,7 +186,7 @@ typedef struct {
 	void (*R_SetDoomSectorLight)( int sector, int light );
 	void (*R_SetDoomSwitches)( const char * state );
 	int (*R_LightForPoint)( vec3_t point, vec3_t ambient, vec3_t directed, vec3_t lightDirection );
-	void (*R_DrawDoomMap)( int x, int y, int size, const byte * pixels );
+	void (*R_DrawDoomMap)( int x, int y, int width, int height, const byte * pixels );
 } cgameImport_t;
 
 // set by the engine right before the module entry point runs
@@ -217,3 +217,4 @@ typedef struct {
 //----------------------------------------------
 
 #endif
+
