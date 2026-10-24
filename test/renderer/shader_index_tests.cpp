@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Exercise the renderer's actual definition traversal with forced hash collisions.
-#include "../tr_shaderindex.h"
+#include "renderer/tr_shaderindex.h"
 #include <cstdio>
 #include <cstdlib>
 #include <stdexcept>

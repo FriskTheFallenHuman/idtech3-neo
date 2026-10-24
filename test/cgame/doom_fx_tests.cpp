@@ -1,7 +1,7 @@
 // Exercise the actual effect parser, scheduler, collision and render adapters.
-#include "../fx/common_headers.h"
-#include "../fx/FxScheduler.h"
-#include "../fx/FxFlame.h"
+#include "game/cgame/fx/common_headers.h"
+#include "game/cgame/fx/FxScheduler.h"
+#include "game/cgame/fx/FxFlame.h"
 #include <cstdio>
 #include <cstdlib>
 #include <filesystem>

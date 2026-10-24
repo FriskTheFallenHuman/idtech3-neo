@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 #include <stdexcept>
-#include "../ui_doom.cpp"
+#include "game/ui/ui_doom.cpp"
 
 uiInfo_t uiInfo;
 namespace test {

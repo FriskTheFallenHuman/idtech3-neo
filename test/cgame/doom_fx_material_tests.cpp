@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-#include "../cg_doomfx_materials.h"
-#include "../../qcommon/doom_bsp.h"
+#include "game/cgame/cg_doomfx_materials.h"
+#include "qcommon/doom_bsp.h"
 #include <cstdio>
 #include <cstring>
 #include <limits>

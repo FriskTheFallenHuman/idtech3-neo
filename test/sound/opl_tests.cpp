@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-#include "../snd_opl.h"
-#include "../snd_musicmix.h"
-#include "../opl/doom_opl.h"
+#include "sound/snd_opl.h"
+#include "sound/snd_musicmix.h"
+#include "sound/opl/doom_opl.h"
 #include <algorithm>
 #include <cstdio>
 #include <cstring>

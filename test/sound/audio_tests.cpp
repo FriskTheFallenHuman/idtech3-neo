@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #define AL_ALEXT_PROTOTYPES
-#include "../snd_local.h"
-#include "../../openal/include/AL/al.h"
-#include "../../openal/include/AL/alc.h"
-#include "../../openal/include/AL/alext.h"
-#include "../snd_fluidsynth.h"
+#include "sound/snd_local.h"
+#include "third-party/openal/include/AL/al.h"
+#include "third-party/openal/include/AL/alc.h"
+#include "third-party/openal/include/AL/alext.h"
+#include "sound/snd_fluidsynth.h"
 #include <algorithm>
 #include <chrono>
 #include <cstdio>

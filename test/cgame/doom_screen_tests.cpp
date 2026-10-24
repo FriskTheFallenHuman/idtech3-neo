@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-#include "../cg_local.h"
-#include "../cg_doomscreens.h"
-#include "../../game/bg_doomlevel.h"
+#include "game/cgame/cg_local.h"
+#include "game/cgame/cg_doomscreens.h"
+#include "game/game/bg_doomlevel.h"
 #include <cstdio>
 #include <map>
 #include <stdexcept>

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-#include "../cg_local.h"
-#include "../cg_doomfx.h"
-#include "../../game/bg_doomblood.h"
+#include "game/cgame/cg_local.h"
+#include "game/cgame/cg_doomfx.h"
+#include "game/game/bg_doomblood.h"
 #include <cstdio>
 #include <limits>
 #include <stdexcept>

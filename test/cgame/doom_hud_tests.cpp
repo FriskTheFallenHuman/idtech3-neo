@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 #include <stdexcept>
-#include "../cg_doomhud.cpp"
+#include "game/cgame/cg_doomhud.cpp"
 
 cg_t cg;
 cgs_t cgs;
