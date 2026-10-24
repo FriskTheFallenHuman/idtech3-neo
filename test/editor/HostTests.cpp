@@ -123,22 +123,29 @@ SDL_Event buttonEvent(SDL_Window *window, float x, float y, bool down) {
     return event;
 }
 void pressKey(const DoomEditorAPI &api, SDL_Window *window, SDL_Scancode scancode) {
-    api.sdlevent(&keyEvent(window, scancode, true));
+    SDL_Event event = keyEvent(window, scancode, true);
+    api.sdlevent(&event);
     drawFrames(api);
-    api.sdlevent(&keyEvent(window, scancode, false));
+    event = keyEvent(window, scancode, false);
+    api.sdlevent(&event);
     drawFrames(api);
 }
 void clickAt(const DoomEditorAPI &api, SDL_Window *window, int x, int y) {
-    api.sdlevent(&motionEvent(window, static_cast<float>(x), static_cast<float>(y)));
+    const float fx = static_cast<float>(x), fy = static_cast<float>(y);
+    SDL_Event event = motionEvent(window, fx, fy);
+    api.sdlevent(&event);
     drawFrames(api);
-    api.sdlevent(&buttonEvent(window, static_cast<float>(x), static_cast<float>(y), true));
+    event = buttonEvent(window, fx, fy, true);
+    api.sdlevent(&event);
     drawFrames(api);
-    api.sdlevent(&buttonEvent(window, static_cast<float>(x), static_cast<float>(y), false));
+    event = buttonEvent(window, fx, fy, false);
+    api.sdlevent(&event);
     drawFrames(api);
 }
 void chooseObject(const DoomEditorAPI &api, SDL_Window *window, const char *name) {
     pressKey(api, window, SDL_SCANCODE_F4);
-    api.sdlevent(&textEvent(window, name));
+    SDL_Event event = textEvent(window, name);
+    api.sdlevent(&event);
     drawFrames(api);
     pressKey(api, window, SDL_SCANCODE_RETURN);
 }
@@ -257,20 +264,24 @@ int main(int argc, char **argv) {
                     "Object catalog search/selection did not place the chosen object types");
         original = de::readFile(source);
         pressKey(*api, window, SDL_SCANCODE_F3);
-        api->sdlevent(&keyEvent(window, SDL_SCANCODE_F2, true));
+        SDL_Event keyPress = keyEvent(window, SDL_SCANCODE_F2, true);
+        api->sdlevent(&keyPress);
         for (int i = 0; i < 3; ++i) {
             api->draw(1440, 900);
         }
         const auto planPreviews = previews;
         api->draw(1440, 900);
         de::require(previews == planPreviews, "Plan tab still rendered a perspective viewport");
-        api->sdlevent(&keyEvent(window, SDL_SCANCODE_F2, false));
-        api->sdlevent(&keyEvent(window, SDL_SCANCODE_F3, true));
+        keyPress = keyEvent(window, SDL_SCANCODE_F2, false);
+        api->sdlevent(&keyPress);
+        keyPress = keyEvent(window, SDL_SCANCODE_F3, true);
+        api->sdlevent(&keyPress);
         for (int i = 0; i < 3; ++i) {
             api->draw(1440, 900);
         }
         de::require(previews > planPreviews, "Perspective tab did not restore the scene");
-        api->sdlevent(&keyEvent(window, SDL_SCANCODE_F3, false));
+        keyPress = keyEvent(window, SDL_SCANCODE_F3, false);
+        api->sdlevent(&keyPress);
         const auto previousFloors = floorVertices, previousCeilings = ceilingVertices;
         de::require(api->show("e1m2"), api->lastError());
         drawFrames(*api);
@@ -281,7 +292,8 @@ int main(int argc, char **argv) {
         int maximizedX = 0, maximizedY = 0, maximizedWidth = 0, maximizedHeight = 0;
         SDL_GetWindowPosition(window, &maximizedX, &maximizedY);
         SDL_GetWindowSize(window, &maximizedWidth, &maximizedHeight);
-        api->sdlevent(&keyEvent(window, SDL_SCANCODE_F12, true));
+        keyPress = keyEvent(window, SDL_SCANCODE_F12, true);
+        api->sdlevent(&keyPress);
         api->draw(1440, 900);
         api->frame();
         de::require(!api->visible() && returned == 1, "F12 did not return to game");
