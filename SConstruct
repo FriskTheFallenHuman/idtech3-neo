@@ -354,11 +354,14 @@ for test in doom_sources.TESTS:
                         LINKFLAGS=['/OPT:REF', '/INCREMENTAL:NO'])
     if test['name'] == 'doomed_host_tests':
         test_env.Append(LINKFLAGS=['/LARGEADDRESSAWARE'])
-        # The host test drives the editor through SDL windows and events.
-        test_env.Append(LIBS=[SDL3])
 
     test_libs = [BUILT_LIBS[name] for name in test.get('libs', [])]
     test_libs += test.get('syslibs', [])
+    # The host test drives the editor through SDL windows and events, so it
+    # links the SDL3 import library itself. This has to sit in the builder's
+    # LIBS list because that argument overrides the environment LIBS.
+    if test['name'] == 'doomed_host_tests':
+        test_libs += [SDL3]
     # Test files live in test/ at the repository root, engine files they
     # pull in still live under code/.
     test_sources = []
