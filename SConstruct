@@ -270,16 +270,20 @@ wolf_env['SUBSYSTEM'] = 'WINDOWS'
 wolf_res = wolf_env.RES(
     wolf_variant + '/sys/rc/winquake.res',
     wolf_variant + '/sys/rc/winquake.rc')
+# SDL provides WinMain inside SDL3.dll now that the engine entry point is
+# SDL_main, so the windows subsystem has to be picked explicitly. These
+# flags are appended to the environment on purpose: a LINKFLAGS argument
+# on the Program call would replace the whole list and drop the /DEBUG
+# flag the debug config sets for the linker.
+wolf_env.Append(
+    LINKFLAGS=['/STACK:8388608', '/LARGEADDRESSAWARE', '/SUBSYSTEM:WINDOWS'])
 wolf = wolf_env.Program(
     '#bin/Doom',
     [wolf_variant + '/' + p for p in
      doom_sources.WOLF_SOURCES + doom_sources.WOLF_EXTRA_SOURCES] + [wolf_res],
     LIBS=[renderer, botlib, splines, OpenAL32, SDL3, doom_opl,
           doom_miniz,
-          'winmm', 'ole32', 'oleaut32', 'wsock32', 'user32', 'gdi32', 'shell32', 'advapi32'],
-    # SDL provides WinMain inside SDL3.dll now that the engine entry point is
-    # SDL_main, so the windows subsystem has to be picked explicitly
-    LINKFLAGS=['/STACK:8388608', '/LARGEADDRESSAWARE', '/SUBSYSTEM:WINDOWS'])
+          'winmm', 'ole32', 'oleaut32', 'wsock32', 'user32', 'gdi32', 'shell32', 'advapi32'])
 
 # The engine links the SDL3 import library, so the DLL that matches it is
 # copied next to the engine and the tests. libfluidsynth-3.dll needs the
