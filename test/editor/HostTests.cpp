@@ -2,6 +2,7 @@
 #include "EditorAPI.h"
 #include "SectorAuthoring.h"
 #include "idfunctions.h"
+#include <SDL3/SDL.h>
 #include <windows.h>
 #include <tlhelp32.h>
 #include <psapi.h>
@@ -76,45 +77,77 @@ void waitForBuild(const DoomEditorAPI &api) {
         Sleep(10);
     }
 }
-std::wstring windowTitle(HWND window) {
-    wchar_t title[32768]{};
-    GetWindowTextW(window, title, static_cast<int>(std::size(title)));
-    return title;
+std::string windowTitle(SDL_Window *window) {
+    return SDL_GetWindowTitle(window);
 }
 void drawFrames(const DoomEditorAPI &api, int count = 3) {
     for (int frame = 0; frame < count; ++frame) {
         api.draw(1440, 900);
     }
 }
-void pressKey(const DoomEditorAPI &api, HWND window, int key) {
-    api.windowMessage(window, WM_KEYDOWN, key,
-                      static_cast<intptr_t>(MapVirtualKeyW(key, MAPVK_VK_TO_VSC)) << 16);
+// The editor consumes SDL events, so the test feeds it the same events a real
+// window would receive.
+SDL_Event keyEvent(SDL_Window *window, SDL_Scancode scancode, bool down) {
+    SDL_Event event{};
+    event.type = down ? SDL_EVENT_KEY_DOWN : SDL_EVENT_KEY_UP;
+    event.key.windowID = SDL_GetWindowID(window);
+    event.key.scancode = scancode;
+    event.key.key = SDL_SCANCODE_TO_KEYCODE(scancode);
+    event.key.down = down;
+    return event;
+}
+SDL_Event textEvent(SDL_Window *window, const char *text) {
+    SDL_Event event{};
+    event.type = SDL_EVENT_TEXT_INPUT;
+    event.text.windowID = SDL_GetWindowID(window);
+    event.text.text = text;
+    return event;
+}
+SDL_Event motionEvent(SDL_Window *window, float x, float y) {
+    SDL_Event event{};
+    event.type = SDL_EVENT_MOUSE_MOTION;
+    event.motion.windowID = SDL_GetWindowID(window);
+    event.motion.x = x;
+    event.motion.y = y;
+    return event;
+}
+SDL_Event buttonEvent(SDL_Window *window, float x, float y, bool down) {
+    SDL_Event event{};
+    event.type = down ? SDL_EVENT_MOUSE_BUTTON_DOWN : SDL_EVENT_MOUSE_BUTTON_UP;
+    event.button.windowID = SDL_GetWindowID(window);
+    event.button.button = 1;
+    event.button.down = down;
+    event.button.clicks = 1;
+    event.button.x = x;
+    event.button.y = y;
+    return event;
+}
+void pressKey(const DoomEditorAPI &api, SDL_Window *window, SDL_Scancode scancode) {
+    api.sdlevent(&keyEvent(window, scancode, true));
     drawFrames(api);
-    api.windowMessage(window, WM_KEYUP, key, 0);
+    api.sdlevent(&keyEvent(window, scancode, false));
     drawFrames(api);
 }
-void clickAt(const DoomEditorAPI &api, HWND window, int x, int y) {
-    api.windowMessage(window, WM_MOUSEMOVE, 0, MAKELPARAM(x, y));
+void clickAt(const DoomEditorAPI &api, SDL_Window *window, int x, int y) {
+    api.sdlevent(&motionEvent(window, static_cast<float>(x), static_cast<float>(y)));
     drawFrames(api);
-    api.windowMessage(window, WM_LBUTTONDOWN, MK_LBUTTON, MAKELPARAM(x, y));
+    api.sdlevent(&buttonEvent(window, static_cast<float>(x), static_cast<float>(y), true));
     drawFrames(api);
-    api.windowMessage(window, WM_LBUTTONUP, 0, MAKELPARAM(x, y));
+    api.sdlevent(&buttonEvent(window, static_cast<float>(x), static_cast<float>(y), false));
     drawFrames(api);
 }
-void chooseObject(const DoomEditorAPI &api, HWND window, const char *name) {
-    pressKey(api, window, VK_F4);
-    for (const auto *letter = name; *letter; ++letter) {
-        api.windowMessage(window, WM_CHAR, static_cast<unsigned char>(*letter), 0);
-    }
+void chooseObject(const DoomEditorAPI &api, SDL_Window *window, const char *name) {
+    pressKey(api, window, SDL_SCANCODE_F4);
+    api.sdlevent(&textEvent(window, name));
     drawFrames(api);
-    pressKey(api, window, VK_RETURN);
+    pressKey(api, window, SDL_SCANCODE_RETURN);
 }
 } // namespace
 
 int main(int argc, char **argv) {
     HMODULE module = nullptr;
     const DoomEditorAPI *api = nullptr;
-    HWND window = nullptr;
+    SDL_Window *window = nullptr;
     try {
         de::require(argc == 5, "Expected editor DLL, scratch project, WAD, and tools directory");
         if (!std::filesystem::exists(argv[3])) {
@@ -163,14 +196,14 @@ int main(int argc, char **argv) {
         de::require(getAPI && !getAPI(DoomEditorAPIVersion + 1), "API version mismatch accepted");
         api = getAPI(DoomEditorAPIVersion);
         de::require(api && api->size == sizeof(DoomEditorAPI), "Invalid editor API layout");
-        window = CreateWindowExW(0, L"STATIC", L"Editor host test",
-                                 WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU, 0, 0, 1440, 900, nullptr,
-                                 nullptr, GetModuleHandleW(nullptr), nullptr);
+        de::require(SDL_Init(SDL_INIT_VIDEO), "Cannot initialize SDL video for the host test");
+        window = SDL_CreateWindow("Editor host test", 1440, 900, SDL_WINDOW_RESIZABLE);
         de::require(window != nullptr, "Cannot create test input window");
-        const auto rootText = root.wstring();
+        const auto rootText = root.u8string();
         DoomEditorHost host{DoomEditorAPIVersion,
                             sizeof(DoomEditorHost),
                             window,
+                            nullptr,
                             rootText.c_str(),
                             logMessage,
                             returnToGame,
@@ -182,30 +215,31 @@ int main(int argc, char **argv) {
         de::require(api->initialize(&host), api->lastError());
         de::require(!api->show("../escape"), "Editor accepted path traversal");
         de::require(api->show(""), api->lastError());
-        de::require(windowTitle(window) == L"DoomEdit: Untitled.dwd",
+        de::require(windowTitle(window) == "DoomEdit: Untitled.dwd",
                     "New map did not set the untitled editor caption");
-        const auto editorStyle = GetWindowLongPtrW(window, GWL_STYLE);
-        de::require((editorStyle & WS_OVERLAPPEDWINDOW) == WS_OVERLAPPEDWINDOW,
+        de::require((SDL_GetWindowFlags(window) & SDL_WINDOW_RESIZABLE) != 0,
                     "Editor lacks native minimize/maximize/resize controls");
-        MINMAXINFO limits{};
-        de::require(
-            api->windowMessage(window, WM_GETMINMAXINFO, 0, reinterpret_cast<intptr_t>(&limits)) &&
-                limits.ptMinTrackSize.x >= 960 && limits.ptMinTrackSize.y >= 640,
-            "Editor did not enforce a usable minimum size");
-        SendMessageW(window, WM_SYSCOMMAND, SC_MAXIMIZE, 0);
-        de::require(IsZoomed(window), "Native maximize control did not maximize the editor");
-        SendMessageW(window, WM_SYSCOMMAND, SC_MINIMIZE, 0);
-        de::require(IsIconic(window) && api->visible(),
+        int minWidth = 0, minHeight = 0;
+        SDL_GetWindowMinimumSize(window, &minWidth, &minHeight);
+        de::require(minWidth >= 960 && minHeight >= 640,
+                    "Editor did not enforce a usable minimum size");
+        SDL_MaximizeWindow(window);
+        de::require((SDL_GetWindowFlags(window) & SDL_WINDOW_MAXIMIZED) != 0,
+                    "Native maximize control did not maximize the editor");
+        SDL_MinimizeWindow(window);
+        de::require((SDL_GetWindowFlags(window) & SDL_WINDOW_MINIMIZED) != 0 && api->visible(),
                     "Native minimize control did not retain the editor document");
-        SendMessageW(window, WM_SYSCOMMAND, SC_RESTORE, 0);
-        de::require(!IsIconic(window) && IsZoomed(window),
+        SDL_RestoreWindow(window);
+        de::require((SDL_GetWindowFlags(window) & SDL_WINDOW_MINIMIZED) == 0 &&
+                        (SDL_GetWindowFlags(window) & SDL_WINDOW_MAXIMIZED) != 0,
                     "Restoring a minimized maximized editor lost maximization");
-        SendMessageW(window, WM_SYSCOMMAND, SC_RESTORE, 0);
-        de::require(!IsZoomed(window), "Native restore control did not unmaximize the editor");
-        ShowWindow(window, SW_HIDE);
+        SDL_RestoreWindow(window);
+        de::require((SDL_GetWindowFlags(window) & SDL_WINDOW_MAXIMIZED) == 0,
+                    "Native restore control did not unmaximize the editor");
+        SDL_HideWindow(window);
         de::require(api->show("worktest"), api->lastError());
         de::require(windowTitle(window) ==
-                        L"DoomEdit: " + std::filesystem::path(source).make_preferred().wstring(),
+                        "DoomEdit: " + std::filesystem::path(source).make_preferred().u8string(),
                     "Editor caption did not include the full DWD path");
         for (int i = 0; i < 4; ++i) {
             api->draw(1440, 900);
@@ -222,45 +256,47 @@ int main(int argc, char **argv) {
                         placed.things[2].type == 2001 && placed.things[0].type == 1,
                     "Object catalog search/selection did not place the chosen object types");
         original = de::readFile(source);
-        pressKey(*api, window, VK_F3);
-        api->windowMessage(window, WM_KEYDOWN, VK_F2,
-                           static_cast<intptr_t>(MapVirtualKeyW(VK_F2, MAPVK_VK_TO_VSC)) << 16);
+        pressKey(*api, window, SDL_SCANCODE_F3);
+        api->sdlevent(&keyEvent(window, SDL_SCANCODE_F2, true));
         for (int i = 0; i < 3; ++i) {
             api->draw(1440, 900);
         }
         const auto planPreviews = previews;
         api->draw(1440, 900);
         de::require(previews == planPreviews, "Plan tab still rendered a perspective viewport");
-        api->windowMessage(window, WM_KEYUP, VK_F2, 0);
-        api->windowMessage(window, WM_KEYDOWN, VK_F3,
-                           static_cast<intptr_t>(MapVirtualKeyW(VK_F3, MAPVK_VK_TO_VSC)) << 16);
+        api->sdlevent(&keyEvent(window, SDL_SCANCODE_F2, false));
+        api->sdlevent(&keyEvent(window, SDL_SCANCODE_F3, true));
         for (int i = 0; i < 3; ++i) {
             api->draw(1440, 900);
         }
         de::require(previews > planPreviews, "Perspective tab did not restore the scene");
-        api->windowMessage(window, WM_KEYUP, VK_F3, 0);
+        api->sdlevent(&keyEvent(window, SDL_SCANCODE_F3, false));
         const auto previousFloors = floorVertices, previousCeilings = ceilingVertices;
         de::require(api->show("e1m2"), api->lastError());
         drawFrames(*api);
         de::require(floorVertices > previousFloors && ceilingVertices > previousCeilings,
                     "E1M2 preview omitted floor/ceiling geometry\n" + messages);
-        SendMessageW(window, WM_SYSCOMMAND, SC_MAXIMIZE, 0);
-        ShowWindow(window, SW_HIDE);
-        RECT maximizedRect{};
-        GetWindowRect(window, &maximizedRect);
-        api->windowMessage(window, WM_KEYDOWN, VK_F12,
-                           static_cast<intptr_t>(MapVirtualKeyW(VK_F12, MAPVK_VK_TO_VSC)) << 16);
+        SDL_MaximizeWindow(window);
+        SDL_HideWindow(window);
+        int maximizedX = 0, maximizedY = 0, maximizedWidth = 0, maximizedHeight = 0;
+        SDL_GetWindowPosition(window, &maximizedX, &maximizedY);
+        SDL_GetWindowSize(window, &maximizedWidth, &maximizedHeight);
+        api->sdlevent(&keyEvent(window, SDL_SCANCODE_F12, true));
         api->draw(1440, 900);
         api->frame();
         de::require(!api->visible() && returned == 1, "F12 did not return to game");
-        de::require(windowTitle(window) == L"Editor host test",
+        de::require(windowTitle(window) == "Editor host test",
                     "Returning to game did not restore the game caption");
-        RECT restoredRect{};
-        GetWindowRect(window, &restoredRect);
-        de::require(IsZoomed(window) && EqualRect(&maximizedRect, &restoredRect),
+        int restoredX = 0, restoredY = 0, restoredWidth = 0, restoredHeight = 0;
+        SDL_GetWindowPosition(window, &restoredX, &restoredY);
+        SDL_GetWindowSize(window, &restoredWidth, &restoredHeight);
+        de::require((SDL_GetWindowFlags(window) & SDL_WINDOW_MAXIMIZED) != 0 &&
+                        maximizedX == restoredX && maximizedY == restoredY &&
+                        maximizedWidth == restoredWidth && maximizedHeight == restoredHeight,
                     "Returning to game lost the maximized window state");
         de::require(api->show(""), "Cannot reopen editor document");
-        de::require(IsZoomed(window), "Reopening editor lost the maximized window state");
+        de::require((SDL_GetWindowFlags(window) & SDL_WINDOW_MAXIMIZED) != 0,
+                    "Reopening editor lost the maximized window state");
         api->resetGraphics();
         api->draw(1440, 900);
         de::require(api->visible(), "Graphics reset lost the editor document");
@@ -341,8 +377,9 @@ int main(int argc, char **argv) {
         api = nullptr;
         FreeLibrary(module);
         module = nullptr;
-        DestroyWindow(window);
+        SDL_DestroyWindow(window);
         window = nullptr;
+        SDL_Quit();
         std::cout << "Editor host: native min/max/restore, maximized game/editor transitions, "
                      "captions, object search/placement, version/layout rejection, "
                      "renderer submissions, F12, reopen, "
@@ -359,8 +396,9 @@ int main(int argc, char **argv) {
             FreeLibrary(module);
         }
         if (window) {
-            DestroyWindow(window);
+            SDL_DestroyWindow(window);
         }
+        SDL_Quit();
         return 1;
     }
 }

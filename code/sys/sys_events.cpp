@@ -322,6 +322,11 @@ void Sys_EventLoop( void ) {
 	vid_ypos = Cvar_Get( "vid_ypos", "22", CVAR_ARCHIVE );
 
 	while ( SDL_PollEvent( &e ) ) {
+		// While the editor is shown it consumes the input events; everything
+		// else still reaches the engine translation below.
+		if ( Sys_EditorProcessEvent( &e ) ) {
+			continue;
+		}
 		switch ( e.type )
 		{
 		case SDL_EVENT_QUIT:

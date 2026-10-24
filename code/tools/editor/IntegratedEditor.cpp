@@ -7,7 +7,8 @@
 #include "Viewport3D.h"
 #include "idfunctions.h"
 #include "pathops.h"
-#include "imgui_impl_win32.h"
+#include "imgui_impl_sdl3.h"
+#include <SDL3/SDL.h>
 #include <windows.h>
 #include <objbase.h>
 #include <algorithm>
@@ -16,62 +17,40 @@
 #include <memory>
 #include <map>
 
-extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND, UINT, WPARAM, LPARAM);
 namespace {
 DoomEditorHost host{};
 std::unique_ptr<de::App> app, compiler;
-HWND editorWindow = nullptr;
+SDL_Window *editorWindow = nullptr;
 ImGuiContext *gui = nullptr;
 std::string apiError, iniPath;
-bool shown = false, returnRequested = false, win32Ready = false;
+bool shown = false, returnRequested = false, sdlReady = false;
 bool comOwned = false;
 bool ownsWindowTitle = false;
-HWND titleWindow = nullptr;
-std::wstring gameWindowTitle, lastEditorTitle;
-HWND managedWindow = nullptr;
+SDL_Window *titleWindow = nullptr;
+std::string gameWindowTitle, lastEditorTitle;
+SDL_Window *managedWindow = nullptr;
 uint64_t fontTexture = 0;
 int activeView = 1, requestedView = 1;
 bool showOutliner = true, showOutput = false;
 std::vector<de::Vec2> draft;
 
 void configureEditorWindow() {
-    const auto window = static_cast<HWND>(host.gameWindow);
-    if (window == managedWindow || !IsWindow(window)) {
+    const auto window = static_cast<SDL_Window *>(host.gameWindow);
+    if (!window || window == managedWindow) {
         return;
     }
     managedWindow = window;
-    const auto previousStyle = GetWindowLongPtrW(window, GWL_STYLE);
-    if ((previousStyle & WS_OVERLAPPEDWINDOW) == WS_OVERLAPPEDWINDOW) {
-        return;
+    // An editor opened from fullscreen needs a window frame too. Both modes use
+    // this window and retain its size across the game/editor switch.
+    if (SDL_GetWindowFlags(window) & SDL_WINDOW_FULLSCREEN) {
+        SDL_SetWindowFullscreen(window, false);
     }
-    // An editor opened from fullscreen needs a native frame too. Both modes use
-    // this HWND and retain its size/maximization across the game/editor switch.
-    RECT bounds{};
-    de::require(GetWindowRect(window, &bounds) != 0, "Cannot query the game window bounds");
-    const auto style = (previousStyle & ~WS_POPUP) | WS_OVERLAPPEDWINDOW;
-    const auto exStyle = GetWindowLongPtrW(window, GWL_EXSTYLE) & ~WS_EX_TOPMOST;
-    de::require(SetWindowLongPtrW(window, GWL_STYLE, style) != 0,
-                "Cannot enable the editor window controls");
-    SetLastError(ERROR_SUCCESS);
-    de::require(SetWindowLongPtrW(window, GWL_EXSTYLE, exStyle) != 0 ||
-                    GetLastError() == ERROR_SUCCESS,
-                "Cannot update the editor window frame");
-    RECT client{};
-    de::require(GetClientRect(window, &client) &&
-                    AdjustWindowRectEx(&client, static_cast<DWORD>(style), FALSE,
-                                       static_cast<DWORD>(exStyle)),
-                "Cannot size the editor window frame");
-    MONITORINFO monitor{sizeof(MONITORINFO)};
-    de::require(GetMonitorInfoW(MonitorFromWindow(window, MONITOR_DEFAULTTONEAREST), &monitor),
-                "Cannot query the editor monitor");
-    const auto &work = monitor.rcWork;
-    const int width = std::min(client.right - client.left, work.right - work.left);
-    const int height = std::min(client.bottom - client.top, work.bottom - work.top);
-    const int x = std::clamp(bounds.left, work.left, work.right - width);
-    const int y = std::clamp(bounds.top, work.top, work.bottom - height);
-    de::require(SetWindowPos(window, HWND_NOTOPMOST, x, y, width, height,
-                             SWP_FRAMECHANGED | SWP_NOACTIVATE) != 0,
-                "Cannot enable the editor window controls");
+    if (SDL_GetWindowFlags(window) & SDL_WINDOW_BORDERLESS) {
+        SDL_SetWindowBordered(window, true);
+    }
+    // The game window allows 640x480; the editor workspace needs more room.
+    // The engine puts the smaller limit back when the editor returns.
+    SDL_SetWindowMinimumSize(window, 960, 640);
 }
 
 void print(const std::string &text) {
@@ -101,7 +80,10 @@ void returnToGame() {
     shown = false;
     returnRequested = false;
     if (ownsWindowTitle) {
-        SetWindowTextW(static_cast<HWND>(host.gameWindow), gameWindowTitle.c_str());
+        const auto window = static_cast<SDL_Window *>(host.gameWindow);
+        if (window) {
+            SDL_SetWindowTitle(window, gameWindowTitle.c_str());
+        }
         ownsWindowTitle = false;
         titleWindow = nullptr;
         lastEditorTitle.clear();
@@ -115,26 +97,25 @@ void returnToGame() {
     }
 }
 void updateWindowTitle() {
-    const auto window = static_cast<HWND>(host.gameWindow);
-    if (!shown || !app || !IsWindow(window)) {
+    const auto window = static_cast<SDL_Window *>(host.gameWindow);
+    if (!shown || !app || !window) {
         return;
     }
     if (!ownsWindowTitle) {
-        gameWindowTitle.resize(static_cast<size_t>(GetWindowTextLengthW(window)) + 1);
-        const int length = GetWindowTextW(window, gameWindowTitle.data(),
-                                          static_cast<int>(gameWindowTitle.size()));
-        gameWindowTitle.resize(static_cast<size_t>(length));
+        // SDL hands out the title in UTF-8 and keeps the storage itself.
+        gameWindowTitle = SDL_GetWindowTitle(window);
         ownsWindowTitle = true;
     }
     const auto document = app->world.pathname.empty()
-                              ? std::wstring(L"Untitled.dwd")
+                              ? std::string("Untitled.dwd")
                               : std::filesystem::absolute(app->world.pathname)
                                     .lexically_normal()
                                     .make_preferred()
-                                    .wstring();
-    const auto title = L"DoomEdit: " + document;
+                                    .u8string();
+    const auto title = "DoomEdit: " + document;
     if (window != titleWindow || title != lastEditorTitle) {
-        de::require(SetWindowTextW(window, title.c_str()) != 0, "Cannot set DoomEdit window title");
+        de::require(SDL_SetWindowTitle(window, title.c_str()),
+                    "Cannot set DoomEdit window title");
         lastEditorTitle = title;
         titleWindow = window;
     }
@@ -199,7 +180,7 @@ void openDocument(const std::filesystem::path &path) {
     app->message("Opened " + path.u8string());
 }
 void createUI() {
-    editorWindow = static_cast<HWND>(host.gameWindow);
+    editorWindow = static_cast<SDL_Window *>(host.gameWindow);
     if (gui) {
         ImGui::SetCurrentContext(gui);
         return;
@@ -210,7 +191,7 @@ void createUI() {
     io.BackendFlags |= ImGuiBackendFlags_RendererHasVtxOffset;
     iniPath = (de::projectDirectory() / "out/editor-layout.ini").u8string();
     io.IniFilename = iniPath.c_str();
-    const float scale = ImGui_ImplWin32_GetDpiScaleForHwnd(editorWindow);
+    const float scale = SDL_GetWindowDisplayScale(editorWindow);
     wchar_t windowsDirectory[MAX_PATH]{};
     GetWindowsDirectoryW(windowsDirectory, MAX_PATH);
     const auto fontPath =
@@ -260,8 +241,8 @@ void createUI() {
     colors[ImGuiCol_TableBorderLight] = {.14f, .15f, .16f, 1};
     style.ScaleAllSizes(scale);
     app->dpi = scale;
-    win32Ready = ImGui_ImplWin32_Init(editorWindow);
-    de::require(win32Ready, "Cannot initialize editor input backend");
+    sdlReady = ImGui_ImplSDL3_InitForOpenGL(editorWindow, host.glContext);
+    de::require(sdlReady, "Cannot initialize editor input backend");
     app->syncReferenceImage();
 }
 void drawUI(const ImDrawData &data) {
@@ -1067,7 +1048,7 @@ bool initialize(const DoomEditorHost *value) {
     }
     try {
         host = *value;
-        de::setProjectDirectory(value->projectRoot);
+        de::setProjectDirectory(std::filesystem::u8path(value->projectRoot));
         host.projectRoot = nullptr;
         const auto initialized = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
         comOwned = SUCCEEDED(initialized);
@@ -1083,7 +1064,7 @@ bool initialize(const DoomEditorHost *value) {
         app->prefs.oneSided = {.8f, .86f, .9f, 1};
         app->prefs.twoSided = {.25f, .65f, .8f, 1};
         app->prefs.selected = {.35f, .7f, .95f, 1};
-        print("Integrated DWD editor initialized (API 2; engine renderer)");
+        print("Integrated DWD editor initialized (API 3; engine renderer)");
         return true;
     } catch (const std::exception &error) {
         fail(error);
@@ -1174,7 +1155,10 @@ void frame() {
 void shutdown() {
     managedWindow = nullptr;
     if (ownsWindowTitle) {
-        SetWindowTextW(static_cast<HWND>(host.gameWindow), gameWindowTitle.c_str());
+        const auto window = static_cast<SDL_Window *>(host.gameWindow);
+        if (window) {
+            SDL_SetWindowTitle(window, gameWindowTitle.c_str());
+        }
         ownsWindowTitle = false;
         titleWindow = nullptr;
         lastEditorTitle.clear();
@@ -1215,13 +1199,13 @@ void shutdown() {
             host.renderer.destroyTexture(fontTexture);
             fontTexture = 0;
         }
-        if (win32Ready) {
-            ImGui_ImplWin32_Shutdown();
+        if (sdlReady) {
+            ImGui_ImplSDL3_Shutdown();
         }
         ImGui::DestroyContext(gui);
         gui = nullptr;
     }
-    win32Ready = false;
+    sdlReady = false;
     editorWindow = nullptr;
     app.reset();
     compiler.reset();
@@ -1257,9 +1241,9 @@ void resetGraphics() {
         fontTexture = 0;
     }
     ImGui::GetIO().Fonts->SetTexID(0);
-    if (win32Ready) {
-        ImGui_ImplWin32_Shutdown();
-        win32Ready = false;
+    if (sdlReady) {
+        ImGui_ImplSDL3_Shutdown();
+        sdlReady = false;
     }
 }
 void draw(int width, int height) {
@@ -1269,9 +1253,9 @@ void draw(int width, int height) {
     try {
         configureEditorWindow();
         createUI();
-        if (!win32Ready) {
-            win32Ready = ImGui_ImplWin32_Init(editorWindow);
-            de::require(win32Ready, "Cannot rebind editor input after renderer restart");
+        if (!sdlReady) {
+            sdlReady = ImGui_ImplSDL3_InitForOpenGL(editorWindow, host.glContext);
+            de::require(sdlReady, "Cannot rebind editor input after renderer restart");
             app->syncReferenceImage();
         }
         auto &io = ImGui::GetIO();
@@ -1285,7 +1269,7 @@ void draw(int width, int height) {
             io.Fonts->SetTexID(static_cast<ImTextureID>(fontTexture));
         }
         app->refreshMapTextures();
-        ImGui_ImplWin32_NewFrame();
+        ImGui_ImplSDL3_NewFrame();
         io.DisplaySize = {static_cast<float>(width), static_cast<float>(height)};
         ImGui::NewFrame();
         drawWorkspace();
@@ -1301,21 +1285,32 @@ void draw(int width, int height) {
         returnToGame();
     }
 }
-bool windowMessage(void *window, uint32_t message, uintptr_t wparam, intptr_t lparam) {
-    host.gameWindow = window;
-    if (shown && message == WM_GETMINMAXINFO) {
-        auto *limits = reinterpret_cast<MINMAXINFO *>(lparam);
-        limits->ptMinTrackSize.x = 960;
-        limits->ptMinTrackSize.y = 640;
-        return true;
+bool sdlevent(const void *value) {
+    const auto *event = static_cast<const SDL_Event *>(value);
+    // Keep the host window current: the engine recreates its window on
+    // vid_restart and every event names the window it belongs to.
+    if (const auto window = SDL_GetWindowFromEvent(event)) {
+        host.gameWindow = window;
     }
-    if (!shown || !gui || !win32Ready) {
+    if (!shown || !gui || !sdlReady) {
         return false;
     }
     ImGui::SetCurrentContext(gui);
-    ImGui_ImplWin32_WndProcHandler(static_cast<HWND>(window), message, wparam, lparam);
-    return (message >= WM_KEYFIRST && message <= WM_KEYLAST) ||
-           (message >= WM_MOUSEFIRST && message <= WM_MOUSELAST) || message == WM_INPUT;
+    ImGui_ImplSDL3_ProcessEvent(event);
+    // Input belongs to the editor while it is shown; window and system
+    // events still reach the engine through its own event pump.
+    switch (event->type) {
+    case SDL_EVENT_KEY_DOWN:
+    case SDL_EVENT_KEY_UP:
+    case SDL_EVENT_TEXT_INPUT:
+    case SDL_EVENT_MOUSE_MOTION:
+    case SDL_EVENT_MOUSE_BUTTON_DOWN:
+    case SDL_EVENT_MOUSE_BUTTON_UP:
+    case SDL_EVENT_MOUSE_WHEEL:
+        return true;
+    default:
+        return false;
+    }
 }
 const DoomEditorAPI api{DoomEditorAPIVersion,
                         sizeof(DoomEditorAPI),
@@ -1328,12 +1323,18 @@ const DoomEditorAPI api{DoomEditorAPIVersion,
                         lastError,
                         draw,
                         resetGraphics,
-                        windowMessage};
+                        sdlevent};
 } // namespace
 
 namespace de {
 void *nativeWindow() {
-    return editorWindow;
+    if (!editorWindow) {
+        return nullptr;
+    }
+    // The native file dialogs and menus want the Win32 handle behind the
+    // SDL window.
+    return SDL_GetPointerProperty(SDL_GetWindowProperties(editorWindow),
+                                  SDL_PROP_WINDOW_WIN32_HWND_POINTER, nullptr);
 }
 const EditorRenderAPI &editorRenderer() {
     return host.renderer;
@@ -1366,7 +1367,9 @@ void closeNativePanel() {
     returnRequested = true;
 }
 void minimizeNativePanel() {
-    ShowWindow(editorWindow, SW_MINIMIZE);
+    if (editorWindow) {
+        SDL_MinimizeWindow(editorWindow);
+    }
 }
 ImFont *nextFont(const std::string &, float) {
     return ImGui::GetFont();
@@ -1382,10 +1385,16 @@ int nativeContextMenu(const std::vector<std::string> &labels, ImVec2 position) {
     for (size_t i = 0; i < labels.size(); ++i) {
         AppendMenuA(menu, MF_STRING, i + 1, labels[i].c_str());
     }
+    const auto hwnd = static_cast<HWND>(SDL_GetPointerProperty(
+        SDL_GetWindowProperties(editorWindow), SDL_PROP_WINDOW_WIN32_HWND_POINTER, nullptr));
+    if (!hwnd) {
+        DestroyMenu(menu);
+        return -1;
+    }
     POINT point{static_cast<LONG>(position.x), static_cast<LONG>(position.y)};
-    ClientToScreen(editorWindow, &point);
+    ClientToScreen(hwnd, &point);
     const auto choice = TrackPopupMenu(menu, TPM_RETURNCMD | TPM_NONOTIFY | TPM_RIGHTBUTTON,
-                                       point.x, point.y, 0, editorWindow, nullptr);
+                                       point.x, point.y, 0, hwnd, nullptr);
     DestroyMenu(menu);
     return static_cast<int>(choice) - 1;
 }

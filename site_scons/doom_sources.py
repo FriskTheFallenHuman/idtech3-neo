@@ -442,7 +442,7 @@ IMGUI_SOURCES = [
     'third-party/imgui/imgui_draw.cpp',
     'third-party/imgui/imgui_tables.cpp',
     'third-party/imgui/imgui_widgets.cpp',
-    'third-party/imgui/backends/imgui_impl_win32.cpp',
+    'third-party/imgui/backends/imgui_impl_sdl3.cpp',
 ]
 
 

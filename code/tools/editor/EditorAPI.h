@@ -5,12 +5,13 @@
 
 // The editor owns all allocations and catches exceptions before returning to the
 // engine. Callbacks only copy transient strings; they never enter Com_Error or a VM.
-constexpr uint32_t DoomEditorAPIVersion = 2;
+constexpr uint32_t DoomEditorAPIVersion = 3;
 struct DoomEditorHost {
     uint32_t version;
     uint32_t size;
-    void *gameWindow;
-    const wchar_t *projectRoot;
+    void *gameWindow;         // the engine SDL_Window
+    void *glContext;          // the engine SDL_GLContext
+    const char *projectRoot;  // UTF-8 directory that holds toolsx86.dll
     void (*print)(const char *text);
     void (*returnToGame)();
     void (*playMap)(const char *mapName);
@@ -28,6 +29,6 @@ struct DoomEditorAPI {
     const char *(*lastError)();
     void (*draw)(int width, int height);
     void (*resetGraphics)();
-    bool (*windowMessage)(void *window, uint32_t message, uintptr_t wparam, intptr_t lparam);
+    bool (*sdlevent)(const void *event);  // a SDL_Event, consumed while the editor is shown
 };
 using DoomEditorGetAPI = const DoomEditorAPI *(__cdecl *)(uint32_t version);

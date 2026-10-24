@@ -164,7 +164,8 @@ doomed_core = editor_core_env.StaticLibrary(
 imgui_env, imgui_variant = module_env('doomed_imgui')
 imgui_env.Append(
     CPPDEFINES=['WINVER=0x0A00', '_WIN32_WINNT=0x0A00'],
-    CPPPATH=['#code/third-party/imgui', '#code/third-party/imgui/backends'])
+    CPPPATH=['#code/third-party/imgui', '#code/third-party/imgui/backends',
+             '#code/third-party/SDL3/include'])
 doomed_imgui = imgui_env.StaticLibrary(
     build_target + '/doomed_imgui',
     [imgui_variant + '/' + p for p in doom_sources.IMGUI_SOURCES])
@@ -203,14 +204,15 @@ if build_editor:
         CCFLAGS=['/utf-8'],
         CPPDEFINES=['WIN32_LEAN_AND_MEAN', 'WINVER=0x0A00', '_WIN32_WINNT=0x0A00'],
         CPPPATH=['#code/tools/editor', '#code', '#code/third-party/imgui',
-                 '#code/third-party/imgui/backends', generated_target])
+                 '#code/third-party/imgui/backends', '#code/third-party/SDL3/include',
+                 generated_target])
     editor_sources = [editor_variant + '/' + p for p in
                       editor_cpp + doom_sources.EDITOR_EXTRA_SOURCES]
     editor_sources.append(generated_target + '/compiler-exports.def')
     editor_dll = editor_env.SharedLibrary(
         '#bin/toolsx86',
         editor_sources,
-        LIBS=[doomed_core, doomed_imgui, dmap, aasbuild, doom_miniz,
+        LIBS=[doomed_core, doomed_imgui, dmap, aasbuild, doom_miniz, SDL3,
               'comdlg32', 'shell32', 'advapi32', 'windowscodecs', 'ole32',
               'dwmapi', 'winmm'])
 
@@ -335,6 +337,7 @@ test_include_paths = [
     '#code/third-party/miniz',
     '#code/third-party/imgui',
     '#code/third-party/imgui/backends',
+    '#code/third-party/SDL3/include',
     generated_target]
 
 test_nodes = []
@@ -351,6 +354,8 @@ for test in doom_sources.TESTS:
                         LINKFLAGS=['/OPT:REF', '/INCREMENTAL:NO'])
     if test['name'] == 'doomed_host_tests':
         test_env.Append(LINKFLAGS=['/LARGEADDRESSAWARE'])
+        # The host test drives the editor through SDL windows and events.
+        test_env.Append(LIBS=[SDL3])
 
     test_libs = [BUILT_LIBS[name] for name in test.get('libs', [])]
     test_libs += test.get('syslibs', [])

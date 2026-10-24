@@ -1,15 +1,13 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "../client/client.h"
 #include "sys_local.h"
-#include "win32/win_local.h"
 #include "sys_editor.h"
 #include "../tools/editor/EditorAPI.h"
-#include <cwchar>
 
 namespace {
-HMODULE editorModule = nullptr;
+SDL_SharedObject *editorModule = nullptr;
 const DoomEditorAPI *editor = nullptr;
-wchar_t projectRoot[32768]{};
+char projectRoot[32768]{};
 char pendingMap[64]{};
 char messages[64][2048]{};
 int messageCount = 0;
@@ -53,48 +51,52 @@ bool loadEditor() {
     if (editor) {
         return true;
     }
-    const auto length = GetModuleFileNameW(nullptr, projectRoot, 32768);
-    if (!length || length >= 32768) {
+    // The editor DLL sits next to the executable, like the old build installed it.
+    const char *base = SDL_GetBasePath();
+    if (!base) {
         Com_Printf("Cannot locate editor: executable path is unavailable\n");
         return false;
     }
-    auto *separator = wcsrchr(projectRoot, L'\\');
-    if (!separator) {
+    Q_strncpyz(projectRoot, base, sizeof(projectRoot));
+    char modulePath[32768];
+    const int needed = SDL_snprintf(modulePath, sizeof(modulePath), "%stoolsx86.dll", projectRoot);
+    SDL_free((void *)base);
+    if (needed < 0 || needed >= static_cast<int>(sizeof(modulePath))) {
         return false;
     }
-    *separator = 0;
-    wchar_t modulePath[32768]{};
-    if (swprintf_s(modulePath, L"%s\\toolsx86.dll", projectRoot) < 0) {
-        return false;
-    }
-    editorModule = LoadLibraryExW(modulePath, nullptr, LOAD_WITH_ALTERED_SEARCH_PATH);
+    editorModule = SDL_LoadObject(modulePath);
     if (!editorModule) {
-        Com_Printf("Cannot load toolsx86.dll (Windows error %lu). Build DoomEditor.\n",
-                   GetLastError());
+        Com_Printf("Cannot load toolsx86.dll (%s). Build DoomEditor.\n", SDL_GetError());
         return false;
     }
-    const auto getAPI =
-        reinterpret_cast<DoomEditorGetAPI>(GetProcAddress(editorModule, "DoomEditor_GetAPI"));
+    const auto getAPI = reinterpret_cast<DoomEditorGetAPI>(
+        SDL_LoadFunction(editorModule, "DoomEditor_GetAPI"));
     editor = getAPI ? getAPI(DoomEditorAPIVersion) : nullptr;
     if (!editor || editor->version != DoomEditorAPIVersion ||
         editor->size != sizeof(DoomEditorAPI) || !editor->initialize || !editor->shutdown ||
         !editor->show || !editor->frame || !editor->visible || !editor->build ||
-        !editor->lastError || !editor->draw || !editor->resetGraphics || !editor->windowMessage) {
+        !editor->lastError || !editor->draw || !editor->resetGraphics || !editor->sdlevent) {
         Com_Printf("Editor DLL has an incompatible API; rebuild the engine and editor together\n");
-        FreeLibrary(editorModule);
+        SDL_UnloadObject(editorModule);
         editorModule = nullptr;
         editor = nullptr;
         return false;
     }
-    const DoomEditorHost host{
-        DoomEditorAPIVersion, sizeof(DoomEditorHost), Win_GetGameWindow(),   projectRoot,
-        copyMessage,          requestReturn,          requestPlay, re.editor};
+    const DoomEditorHost host{DoomEditorAPIVersion,
+                              sizeof(DoomEditorHost),
+                              glw_state.window,
+                              glw_state.context,
+                              projectRoot,
+                              copyMessage,
+                              requestReturn,
+                              requestPlay,
+                              re.editor};
     const bool initialized = editor->initialize(&host);
     flushMessages();
     if (!initialized) {
         Com_Printf("Cannot initialize editor: %s\n", editor->lastError());
         editor->shutdown();
-        FreeLibrary(editorModule);
+        SDL_UnloadObject(editorModule);
         editorModule = nullptr;
         editor = nullptr;
         return false;
@@ -185,12 +187,15 @@ void Sys_EditorFrame() {
             S_SetEditorPaused(qfalse);
             pausedByEditor = false;
         }
-        if (!Cvar_VariableIntegerValue("r_hiddenWindow")) {
-            if (IsIconic(Win_GetGameWindow())) {
-                ShowWindow(Win_GetGameWindow(), SW_RESTORE);
+        SDL_Window *window = glw_state.window;
+        if (window && !Cvar_VariableIntegerValue("r_hiddenWindow")) {
+            if (SDL_GetWindowFlags(window) & SDL_WINDOW_MINIMIZED) {
+                SDL_RestoreWindow(window);
             }
-            SetForegroundWindow(Win_GetGameWindow());
-            SetFocus(Win_GetGameWindow());
+            SDL_RaiseWindow(window);
+            // The editor raised the minimum size while it was shown; the
+            // engine window goes back to the size the game allows.
+            SDL_SetWindowMinimumSize(window, 640, 480);
         }
         IN_Activate(qtrue);
         Com_Printf("Returned to game; editor document retained\n");
@@ -205,23 +210,24 @@ void Sys_EditorFrame() {
     }
 }
 void Sys_EditorDraw(int width, int height) {
-    if (editor && editor->visible() && !IsIconic(Win_GetGameWindow())) {
-        RECT client{};
-        if (GetClientRect(Win_GetGameWindow(), &client)) {
-            width = client.right - client.left;
-            height = client.bottom - client.top;
-        }
-        editor->draw(width, height);
+    if (!editor || !editor->visible()) {
+        return;
     }
+    SDL_Window *window = glw_state.window;
+    if (!window || (SDL_GetWindowFlags(window) & SDL_WINDOW_MINIMIZED)) {
+        return;
+    }
+    // The caller only knows the size of the last frame, so ask the window.
+    SDL_GetWindowSize(window, &width, &height);
+    editor->draw(width, height);
 }
 void Sys_EditorRendererReset() {
     if (editor) {
         editor->resetGraphics();
     }
 }
-bool Sys_EditorWindowMessage(void *window, unsigned int message, uintptr_t wparam,
-                             intptr_t lparam) {
-    return editor && editor->windowMessage(window, message, wparam, lparam);
+bool Sys_EditorProcessEvent(const SDL_Event *event) {
+    return editor && editor->sdlevent(event);
 }
 void Sys_ShutdownEditor() {
     if (editor) {
@@ -230,7 +236,7 @@ void Sys_ShutdownEditor() {
         editor = nullptr;
     }
     if (editorModule) {
-        FreeLibrary(editorModule);
+        SDL_UnloadObject(editorModule);
         editorModule = nullptr;
     }
     if (pausedByEditor) {
