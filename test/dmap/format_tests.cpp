@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-#include "qcommon/doom_bsp.h"
+#include "../../../../qcommon/doom_bsp.h"
 #include <cstring>
 #include <limits>
 #include <fstream>
@@ -43,7 +43,6 @@ int main(int argc, char **argv) {
         });
         reject([](auto &h, auto &data) {
             auto *side = reinterpret_cast<dbsp::Side *>(data.data() + h.lumps[dbsp::Sides].offset);
-
             side->sector = INT32_MAX;
         });
         reject([](auto &h, auto &data) {

@@ -40,8 +40,7 @@ int main(int argc, char **argv) {
                 require(!surface.fullbright(), "amber and green remain dark");
                 continue;
             }
-    
-        ++signalLights;
+            ++signalLights;
             signalEmitters.push_back(e);
             require(surface.fullbright() && e.point && e.blink && e.strobePeriod == 35,
                     "red lens and attached light blink");
@@ -72,8 +71,7 @@ int main(int argc, char **argv) {
                     "walk beneath signal housing");
             require(collider.ray(pose, {136, -40, 179}, {136, 10, 179}).hit,
                     "signal housing blocks shots");
-            require(collider.ray(pose, {
-256, -40, 179}, {256, 10, 179}).hit,
+            require(collider.ray(pose, {256, -40, 179}, {256, 10, 179}).hit,
                     "far signal housing blocks shots");
             require(collider.ray(pose, {0, -40, 110}, {0, -5, 110}).hit,
                     "pole-mounted housing blocks shots");
@@ -108,8 +106,7 @@ int main(int argc, char **argv) {
                 require(v.position.z >= 0 && v.position.z <= car->height,
                         "car fits floor and clearance");
             const auto e = skinEmission(relativeAsset(car->file.parent_path(), surface.shader));
-         
-   if (!e.point)
+            if (!e.point)
                 continue;
             ++attachments;
             require(surface.fullbright() && e.strobePeriod, "point source has animated lens");
@@ -146,8 +143,7 @@ int main(int argc, char **argv) {
                     "shots pass through real fence gaps");
             require(panel.ray(pose, {8, -20, 65}, {8, 20, 65}).hit, "shots hit fence pickets");
             collision::Mesh streetlight(model, 0);
-            requ
-ire(!streetlight.sweep(pose, {45, -20, 0}, {45, 0, 0}, 16, 56).hit,
+            require(!streetlight.sweep(pose, {45, -20, 0}, {45, 0, 0}, 16, 56).hit,
                     "walking beneath the streetlight arm stays clear");
             require(streetlight.sweep(pose, {45, 0, 180}, {45, 0, 180}, 16, 56).hit,
                     "raised actor meets overhanging geometry");
@@ -177,8 +173,7 @@ ire(!streetlight.sweep(pose, {45, -20, 0}, {45, 0, 0}, 16, 56).hit,
                 "red phase");
         require(doom_materials::emissionBrightness(red, 10) == 0 &&
                     doom_materials::emissionBrightness(blue, 10) == 1,
-            
-    "blue phase");
+                "blue phase");
         require(doom_materials::emissionBrightness(red, 3) == 0 &&
                     doom_materials::emissionBrightness(blue, 3) == 0,
                 "dark gap");
@@ -221,7 +216,6 @@ ire(!streetlight.sweep(pose, {45, -20, 0}, {45, 0, 0}, 16, 56).hit,
         };
         auto corrupt = bytes;
         corrupt.resize(80);
-
         rejects(corrupt);
         corrupt = bytes;
         corrupt[4] = 14;
@@ -276,8 +270,7 @@ ire(!streetlight.sweep(pose, {45, -20, 0}, {45, 0, 0}, 16, 56).hit,
         roundtrip.load(out / "model-roundtrip.dwd");
         require(roundtrip.things.back().type == 15005 && roundtrip.things.back().angle == 37,
                 "police car save roundtrip");
-        std::cout << "MD3 regression pass
-ed: decoding, bounds, invalid input, skins, animation, "
+        std::cout << "MD3 regression passed: decoding, bounds, invalid input, skins, animation, "
                      "rotation, map persistence\n";
         return 0;
     } catch (const std::exception &e) {

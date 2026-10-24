@@ -58,8 +58,7 @@ bool drawUI(const EditorUIDraw *draw) {
 void waitForBuild(const DoomEditorAPI &api) {
     const auto snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
     de::require(snapshot != INVALID_HANDLE_VALUE, "Cannot inspect compiler process isolation");
-    PROCESSE
-NTRY32 process{};
+    PROCESSENTRY32 process{};
     process.dwSize = sizeof(process);
     bool child = false;
     if (Process32First(snapshot, &process)) {
@@ -108,8 +107,7 @@ void chooseObject(const DoomEditorAPI &api, HWND window, const char *name) {
         api.windowMessage(window, WM_CHAR, static_cast<unsigned char>(*letter), 0);
     }
     drawFrames(api);
-    pressKey
-(api, window, VK_RETURN);
+    pressKey(api, window, VK_RETURN);
 }
 } // namespace
 
@@ -147,8 +145,7 @@ int main(int argc, char **argv) {
         auto original = de::readFile(source);
         const auto retainedLogPath = root / "host-stream.txt";
         std::ofstream retainedLog(retainedLogPath, std::ios::binary);
-        de::re
-quire(bool(retainedLog), "Cannot create host CRT stream");
+        de::require(bool(retainedLog), "Cannot create host CRT stream");
         module = LoadLibraryW(std::filesystem::absolute(argv[1]).c_str());
         de::require(module != nullptr, "Cannot load editor DLL");
         const auto *image = reinterpret_cast<const unsigned char *>(module);
@@ -179,8 +176,7 @@ quire(bool(retainedLog), "Cannot create host CRT stream");
         de::require(!api->initialize(&wrong), "Host size mismatch accepted");
         de::require(api->initialize(&host), api->lastError());
         de::require(!api->show("../escape"), "Editor accepted path traversal");
-        de::require
-(api->show(""), api->lastError());
+        de::require(api->show(""), api->lastError());
         de::require(windowTitle(window) == L"DoomEdit: Untitled.dwd",
                     "New map did not set the untitled editor caption");
         const auto editorStyle = GetWindowLongPtrW(window, GWL_STYLE);
@@ -212,8 +208,7 @@ quire(bool(retainedLog), "Cannot create host CRT stream");
         de::require(api->visible() && uiFrames >= 4 && previews >= 4, messages);
         chooseObject(*api, window, "Imp");
         clickAt(*api, window, 600, 450);
-        chooseObject(*api, win
-dow, "Shotgun");
+        chooseObject(*api, window, "Shotgun");
         clickAt(*api, window, 700, 450);
         clickAt(*api, window, 85, 49); // Save the existing DWD through the toolbar.
         de::EditWorld placed;
@@ -249,8 +244,7 @@ dow, "Shotgun");
         RECT maximizedRect{};
         GetWindowRect(window, &maximizedRect);
         api->windowMessage(window, WM_KEYDOWN, VK_F12,
-                           static_cast<intptr
-_t>(MapVirtualKeyW(VK_F12, MAPVK_VK_TO_VSC)) << 16);
+                           static_cast<intptr_t>(MapVirtualKeyW(VK_F12, MAPVK_VK_TO_VSC)) << 16);
         api->draw(1440, 900);
         api->frame();
         de::require(!api->visible() && returned == 1, "F12 did not return to game");
@@ -285,8 +279,7 @@ _t>(MapVirtualKeyW(VK_F12, MAPVK_VK_TO_VSC)) << 16);
         DWORD handlesBefore = 0;
         GetProcessHandleCount(GetCurrentProcess(), &handlesBefore);
         PROCESS_MEMORY_COUNTERS_EX memoryBefore{};
-        memoryBefore.c
-b = sizeof(memoryBefore);
+        memoryBefore.cb = sizeof(memoryBefore);
         GetProcessMemoryInfo(GetCurrentProcess(),
                              reinterpret_cast<PROCESS_MEMORY_COUNTERS *>(&memoryBefore),
                              sizeof(memoryBefore));
@@ -320,8 +313,7 @@ b = sizeof(memoryBefore);
         }
         de::writeTextAtomic(profilePath, "invalid configuration syntax\n");
         messages.clear();
-        de::require(api->build("wor
-ktest", true), api->lastError());
+        de::require(api->build("worktest", true), api->lastError());
         const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(30);
         while (messages.find("Error:") == std::string::npos) {
             de::require(std::chrono::steady_clock::now() < deadline,

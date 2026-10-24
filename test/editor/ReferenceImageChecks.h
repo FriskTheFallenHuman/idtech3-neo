@@ -58,8 +58,7 @@ inline void testReferenceImage(App &a, const std::filesystem::path &fixture) {
         return draw;
     };
     auto sameMap = [&](const ImDrawList &left, const ImDrawList &right) {
-        r
-equire(left.VtxBuffer.Size == right.VtxBuffer.Size &&
+        require(left.VtxBuffer.Size == right.VtxBuffer.Size &&
                     left.IdxBuffer.Size == right.IdxBuffer.Size &&
                     left.CmdBuffer.Size == right.CmdBuffer.Size,
                 "Hidden reference changed map drawing");
@@ -98,8 +97,7 @@ equire(left.VtxBuffer.Size == right.VtxBuffer.Size &&
     r.scale = 2;
     r.rotation = 0;
     auto visible = render();
-    require(visible->CmdBuffer.Size >= 3 && visible->CmdBuffer[0].ElemC
-ount == 6 &&
+    require(visible->CmdBuffer.Size >= 3 && visible->CmdBuffer[0].ElemCount == 6 &&
                 visible->CmdBuffer[1].GetTexID() == texture &&
                 visible->CmdBuffer[1].ElemCount == 6 &&
                 visible->CmdBuffer[2].GetTexID() != texture && visible->CmdBuffer[2].ElemCount > 0,
@@ -134,7 +132,6 @@ ount == 6 &&
     require(a.retiredImages.size() == retired + 1 && a.retiredImages.back() == texture,
             "Reference replacement did not defer texture release");
     const auto replacement = r.texture;
-
     a.removeReferenceImage();
     require(!r.texture && r.path.empty() && a.retiredImages.back() == replacement,
             "Reference removal did not clear state and retire the texture");
@@ -171,8 +168,7 @@ ount == 6 &&
         require(!a.referenceImage.texture && a.world.reference.scale == expected.scale &&
                     a.referenceImage.center == expected.center,
                 "Missing image discarded saved reference settings");
-        a.world = std::move(saved)
-;
+        a.world = std::move(saved);
         a.removeReferenceImage(false);
     }
     // Keep a visible reference for the smoke screenshot.

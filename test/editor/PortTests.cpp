@@ -37,8 +37,7 @@ int main(int argc, char **argv) {
         require(compilerInput.find("DoomEd sector indices") == std::string::npos &&
                     compilerInput.find("DoomEd reference image") == std::string::npos,
                 "Editor metadata leaked into DoomMap input");
-        require(copy.explicitSectors && copy.reference.path == "refe
-rence.png",
+        require(copy.explicitSectors && copy.reference.path == "reference.png",
                 "Compiler snapshot modified the authoring document");
         copy.parse(serialized);
         bool rejected = false;

@@ -41,8 +41,7 @@ int main(int argc, char **argv) {
             });
             rejects([] {
                 doom_materials::parse(
-                    "DOOM_MATERIALS 1\nF BAD 64 64 EMISSIVE 1 1 1 2 512 
-FLICKER EXTRA\n");
+                    "DOOM_MATERIALS 1\nF BAD 64 64 EMISSIVE 1 1 1 2 512 FLICKER EXTRA\n");
             });
             const auto halo = doom_materials::parse(
                 "DOOM_MATERIALS 1\nF LAMP 64 64 EMISSIVE 1 .55 .16 220 768 CORONA 24 .7\n");
@@ -77,8 +76,7 @@ FLICKER EXTRA\n");
             automatic.checkpoint();
             int divider = automatic.newLine(reverse ? Vec2{128, 256} : Vec2{128, 0},
                                             reverse ? Vec2{128, 0} : Vec2{128, 256});
-            require(finishDra
-wnSector(automatic, divider, false),
+            require(finishDrawnSector(automatic, divider, false),
                     "Reconnecting line automatically forms sector");
             require(connectSectors(automatic).size() == 2, "Automatic divider yields two sectors");
             require(automatic.undo() && automatic.serialize() == before,
@@ -114,8 +112,7 @@ wnSector(automatic, divider, false),
         {
             EditWorld attached;
             attached.load(std::filesystem::path(argv[1]) /
-                          "tools/DoomEd/tests/
-fixtures/AttachedInner.dwd");
+                          "tools/DoomEd/tests/fixtures/AttachedInner.dwd");
             const auto original = attached;
             require(finishDrawnSector(attached, 10, false),
                     "Auto-connect three edges to an existing inner sector");
@@ -148,8 +145,7 @@ fixtures/AttachedInner.dwd");
                         joined.newLine(p[i], p[(i + 1) % 4], line);
                     }
                 };
-                box
-(0, 0, 128, 256, 0, explicitIds ? 17 : -1);
+                box(0, 0, 128, 256, 0, explicitIds ? 17 : -1);
                 box(128, partial ? 64 : 0, 256, partial ? 192 : 256, 16, -1);
                 joined.explicitSectors = explicitIds;
                 const auto before = joined.serialize();
@@ -183,8 +179,7 @@ fixtures/AttachedInner.dwd");
             for (int i = 0; i < 4; ++i)
                 divided.newLine(p[i], p[(i + 1) % 4]);
             divided.newLine({128, 0}, {128, 128});
-            
-require(joinAdjacentSectors(divided) > 0 && connectSectors(divided).size() == 2,
+            require(joinAdjacentSectors(divided) > 0 && connectSectors(divided).size() == 2,
                     "A one-sided divider becomes a portal between two bounded rooms");
             EditWorld open;
             open.newLine({0, 0}, {128, 0});
@@ -221,8 +216,7 @@ require(joinAdjacentSectors(divided) > 0 && connectSectors(divided).size() == 2,
                     auto &l = nested.lines[index];
                     require((l.flags & 5) == 4 && l.side[0].midtexture == "-" &&
                                 l.side[1].midtexture == "-",
-                            "Inner b
-oundary must be an open two-sided portal");
+                            "Inner boundary must be an open two-sided portal");
                     require(l.side[0].ends.floorflat == "CWFLOOR" &&
                                 l.side[1].bottomtexture == "CWBRICK",
                             "Inner sector must inherit surrounding materials");
@@ -261,8 +255,7 @@ oundary must be an open two-sided portal");
             edge({-128, -128}, {-128, 128}, true);
             Line portal;
             portal.flags = 4;
-   
-         portal.side[0].midtexture = portal.side[1].midtexture = "-";
+            portal.side[0].midtexture = portal.side[1].midtexture = "-";
             portal.side[0].toptexture = portal.side[1].toptexture = "STARTAN3";
             portal.side[0].bottomtexture = portal.side[1].bottomtexture = "STARTAN3";
             portal.side[0].ends.slope = {0, 128, 0, -16384};
@@ -292,8 +285,7 @@ oundary must be an open two-sided portal");
                         tilted.floorAt({0, 256}) == 8,
                     "Slope shortcut pivot and rise/run");
             require(ramp.adjustedFloor(flat, 8, 0).floorheight == 8, "Height shortcut step");
-   
-         require(ramp.adjustedFloor(flat, 512, 0) == flat, "Reject floor above ceiling");
+            require(ramp.adjustedFloor(flat, 512, 0) == flat, "Reject floor above ceiling");
             ramp.save(output / "RAMP.dwd");
             auto roof = ramp;
             for (auto &line : roof.lines)
@@ -326,8 +318,7 @@ oundary must be an open two-sided portal");
             require(roof.adjustedSurface(roofSector, true, -128, 0) == roofSector,
                     "Reject ceiling below floor");
             roof.checkpoint();
-            
-for (auto &line : roof.lines)
+            for (auto &line : roof.lines)
                 line.selected = 1;
             roof.moveSelected({64, 32});
             require(roof.lines[3].side[0].ends.ceilingAt({64, 32}) == 96,
@@ -363,8 +354,7 @@ for (auto &line : roof.lines)
             rejects([&] { decodeSlopes(data.data(), data.size() - 1, 1); });
             rejects([&] { decodeSlopes(data.data(), data.size(), 2); });
         }
-        const auto
- packPath = root / "assets/materials/cyberfort/cyberfort.wad";
+        const auto packPath = root / "assets/materials/cyberfort/cyberfort.wad";
         DoomProject project;
         project.loadWad(root / "DOOM.WAD");
         const auto walls = project.textures.size(), flats = project.wad.flatNames().size();
@@ -399,8 +389,7 @@ for (auto &line : roof.lines)
         restored.load(output / "cyberfort.dpr");
         require(restored.materialPacks.size() == 1 && restored.wad.materials().size() == 6 &&
                     restored.textures.size() == project.textures.size(),
-                "Project material persis
-tence");
+                "Project material persistence");
         Wadfile resources;
         project.wad.copyMaterialsTo(resources);
         resources.save(output / "resources.wad");
@@ -437,8 +426,7 @@ tence");
             side.ends.ceilingflat = "CWCEIL";
             side.ends.lightlevel = second ? 192 : 224;
         };
-        outer({0, 256}, {256, 2
-56}, "CWBRICK", false);
+        outer({0, 256}, {256, 256}, "CWBRICK", false);
         outer({256, 0}, {0, 0}, "CWSTEEL", false);
         outer({0, 0}, {0, 256}, "CWBRICK", false);
         const auto first = world.lines.back().side[0].ends;
@@ -478,8 +466,7 @@ tence");
                 side.uv = {2000, 500, 7500, -3250};
                 side.ends.floorUV = {1500, 2500, 12250, -30000};
                 side.ends.ceilingUV = {750, 2000, -9500, 81000};
-                side.ends.cei
-lingflat = "LASTORM";
+                side.ends.ceilingflat = "LASTORM";
             }
         const auto rotationText = rotated.serialize();
         EditWorld rotationRestored;
@@ -511,8 +498,7 @@ lingflat = "LASTORM";
         const auto uv = rotatedPlaneUV(64, 0, 90000);
         require(std::abs(uv[0]) < .001f && std::abs(uv[1] - 64) < .001f,
                 "Quarter-turn UV coordinates");
-       
- const auto encoded = encodeRotations({{37125, -22500}});
+        const auto encoded = encodeRotations({{37125, -22500}});
         require(decodeRotations(encoded.data(), encoded.size(), 1)[0] ==
                     SectorRotation{37125, -22500},
                 "Arbitrary rotation binary round trip");

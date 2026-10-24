@@ -50,8 +50,7 @@ int main(int argc, char **argv) {
         restrictAllocations = false;
         Wadfile loaded;
         loaded.load(out / "streamed.wad");
-        require(loaded.
-lumps.size() == 4 && loaded.get("THINGS") == map.get("THINGS"),
+        require(loaded.lumps.size() == 4 && loaded.get("THINGS") == map.get("THINGS"),
                 "map records preserved");
         require(loaded.get("BIGSKIN") == resources.get("BIGSKIN"),
                 "streamed material bytes preserved");

@@ -48,7 +48,6 @@ inline void testThingSplineEditing(App &a, const std::filesystem::path &out) {
     io.MousePos = worldToScreen(a, {0, -96});
     io.MouseClicked[0] = io.MouseDown[0] = true;
     io.MouseDownDuration[0] = 0;
-
     respondThingSpline(a, true);
     io.MouseClicked[0] = false;
     io.MouseDownDuration[0] = .1f;
@@ -86,8 +85,7 @@ inline void testThingSplineEditing(App &a, const std::filesystem::path &out) {
             "Start extension undo failed");
     require(a.world.redo(), "Start extension redo failed");
     click(a.world.findSpline(id)->nodes.back());
-    require(a.splineAdding && !a.splineExte
-ndStart, "Last endpoint did not activate end extension");
+    require(a.splineAdding && !a.splineExtendStart, "Last endpoint did not activate end extension");
     click({320, -32});
     require(a.world.findSpline(id)->nodes.size() == 8 &&
                 a.world.findSpline(id)->nodes.back() == Vec2{320, -32},

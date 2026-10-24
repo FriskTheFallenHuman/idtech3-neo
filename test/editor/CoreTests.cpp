@@ -59,8 +59,7 @@ int main(int argc, char **argv) {
         copy.paste({256, 256});
         check(copy.lines.size() == 5, "Clipboard paste");
         copy.undo();
-        check(copy
-.lines.size() == 4, "Undo paste");
+        check(copy.lines.size() == 4, "Undo paste");
         copy.splitLine(0, {64, 128});
         check(copy.lines.size() == 5 && connectSectors(copy).size() == 1,
               "Split line preserves topology");
@@ -97,8 +96,7 @@ int main(int argc, char **argv) {
         check(raised.things[1].height == 7, "Fine downward height step");
         EditWorld heightReload;
         heightReload.parse(raised.serialize());
-        check(heig
-htReload.things[1].height == 7 && heightReload.things[2].height == 7,
+        check(heightReload.things[1].height == 7 && heightReload.things[2].height == 7,
               "DWD preserves thing heights");
         raised.exportMap(out / "heights.wad", "E1M1");
         Wadfile heightWad;
@@ -137,8 +135,7 @@ htReload.things[1].height == 7 && heightReload.things[2].height == 7,
         Bytes invalid = {'P', 'W', 'A', 'D'};
         put32(invalid, 0xffffffff);
         put32(invalid, 12);
-        writeFileAtomic(out / "bad.wad", inva
-lid);
+        writeFileAtomic(out / "bad.wad", invalid);
         rejects([&] { generated.load(out / "bad.wad"); }, "Invalid WAD directory rejected");
         check(generated.mapNames().size() == 1, "Failed WAD read preserves previous data");
         check(lineInRect({-2, 0}, {2, 0}, {-1, -1}, {1, 1}), "Line crossing rectangle");
@@ -180,8 +177,7 @@ lid);
         check(!textures.empty(), "Real textures decoded");
         for (auto &t : textures) {
             auto im = wad.texture(t);
-            check(im.pixels.size() == size_t(t.width) * t.height
-, "Texture composition size");
+            check(im.pixels.size() == size_t(t.width) * t.height, "Texture composition size");
         }
         for (auto &name : wad.flatNames())
             check(wad.flat(name).pixels.size() == 4096, "Flat decoding");

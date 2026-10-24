@@ -45,8 +45,7 @@ void checkRoom(bool reverse) {
     check(world.redo(), "Sector creation redo failed");
     authorSector(world, {{128, 0}, {256, 0}, {256, 128}, {128, 128}});
     check(std::count_if(world.lines.begin(), world.lines.end(),
-                        [](const Line &line) { return line.selected >= 
-0; }) == 7,
+                        [](const Line &line) { return line.selected >= 0; }) == 7,
           "Adjacent room left duplicate shared walls");
     const auto portals =
         std::count_if(world.lines.begin(), world.lines.end(),
@@ -84,8 +83,7 @@ int main(int argc, char **argv) {
         EditWorld objects;
         objects.clear();
         const auto emptyObjects = objects.serialize();
-        objects.placeObj
-ect({64, 96}, 3001, -90, 15);
+        objects.placeObject({64, 96}, 3001, -90, 15);
         check(objects.things.size() == 1 && objects.things[0].type == 3001 &&
                   objects.things[0].angle == 270 && objects.things[0].options == 15,
               "Object placement lost the selected type or defaults");
@@ -116,8 +114,7 @@ ect({64, 96}, 3001, -90, 15);
             project.loadWad(argv[1]);
             const auto floor = std::find_if(project.textures.begin(), project.textures.end(),
                                             [](const Texture &t) { return t.name == "FLOOR0_1"; });
-            const auto wall =
- std::find_if(project.textures.begin(), project.textures.end(),
+            const auto wall = std::find_if(project.textures.begin(), project.textures.end(),
                                            [](const Texture &t) { return t.name == "STARTAN3"; });
             check(floor != project.textures.end() && wall != project.textures.end(),
                   "Unified texture catalog omits a storage kind");

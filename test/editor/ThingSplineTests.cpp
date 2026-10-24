@@ -40,8 +40,7 @@ int main(int argc, char **argv) {
         auto things = generateSplineThings(s);
         double first = (curve.back().distance - (things.size() - 1) * s.spacing) / 2;
         for (size_t i = 0; i < things.size(); ++i) {
-    
-        auto expected = splinePointAt(curve, first + i * s.spacing);
+            auto expected = splinePointAt(curve, first + i * s.spacing);
             require(close(things[i].origin.x, expected.x) && close(things[i].origin.y, expected.y),
                     "Curve arc spacing failed");
         }
@@ -86,8 +85,7 @@ int main(int argc, char **argv) {
         world.reference = {
             (root / "assets/models/security-fence/iron.png").lexically_normal().u8string(),
             {12.25f, -4.5f},
-            2.125f
-,
+            2.125f,
             .37f,
             17.5f};
         world.save(out / "SPLINE.dwd");
@@ -127,8 +125,7 @@ int main(int argc, char **argv) {
         require(reload.findSpline(1)->nodes[0] == node + Vec2{16, 24},
                 "Moving a generated thing must carry its spline");
         require(reload.undo(), "Undo group move failed");
-        reload.exportMap(out
- / "SPLINE-editable.wad", "SPLINE");
+        reload.exportMap(out / "SPLINE-editable.wad", "SPLINE");
         Wadfile wad;
         wad.load(out / "SPLINE-editable.wad");
         require(wad.lumps[wad.find("THINGS")].data.size() == reload.things.size() * 10,
