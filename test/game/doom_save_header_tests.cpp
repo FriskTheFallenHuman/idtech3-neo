@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-#include "qcommon/doom_save.h"
+#include "../../qcommon/doom_save.h"
 #include <cstdio>
 #include <initializer_list>
 #include <stdexcept>
@@ -45,8 +45,7 @@ int main() {
         version = SAVE_VERSION;
         std::memcpy(bytes, &version, sizeof(version));
         time = -1;
-        std::memcpy(bytes + si
-zeof(int) + MAX_QPATH, &time, sizeof(time));
+        std::memcpy(bytes + sizeof(int) + MAX_QPATH, &time, sizeof(time));
         if (valid(sizeof(bytes))) {
             throw std::runtime_error("Negative save time accepted");
         }

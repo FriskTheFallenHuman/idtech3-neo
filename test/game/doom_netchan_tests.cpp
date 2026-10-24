@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-#include "game/q_shared.h"
-#include "qcommon/qcommon.h"
+#include "../q_shared.h"
+#include "../../qcommon/qcommon.h"
 #include <cstdio>
 #include <stdexcept>
 #include <vector>
@@ -56,8 +56,7 @@ int main() {
                 while (NET_GetLoopPacket(NS_CLIENT, &from, &message)) {
                     if (Netchan_Process(&receiver, &message)) {
                         if (message.cursize != length + 4 ||
-    
-                        memcmp(message.data + 4, original.data(), length)) {
+                            memcmp(message.data + 4, original.data(), length)) {
                             throw std::runtime_error("Fragmented payload was corrupted");
                         }
                         complete = true;
@@ -101,7 +100,6 @@ int main() {
         Netchan_Setup(NS_CLIENT, &receiver, address, 0);
         byte payload[2600]{};
         byte bytes[2603]{};
-
         msg_t message;
         MSG_Init(&message, bytes, sizeof(bytes));
         Netchan_Transmit(&sender, sizeof(payload), payload);

@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-#include "game/q_shared.h"
-#include "game/bg_public.h"
-#include "game/bg_doomweapons.h"
-#include "game/bg_doommonsters.h"
+#include "../q_shared.h"
+#include "../bg_public.h"
+#include "../bg_doomweapons.h"
+#include "../bg_doommonsters.h"
 #include <cstdio>
 #include <initializer_list>
 #include <stdexcept>
@@ -50,8 +50,7 @@ void Trace(trace_t *trace, const vec3_t start, const vec3_t mins, const vec3_t m
         float normal = 0;
         bool intersects = true;
         for (int i = 0; i < 3; ++i) {
-            const float delta = end[i] - s
-tart[i];
+            const float delta = end[i] - start[i];
             if (fabs(delta) < 0.000001f) {
                 if (start[i] <= low[i] || start[i] >= high[i]) {
                     intersects = false;
@@ -103,8 +102,7 @@ void Run(bool monster) {
     ps.groundEntityNum = ENTITYNUM_NONE;
     VectorSet(ps.mins, monster ? -20 : -16, monster ? -20 : -16, monster ? 0 : -24);
     VectorSet(ps.maxs, monster ? 20 : 16, monster ? 20 : 16, monster ? 56 : 32);
-    ps.maxs[2] -= 2 * doommonster::
-HullInset;
+    ps.maxs[2] -= 2 * doommonster::HullInset;
     ps.origin[2] = monster ? 0 : 24;
     ps.crouchMaxZ = ps.maxs[2];
     ps.viewheight = ps.standViewHeight = monster ? 42 : 17;
@@ -158,8 +156,7 @@ int main() {
                   "collision and low-ceiling steps without mesh scripts.");
         return 0;
     } catch (const std::exception &error) {
-    
-    std::fprintf(stderr, "%s\n", error.what());
+        std::fprintf(stderr, "%s\n", error.what());
         return 1;
     }
 }

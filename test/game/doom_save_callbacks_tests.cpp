@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-#include "game/g_save_callbacks.h"
+#include "../g_save_callbacks.h"
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -51,8 +51,7 @@ int main(int argc, char **argv) {
     CHECK(DOOM_FindSaveCallbackByName("missing_callback") == nullptr);
     CHECK(DOOM_FindSaveCallbackByName(nullptr) == nullptr);
     CHECK(DOOM_FindSaveCallbackAtAddress(nullptr) == nullptr);
-    CHECK(DOOM_FindSaveCall
-backAtAddress(DOOM_SaveCallbackAddress(UnregisteredFunction)) ==
+    CHECK(DOOM_FindSaveCallbackAtAddress(DOOM_SaveCallbackAddress(UnregisteredFunction)) ==
           nullptr);
     const auto *legacy = DOOM_FindSaveCallbackAtAddress(DOOM_SaveCallbackAddress(LegacyFunction));
     CHECK(legacy && !std::strcmp(legacy->funcStr, "A0_new_alias"));
@@ -89,8 +88,7 @@ backAtAddress(DOOM_SaveCallbackAddress(UnregisteredFunction)) ==
         doomSaveCallbackRegistration_t invalid(name, function, __FILE__, __LINE__);
         CHECK(!DOOM_ValidateSaveCallbacks(&error));
         CHECK(error && std::strstr(error, expected));
-        CHECK(std::strstr(error, "doom_save_callbacks_
-tests.cpp"));
+        CHECK(std::strstr(error, "doom_save_callbacks_tests.cpp"));
         CHECK(DOOM_FindSaveCallbackByName("typed_callback") == nullptr);
     }
     std::puts("Save callback registration checks passed.");

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-#include "game/g_local.h"
+#include "../g_local.h"
 #include <cstdio>
 #include <stdexcept>
 
@@ -65,8 +65,7 @@ void QDECL Com_Error(int, const char *message, ...) {
 }
 int trap_FS_FOpenFile(const char *name, fileHandle_t *file, fsMode_t) {
     assetFile = std::fopen(va("base/%s", name), "rb");
-    *file = assetFile ? 1 :
- 0;
+    *file = assetFile ? 1 : 0;
     if (!assetFile) {
         return -1;
     }
@@ -150,8 +149,7 @@ void trap_BotFreeClient(int slot) {
           "Only native map actor slots may be released");
     ++releasedActors;
 }
-qboolean G_SpawnInt(const char 
-*, const char *value, int *result) {
+qboolean G_SpawnInt(const char *, const char *value, int *result) {
     *result = atoi(value);
     return qtrue;
 }
@@ -208,8 +206,7 @@ void trap_Trace(trace_t *trace, const vec3_t start, const vec3_t mins, const vec
         // Sweep against an independent rectangular obstacle using slab entry
         // times. Expanding by the actor bounds also checks species clearance.
         const float low[3] = {64 - (maxs ? maxs[0] : 0), -100 - (maxs ? maxs[1] : 0), -1000};
-        const float high[3] = {96 - (mins ? mins[0] : 0), 100 - (mins ? 
-mins[1] : 0), 1000};
+        const float high[3] = {96 - (mins ? mins[0] : 0), 100 - (mins ? mins[1] : 0), 1000};
         float entry = 0, exit = 1;
         int axis = -1;
         float normal = 0;
@@ -267,8 +264,7 @@ int main() {
         player->inuse = qtrue;
         player->client = &clients[0];
         player->health = 1000;
-     
-   clients[0].pers.connected = CON_CONNECTED;
+        clients[0].pers.connected = CON_CONNECTED;
         clients[0].sess.sessionTeam = TEAM_FREE;
         clients[0].ps.viewheight = 17;
         VectorSet(player->r.mins, -16, -16, -24);
@@ -305,8 +301,7 @@ int main() {
         obstructed = false;
         imp->doomNpc.options = 7;
         G_DoomAIHear(0, player->r.currentOrigin, 2048);
-        Check(imp->doomNpc.enemy == 0, "Gunshot wak
-es ordinary monsters");
+        Check(imp->doomNpc.enemy == 0, "Gunshot wakes ordinary monsters");
         auto *demon = Spawn(Demon, -64);
         G_DoomAIDamage(imp, demon, 1, 0, MOD_MACHINEGUN);
         Check(imp->doomNpc.enemy == demon->s.number, "Damage establishes monster infighting");
@@ -342,8 +337,7 @@ es ordinary monsters");
             const auto &origin = demon->client->ps.origin;
             wentAround = wentAround || fabs(origin[1]) >= 129.8f;
             Check(
-                !(origin[0] + demon->r.maxs[0] > 64.01f && origin[0] + demon->r.mins[
-0] < 95.99f &&
+                !(origin[0] + demon->r.maxs[0] > 64.01f && origin[0] + demon->r.mins[0] < 95.99f &&
                   origin[1] + demon->r.maxs[1] > -99.99f && origin[1] + demon->r.mins[1] < 99.99f),
                 "Pursuit cannot pass through the expanded wall");
         }

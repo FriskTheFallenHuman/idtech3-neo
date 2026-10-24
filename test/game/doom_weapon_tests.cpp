@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-#include "game/q_shared.h"
-#include "game/bg_public.h"
-#include "game/bg_doomweapons.h"
+#include "../q_shared.h"
+#include "../bg_public.h"
+#include "../bg_doomweapons.h"
 #include <cstdio>
 #include <stdexcept>
 
@@ -53,7 +53,6 @@ int main() {
             const int before = ps.ammo[def.ammo];
             Check(FireFor(ps, Milliseconds(def.fireTic) + 2, 1) == 1,
                   "Action frame must fire once");
-
             Check(before - ps.ammo[def.ammo] == def.cost, "Correct ammo cost at action frame");
             Check((ps.weapAnim & ~ANIM_TOGGLEBIT) == WEAP_ATTACK1, "Existing attack animation");
             Check(ps.weaponDelay == 0 && ps.weaponstate == WEAPON_FIRING, "Delay completes once");
@@ -91,8 +90,7 @@ int main() {
         Check(Collect(pickup, 7) && pickup.ammo[WP_DOOM_PISTOL] == 200, "Ammo cap");
         Check(!Collect(pickup, 7) && !Collect(pickup, -1) && !Collect(pickup, PickupCount),
               "Full ammo and malformed pickup IDs");
- 
-       Check(Collect(pickup, 14) && Maximum(pickup, WP_DOOM_PISTOL) == 400 &&
+        Check(Collect(pickup, 14) && Maximum(pickup, WP_DOOM_PISTOL) == 400 &&
                   Maximum(pickup, WP_DOOM_BFG) == 600,
               "Backpack doubles all ammo limits");
         pickup = Player(WP_DOOM_FIST);

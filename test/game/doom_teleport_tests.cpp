@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Include the adapter to exercise its real action path with controlled map metadata.
-#include "game/g_doom.cpp"
+#include "../g_doom.cpp"
 #include <cstdio>
 #include <initializer_list>
 #include <stdexcept>
@@ -62,7 +62,6 @@ void QDECL Com_Printf(const char *, ...) {
 void QDECL Com_Error(int, const char *message, ...) {
     throw std::runtime_error(message);
 }
-
 void QDECL G_DPrintf(const char *, ...) {
 }
 void trap_GetConfigstring(int, char *text, int) {
@@ -132,8 +131,7 @@ void trap_Cvar_VariableStringBuffer(const char *, char *buffer, int) {
 int trap_FS_FOpenFile(const char *, fileHandle_t *, fsMode_t) {
     return 0;
 }
-void trap_FS_FClos
-eFile(fileHandle_t) {
+void trap_FS_FCloseFile(fileHandle_t) {
 }
 void QDECL G_Error(const char *message, ...) {
     throw std::runtime_error(message);
@@ -181,8 +179,7 @@ int main() {
         VectorSet(client.oldOrigin, 32, 64, 24);
         VectorSet(client.ps.origin, 32, -64, 24);
         G_DoomCrossLines(&actor);
-        Check(!eventCount, "Back-to-front crossing does not te
-leport");
+        Check(!eventCount, "Back-to-front crossing does not teleport");
         Reset();
         client.ps.origin[1] = 0;
         G_DoomCrossLines(&actor);
@@ -224,8 +221,7 @@ leport");
         actor.health = 0;
         Check(!DoomLineActivate(&line, &actor), "Dead actors cannot teleport");
         Reset();
-        cl
-ient.sess.sessionTeam = TEAM_SPECTATOR;
+        client.sess.sessionTeam = TEAM_SPECTATOR;
         Check(!DoomLineActivate(&line, &actor), "Spectators cannot consume map actions");
         std::puts("Doom teleport activation, metadata, landing, motion, effects and failure paths "
                   "passed.");

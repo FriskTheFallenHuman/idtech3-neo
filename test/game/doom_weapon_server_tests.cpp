@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-#include "game/g_local.h"
+#include "../g_local.h"
 void G_DoomItemTouch(gentity_t *, gentity_t *, trace_t *) {
 }
 void G_DoomSpawnItemThings(const void *) {
 }
-#include "game/bg_doomweapons.h"
+#include "../bg_doomweapons.h"
 #include <cstdio>
 #include <stdexcept>
 #include <vector>
@@ -68,8 +68,7 @@ void trap_LinkEntity(gentity_t *) {
 }
 void G_SetOrigin(gentity_t *entity, vec3_t origin) {
     VectorCopy(origin, entity->r.currentOrigin);
-    VectorCopy(origin,
- entity->s.pos.trBase);
+    VectorCopy(origin, entity->s.pos.trBase);
 }
 void G_FreeEntity(gentity_t *entity) {
     entity->inuse = qfalse;
@@ -124,8 +123,7 @@ void G_Damage(gentity_t *target, gentity_t *, gentity_t *attacker, vec3_t, vec3_
     lastDamage = damage;
     lastMod = mod;
     damages.push_back(damage);
-    if (shrinkOnDama
-ge) {
+    if (shrinkOnDamage) {
         target->r.maxs[2] = 8;
     }
 }
@@ -162,8 +160,7 @@ int main() {
             traceFlags = SURF_METAL | SURF_NOMARKS;
             traceContents = CONTENTS_SLIME;
             G_DoomFireWeapon(player);
-            vec3_
-t hitNormal;
+            vec3_t hitNormal;
             ByteToDir(impact.s.eventParm, hitNormal);
             Check(damageCount == 0, "World obstruction prevents damage");
             Check(impactCount == pellets && lastImpactEvent == EV_MISSILE_MISS &&
@@ -200,8 +197,7 @@ t hitNormal;
         for (int weapon : {WP_DOOM_ROCKET, WP_DOOM_PLASMA, WP_DOOM_BFG}) {
             auto *player = Player(weapon);
             level.time = 1000;
-            Check(G_DoomFireWeapon
-(player), "Server launches projectile");
+            Check(G_DoomFireWeapon(player), "Server launches projectile");
             Check(projectile.s.eType == ET_MISSILE && projectile.s.weapon == weapon,
                   "Projectile retains Doom weapon ID for rendering and impact");
             Check(projectile.parent == player && projectile.r.ownerNum == player->s.number &&
@@ -232,8 +228,7 @@ t hitNormal;
         puts("Doom server weapon checks passed: collision, melee range, shotgun pellets, damage "
              "dice, shootable lines, projectile ownership/speed/splash and BFG spray.");
         return 0;
-    } catch (const std::exception &e
-rror) {
+    } catch (const std::exception &error) {
         fprintf(stderr, "FAIL: %s\n", error.what());
         return 1;
     }

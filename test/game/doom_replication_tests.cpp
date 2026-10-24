@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-#include "game/q_shared.h"
-#include "game/bg_public.h"
-#include "qcommon/qcommon.h"
-#include "cgame/cg_public.h"
-#include "game/bg_doommonsters.h"
+#include "../q_shared.h"
+#include "../bg_public.h"
+#include "../../qcommon/qcommon.h"
+#include "../../cgame/cg_public.h"
+#include "../bg_doommonsters.h"
 #include <cstdio>
 #include <stdexcept>
 
@@ -48,8 +48,7 @@ int main() {
             decoded.legsAnim != actor.legsAnim || decoded.effect1Time != actor.effect1Time ||
             decoded.pos.trBase[0] != actor.pos.trBase[0] || decoded.apos.trBase[1] != 315 ||
             decoded.eFlags != EF_DEAD) {
-            
-throw std::runtime_error(
+            throw std::runtime_error(
                 "Monster snapshot state did not survive the real network codec");
         }
         playerState_t state{}, restored{};
@@ -85,8 +84,7 @@ throw std::runtime_error(
         if (restored.clientNum != 255 ||
             restored.stats[STAT_DOOM_MONSTER] != doommonster::SpiderMastermind ||
             restored.stats[STAT_HEALTH] != 3000) {
-            throw std::runtime_error("High-slot player state did not ro
-und-trip");
+            throw std::runtime_error("High-slot player state did not round-trip");
         }
         std::puts("Client 255, monster sprite state and player state round-trip through the "
                   "network codec.");

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-#include "game/g_local.h"
-#include "game/g_doomsave.h"
+#include "../g_local.h"
+#include "../g_doomsave.h"
 #include <cstdio>
 #include <stdexcept>
 #include <string>
@@ -64,8 +64,7 @@ void trap_UnlinkEntity(gentity_t *entity) {
 void trap_BotFreeClient(int slot) {
     Check(slot > 0 && slot < MAX_CLIENTS, "Human or out-of-range slot freed");
     allocated[slot] = false;
-    g_en
-tities[slot].r.svFlags &= ~SVF_BOT;
+    g_entities[slot].r.svFlags &= ~SVF_BOT;
 }
 int trap_BotAllocateClient() {
     for (int slot = 1; slot < MAX_CLIENTS; ++slot) {
@@ -115,8 +114,7 @@ int main() {
         }
         SavedClient(2);
         SavedClient(7);
-        SavedCli
-ent(MAX_CLIENTS - 1);
+        SavedClient(MAX_CLIENTS - 1);
         G_DoomSaveFinishRestore(records);
         Check(userinfos[2].find("baronofhell") != std::string::npos &&
                   configstrings[7].find("doomnpc\\6") != std::string::npos &&

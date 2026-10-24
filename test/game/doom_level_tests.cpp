@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-#include "game/g_local.h"
-#include "game/g_doomlevel.h"
-#include "game/bg_doomlevel.h"
-#include "game/bg_doomweapons.h"
+#include "../g_local.h"
+#include "../g_doomlevel.h"
+#include "../bg_doomlevel.h"
+#include "../bg_doomweapons.h"
 #include <cstdio>
 #include <fstream>
 #include <map>

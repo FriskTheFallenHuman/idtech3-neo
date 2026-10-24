@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-#include "game/g_local.h"
-#include "game/bg_doomitems.h"
+#include "../g_local.h"
+#include "../bg_doomitems.h"
 #include <cstdio>
 #include <fstream>
 #include <stdexcept>

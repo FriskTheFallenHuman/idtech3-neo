@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-#include "game/q_shared.h"
-#include "game/bg_doommonsters.h"
-#include "cgame/cg_doomsprite_geometry.h"
-#include "game/g_doomsound.h"
+#include "../q_shared.h"
+#include "../bg_doommonsters.h"
+#include "../../cgame/cg_doomsprite_geometry.h"
+#include "../g_doomsound.h"
 #include <cstdio>
 #include <fstream>
 #include <limits>
@@ -54,8 +54,7 @@ int main(int argc, char **argv) {
             Check(levels[1] == 0 && levels[2] == 1 && levels[3] == 2 && levels[4] == 2,
                   "Noise crosses one sound-block line and stops at closed doors or a second block");
             ceilings[4] = 128;
-            doomsound::Flood(0, 5, heads, links, floors, ceilings,
- levels, queue);
+            doomsound::Flood(0, 5, heads, links, floors, ceilings, levels, queue);
             Check(levels[4] == 0 && levels[3] == 0 && levels[2] == 1,
                   "Opening a door allows noise to take the alternate connected path");
         }
@@ -89,8 +88,7 @@ int main(int argc, char **argv) {
                   TypeForThing(7) == SpiderMastermind && TypeForThing(16) == Cyberdemon &&
                   TypeForThing(48) == TechPillar && TypeForThing(123456) == None,
               "Original Doom thing mapping");
-        for (int species = Zombie; species < Marin
-e; ++species) {
+        for (int species = Zombie; species < Marine; ++species) {
             Check(TypeForClass(definitions[species].classname) == species,
                   "Entity classname mapping");
         }
@@ -129,8 +127,7 @@ e; ++species) {
         {
             Patch patch{};
             patch.width = 30;
-            patch.
-height = 50;
+            patch.height = 50;
             patch.top = 45;
             patch.textureWidth = 32;
             patch.textureHeight = 64;
@@ -160,8 +157,7 @@ height = 50;
                   set.views[0][1].flip != set.views[0][7].flip,
               "Dual-name sprite rotations share a PNG and reverse their UVs");
         auto traversal = imp;
-        traversal.replace(traversal.find("models/players/imp/frames/"), 25
-,
+        traversal.replace(traversal.find("models/players/imp/frames/"), 25,
                           "models/players/../frames/");
         Check(!Parse(traversal.data(), set), "Path traversal must reject");
         std::puts(
