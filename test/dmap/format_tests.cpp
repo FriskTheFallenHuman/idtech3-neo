@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-#include "../../../../qcommon/doom_bsp.h"
+#include "qcommon/doom_bsp.h"
 #include <cstring>
 #include <limits>
 #include <fstream>
