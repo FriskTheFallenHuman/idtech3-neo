@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-#include "../g_local.h"
+#include "game/game/g_local.h"
 #include <cstdio>
 #include <stdexcept>
 

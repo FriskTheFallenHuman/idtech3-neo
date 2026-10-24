@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-#include "../../qcommon/doom_save.h"
+#include "qcommon/doom_save.h"
 #include <cstdio>
 #include <initializer_list>
 #include <stdexcept>

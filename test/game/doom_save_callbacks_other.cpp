@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-#include "../g_save_callbacks.h"
+#include "game/game/g_save_callbacks.h"
 
 namespace {
 // File-local callbacks need no exported symbol or central forward declaration.

@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-#include "../g_local.h"
+#include "game/game/g_local.h"
 void G_DoomItemTouch(gentity_t *, gentity_t *, trace_t *) {
 }
 void G_DoomSpawnItemThings(const void *) {
 }
-#include "../bg_doomweapons.h"
+#include "game/game/bg_doomweapons.h"
 #include <cstdio>
 #include <stdexcept>
 #include <vector>

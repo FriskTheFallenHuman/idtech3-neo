@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-#include "../q_shared.h"
-#include "../../qcommon/qcommon.h"
+#include "game/game/q_shared.h"
+#include "qcommon/qcommon.h"
 #include <cstdio>
 #include <stdexcept>
 #include <vector>

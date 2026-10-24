@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Include the adapter to exercise its real action path with controlled map metadata.
-#include "../g_doom.cpp"
+#include "game/game/g_doom.cpp"
 #include <cstdio>
 #include <initializer_list>
 #include <stdexcept>

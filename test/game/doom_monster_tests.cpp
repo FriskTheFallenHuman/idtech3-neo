@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-#include "../q_shared.h"
-#include "../bg_doommonsters.h"
-#include "../../cgame/cg_doomsprite_geometry.h"
-#include "../g_doomsound.h"
+#include "game/game/q_shared.h"
+#include "game/game/bg_doommonsters.h"
+#include "game/cgame/cg_doomsprite_geometry.h"
+#include "game/game/g_doomsound.h"
 #include <cstdio>
 #include <fstream>
 #include <limits>

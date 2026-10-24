@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-#include "../g_local.h"
-#include "../g_doomsave.h"
+#include "game/game/g_local.h"
+#include "game/game/g_doomsave.h"
 #include <cstdio>
 #include <stdexcept>
 #include <string>

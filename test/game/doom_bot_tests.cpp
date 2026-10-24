@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Exercise the real combat decisions against independent visibility/team boundaries.
-#include "../g_doombots_combat.cpp"
-#include "../g_doombots_goals.cpp"
+#include "game/game/g_doombots_combat.cpp"
+#include "game/game/g_doombots_goals.cpp"
 #include <cstdio>
 #include <stdexcept>
 

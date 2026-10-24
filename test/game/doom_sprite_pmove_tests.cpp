@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-#include "../q_shared.h"
-#include "../bg_public.h"
-#include "../bg_doomweapons.h"
-#include "../bg_doommonsters.h"
+#include "game/game/q_shared.h"
+#include "game/game/bg_public.h"
+#include "game/game/bg_doomweapons.h"
+#include "game/game/bg_doommonsters.h"
 #include <cstdio>
 #include <initializer_list>
 #include <stdexcept>
