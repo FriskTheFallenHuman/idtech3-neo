@@ -1126,13 +1126,10 @@ extern cvar_t  *r_showcluster;
 extern cvar_t   *r_mode;                // video mode
 extern cvar_t   *r_fullscreen;
 extern cvar_t   *r_gamma;
-extern cvar_t   *r_gammaShader;         // apply the gamma tables with the post-process shader
 extern cvar_t   *r_displayRefresh;      // optional display refresh option
-extern cvar_t   *r_ignorehwgamma;       // overrides hardware gamma capabilities
 
 extern cvar_t   *r_allowExtensions;             // global enable/disable of OpenGL extensions
 extern cvar_t   *r_ext_compressed_textures;     // these control use of specific extensions
-extern cvar_t   *r_ext_gamma_control;
 extern cvar_t   *r_ext_texenv_op;
 extern cvar_t   *r_ext_multitexture;
 extern cvar_t   *r_ext_compiled_vertex_array;
@@ -1399,10 +1396,6 @@ void        GLimp_FrontEndSleep( void );
 void        GLimp_WakeRenderer( void *data );
 
 void        GLimp_LogComment( char *comment );
-
-void GLimp_SetGamma( unsigned char red[256],
-					 unsigned char green[256],
-					 unsigned char blue[256] );
 
 
 /*

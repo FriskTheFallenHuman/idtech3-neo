@@ -41,9 +41,6 @@ If you have questions concerning this license or the applicable additional terms
 #include "sys_local.h"
 #include "win32/win_local.h"
 
-extern void WG_CheckHardwareGamma( void );
-extern void WG_RestoreGamma( void );
-
 typedef enum {
 	RSERR_OK,
 
@@ -648,7 +645,6 @@ void GLimp_Init( void ) {
 	ri.Cvar_Set( "r_lastValidRenderer", glConfig.renderer_string );
 
 	GLW_InitExtensions();
-	WG_CheckHardwareGamma();
 }
 
 
@@ -660,9 +656,6 @@ void GLimp_Init( void ) {
 */
 void GLimp_Shutdown( void ) {
 	ri.Printf( PRINT_ALL, "Shutting down OpenGL subsystem\n" );
-
-	// restore gamma first, it needs a working GL subsystem
-	WG_RestoreGamma();
 
 	// set current context to NULL, then delete it
 	if ( glw_state.context ) {

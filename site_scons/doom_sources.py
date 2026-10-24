@@ -280,7 +280,6 @@ RENDERER_SOURCES = fix_paths([
     'renderer/tr_sky.cpp',
     'renderer/tr_surface.cpp',
     'renderer/tr_world.cpp',
-    'sys/win32/win_gamma.cpp',
     'sys/sys_glimp.cpp',
     'sys/sys_qgl.cpp',
 ])

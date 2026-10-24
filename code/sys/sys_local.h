@@ -71,12 +71,6 @@ void Conbuf_AppendText( const char *msg );
 
 qboolean    Sys_GetPacket( netadr_t *net_from, msg_t *net_message );
 
-// Hardware gamma ramps, implemented with Win32 in sys/win32/win_gamma.cpp
-
-void WG_CheckHardwareGamma( void );
-void WG_RestoreGamma( void );
-void GLimp_SetGamma( unsigned char red[256], unsigned char green[256], unsigned char blue[256] );
-
 // Win32-only helpers the SDL files call into, implemented in
 // sys/win32/win_shared.cpp
 

@@ -27,8 +27,7 @@ If you have questions concerning this license or the applicable additional terms
 */
 
 // win_local.h: shared header for the sys/win32 code that has no SDL3
-// counterpart: the console window, Winsock networking and the hardware
-// gamma ramps.
+// counterpart: the console window and Winsock networking.
 
 #ifndef __WIN_LOCAL_H__
 #define __WIN_LOCAL_H__

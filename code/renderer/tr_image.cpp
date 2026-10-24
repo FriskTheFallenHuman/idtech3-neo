@@ -35,7 +35,6 @@ If you have questions concerning this license or the applicable additional terms
 
 #include "tr_local.h"
 #include "tr_glprogs.h"
-#include "tr_vfx.h"
 
 static byte s_intensitytable[256];
 static unsigned char s_gammatable[256];
@@ -73,11 +72,9 @@ void R_InitGammaShader( void ) {
 	if ( gammaShaderReady ) {
 		return;
 	}
-	if ( !R_VfxAvailable() ) {
-		ri.Printf( PRINT_ALL, "Gamma shader skipped: GLSL is not available\n" );
-		return;
-	}
+	// GLSL support is a hard requirement, a broken shader is fatal
 	if ( !gammaProgram.Load( "glprogs/screen.vert", "glprogs/gamma.frag" ) ) {
+		ri.Error( ERR_FATAL, "Gamma shader failed to build, GLSL support is required" );
 		return;
 	}
 	gammaProgram.Bind();
@@ -153,7 +150,7 @@ void RB_ApplyGammaShader( void ) {
 	int width, height;
 	glstate_t saved;
 
-	if ( !gammaShaderReady || !r_gammaShader->integer ) {
+	if ( !gammaShaderReady ) {
 		return;
 	}
 
@@ -524,45 +521,20 @@ lighting range
 ================
 */
 void R_LightScaleTexture( unsigned *in, int inwidth, int inheight, qboolean only_gamma ) {
-	if ( only_gamma ) {
-		if ( !glConfig.deviceSupportsGamma ) {
-			int i, c;
-			byte    *p;
-
-			p = (byte *)in;
-
-			c = inwidth * inheight;
-			for ( i = 0 ; i < c ; i++, p += 4 )
-			{
-				p[0] = s_gammatable[p[0]];
-				p[1] = s_gammatable[p[1]];
-				p[2] = s_gammatable[p[2]];
-			}
-		}
-	} else
-	{
+	// gamma is applied to the whole frame by the shader pass, so the
+	// textures only need the intensity scaling
+	if ( !only_gamma ) {
 		int i, c;
 		byte    *p;
 
 		p = (byte *)in;
 
 		c = inwidth * inheight;
-
-		if ( glConfig.deviceSupportsGamma ) {
-			for ( i = 0 ; i < c ; i++, p += 4 )
-			{
-				p[0] = s_intensitytable[p[0]];
-				p[1] = s_intensitytable[p[1]];
-				p[2] = s_intensitytable[p[2]];
-			}
-		} else
+		for ( i = 0 ; i < c ; i++, p += 4 )
 		{
-			for ( i = 0 ; i < c ; i++, p += 4 )
-			{
-				p[0] = s_gammatable[s_intensitytable[p[0]]];
-				p[1] = s_gammatable[s_intensitytable[p[1]]];
-				p[2] = s_gammatable[s_intensitytable[p[2]]];
-			}
+			p[0] = s_intensitytable[p[0]];
+			p[1] = s_intensitytable[p[1]];
+			p[2] = s_intensitytable[p[2]];
 		}
 	}
 }
@@ -2134,21 +2106,9 @@ void R_SetColorMappings( void ) {
 	int inf;
 	int shift;
 
-	// the shader pass can pick up lazily after a cvar change
-	if ( r_gammaShader->integer && !gammaShaderReady && R_VfxAvailable() ) {
-		R_InitGammaShader();
-	}
-
-	// setup the overbright lighting
+	// setup the overbright lighting, the shader pass applies the ramp so
+	// overbright works in windowed mode too
 	tr.overbrightBits = r_overBrightBits->integer;
-	if ( !glConfig.deviceSupportsGamma && !( gammaShaderReady && r_gammaShader->integer ) ) {
-		tr.overbrightBits = 0;      // need hardware gamma for overbright
-	}
-
-	// never overbright in windowed mode
-	if ( !glConfig.isFullscreen ) {
-		tr.overbrightBits = 0;
-	}
 
 	// allow 2 overbright bits in 24 bit, but only 1 in 16 bit
 	if ( glConfig.colorBits > 16 ) {
@@ -2206,19 +2166,8 @@ void R_SetColorMappings( void ) {
 		s_intensitytable[i] = j;
 	}
 
-	if ( gammaShaderReady && r_gammaShader->integer ) {
-		// the shader owns the correction, keep the hardware ramps neutral
-		if ( glConfig.deviceSupportsGamma ) {
-			unsigned char identity[256];
-			for ( i = 0; i < 256; i++ ) {
-				identity[i] = i;
-			}
-			GLimp_SetGamma( identity, identity, identity );
-		}
-		R_UploadGammaTable();
-	} else if ( glConfig.deviceSupportsGamma ) {
-		GLimp_SetGamma( s_gammatable, s_gammatable, s_gammatable );
-	}
+	// the shader pass owns the gamma correction, hand it the current table
+	R_UploadGammaTable();
 }
 
 /*

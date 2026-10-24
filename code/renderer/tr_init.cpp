@@ -82,7 +82,6 @@ cvar_t  *r_smp;
 cvar_t  *r_showSmp;
 cvar_t  *r_skipBackEnd;
 
-cvar_t  *r_ignorehwgamma;
 cvar_t  *r_measureOverdraw;
 
 cvar_t  *r_inGameVideo;
@@ -113,7 +112,6 @@ cvar_t  *r_nocurves;
 cvar_t  *r_allowExtensions;
 
 cvar_t  *r_ext_compressed_textures;
-cvar_t  *r_ext_gamma_control;
 cvar_t  *r_ext_multitexture;
 cvar_t  *r_ext_compiled_vertex_array;
 cvar_t  *r_ext_texture_env_add;
@@ -170,7 +168,6 @@ cvar_t  *r_textureMode;
 cvar_t  *r_offsetFactor;
 cvar_t  *r_offsetUnits;
 cvar_t  *r_gamma;
-cvar_t  *r_gammaShader;
 cvar_t  *r_intensity;
 cvar_t  *r_lockpvs;
 cvar_t  *r_noportals;
@@ -311,7 +308,6 @@ static void InitOpenGL( void ) {
 	//		- r_glDriver
 	//		- r_mode
 	//		- r_(color|depth|stencil)bits
-	//		- r_ignorehwgamma
 	//		- r_gamma
 	//
 
@@ -483,8 +479,8 @@ void R_TakeScreenshot( int x, int y, int width, int height, char *fileName ) {
 		buffer[i + 2] = temp;
 	}
 
-	// gamma correct
-	if ( ( tr.overbrightBits > 0 ) && glConfig.deviceSupportsGamma ) {
+	// gamma correct, the captured pixels are still pre-shader
+	if ( tr.overbrightBits > 0 ) {
 		R_GammaCorrect( buffer + 18, glConfig.vidWidth * glConfig.vidHeight * 3 );
 	}
 
@@ -505,8 +501,8 @@ void R_TakeScreenshotJPEG( int x, int y, int width, int height, char *fileName )
 
 	qglReadPixels( x, y, width, height, GL_RGBA, GL_UNSIGNED_BYTE, buffer );
 
-	// gamma correct
-	if ( ( tr.overbrightBits > 0 ) && glConfig.deviceSupportsGamma ) {
+	// gamma correct, the captured pixels are still pre-shader
+	if ( tr.overbrightBits > 0 ) {
 		R_GammaCorrect( buffer, glConfig.vidWidth * glConfig.vidHeight * 4 );
 	}
 
@@ -618,8 +614,8 @@ void R_LevelShot( void ) {
 		}
 	}
 
-	// gamma correct
-	if ( ( tr.overbrightBits > 0 ) && glConfig.deviceSupportsGamma ) {
+	// gamma correct, the captured pixels are still pre-shader
+	if ( tr.overbrightBits > 0 ) {
 		R_GammaCorrect( buffer + 18, 128 * 128 * 3 );
 	}
 
@@ -869,12 +865,7 @@ void GfxInfo_f( void ) {
 	{
 		ri.Printf( PRINT_ALL, "N/A\n" );
 	}
-	if ( glConfig.deviceSupportsGamma ) {
-		ri.Printf( PRINT_ALL, "GAMMA: hardware w/ %d overbright bits\n", tr.overbrightBits );
-	} else
-	{
-		ri.Printf( PRINT_ALL, "GAMMA: software w/ %d overbright bits\n", tr.overbrightBits );
-	}
+	ri.Printf( PRINT_ALL, "GAMMA: shader w/ %d overbright bits\n", tr.overbrightBits );
 	ri.Printf( PRINT_ALL, "CPU: %s\n", sys_cpustring->string );
 
 	// rendering primitives
@@ -956,7 +947,6 @@ void R_Register( void ) {
 	r_glDriver = ri.Cvar_Get( "r_glDriver", OPENGL_DRIVER_NAME, CVAR_ARCHIVE | CVAR_LATCH );
 	r_allowExtensions = ri.Cvar_Get( "r_allowExtensions", "1", CVAR_ARCHIVE | CVAR_LATCH );
 	r_ext_compressed_textures = ri.Cvar_Get( "r_ext_compressed_textures", "1", CVAR_ARCHIVE | CVAR_LATCH );   // (SA) ew, a spelling change I missed from the missionpack
-	r_ext_gamma_control = ri.Cvar_Get( "r_ext_gamma_control", "1", CVAR_ARCHIVE | CVAR_LATCH );
 	r_ext_multitexture = ri.Cvar_Get( "r_ext_multitexture", "1", CVAR_ARCHIVE | CVAR_LATCH );
 	r_ext_compiled_vertex_array = ri.Cvar_Get( "r_ext_compiled_vertex_array", "1", CVAR_ARCHIVE | CVAR_LATCH );
 	r_glIgnoreWicked3D = ri.Cvar_Get( "r_glIgnoreWicked3D", "0", CVAR_ARCHIVE | CVAR_LATCH );
@@ -1010,7 +1000,6 @@ void R_Register( void ) {
 #endif
 	r_depthbits = ri.Cvar_Get( "r_depthbits", "0", CVAR_ARCHIVE | CVAR_LATCH );
 	r_overBrightBits = ri.Cvar_Get( "r_overBrightBits", "1", CVAR_ARCHIVE | CVAR_LATCH );
-	r_ignorehwgamma = ri.Cvar_Get( "r_ignorehwgamma", "1", CVAR_ARCHIVE | CVAR_LATCH );    //----(SA) changed this to default to '1' for Drew
 	r_mode = ri.Cvar_Get( "r_mode", "2", CVAR_ARCHIVE | CVAR_LATCH );
 	r_fullscreen = ri.Cvar_Get( "r_fullscreen", "1", CVAR_ARCHIVE | CVAR_LATCH );
 	r_customwidth = ri.Cvar_Get( "r_customwidth", "1920", CVAR_ARCHIVE | CVAR_LATCH );
@@ -1064,7 +1053,6 @@ void R_Register( void ) {
 #else
 	r_gamma = ri.Cvar_Get( "r_gamma", "1.3", CVAR_ARCHIVE );
 #endif
-	r_gammaShader = ri.Cvar_Get( "r_gammaShader", "1", CVAR_ARCHIVE );
 	r_facePlaneCull = ri.Cvar_Get( "r_facePlaneCull", "1", CVAR_ARCHIVE );
 
 	r_railWidth = ri.Cvar_Get( "r_railWidth", "16", CVAR_ARCHIVE );
