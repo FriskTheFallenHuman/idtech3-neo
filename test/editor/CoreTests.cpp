@@ -152,55 +152,68 @@ int main(int argc, char **argv) {
         check(image.width == 65 && image.height == 3 &&
                   image.pixels[64] == (0xff000000u | 64u | (191u << 8)),
               "Odd-width LBM roundtrip");
-        Wadfile wad;
-        wad.load(std::filesystem::u8path(argv[1]));
-        auto maps = wad.mapNames();
-        check(!maps.empty(), "Real WAD contains maps");
-        size_t mapLines = 0;
-        for (auto &name : maps) {
-            EditWorld map;
-            map.importMap(wad, name);
-            EditWorld reload;
-            reload.parse(map.serialize());
-            check(reload.serialize() == map.serialize(), "Real map text roundtrip");
-            mapLines += map.lines.size();
-            try {
-                auto connected = connectSectors(reload);
-                check(!connected.empty(), "Real map sector detection");
-                reload.exportMap(out / (name + ".wad"), name);
-            } catch (const std::exception &e) {
-                std::cerr << name << ": " << e.what() << "\n";
-                throw;
+        // The real-WAD section needs DOOM.WAD; CI has no game data, so run
+        // only the self-contained checks when the file is absent.
+        const bool hasWad = std::filesystem::exists(std::filesystem::u8path(argv[1]));
+        size_t mapCount = 0, mapLines = 0, textureCount = 0;
+        if (hasWad) {
+            Wadfile wad;
+            wad.load(std::filesystem::u8path(argv[1]));
+            auto maps = wad.mapNames();
+            check(!maps.empty(), "Real WAD contains maps");
+            mapCount = maps.size();
+            for (auto &name : maps) {
+                EditWorld map;
+                map.importMap(wad, name);
+                EditWorld reload;
+                reload.parse(map.serialize());
+                check(reload.serialize() == map.serialize(), "Real map text roundtrip");
+                mapLines += map.lines.size();
+                try {
+                    auto connected = connectSectors(reload);
+                    check(!connected.empty(), "Real map sector detection");
+                    reload.exportMap(out / (name + ".wad"), name);
+                } catch (const std::exception &e) {
+                    std::cerr << name << ": " << e.what() << "\n";
+                    throw;
+                }
             }
+            auto textures = wad.textures();
+            check(!textures.empty(), "Real textures decoded");
+            textureCount = textures.size();
+            for (auto &t : textures) {
+                auto im = wad.texture(t);
+                check(im.pixels.size() == size_t(t.width) * t.height, "Texture composition size");
+            }
+            for (auto &name : wad.flatNames())
+                check(wad.flat(name).pixels.size() == 4096, "Flat decoding");
+            DoomProject project;
+            project.loadWad(std::filesystem::u8path(argv[1]));
+            project.maps = {"E1M1"};
+            project.save(out / "project.dpr");
+            DoomProject project2;
+            project2.load(out / "project.dpr");
+            check(project2.textures.size() == project.textures.size() && project2.maps == project.maps,
+                  "Project roundtrip");
+            project.exportTextures(out / "textures.wad");
+            Wadfile tw;
+            tw.load(out / "textures.wad");
+            check(tw.textures().size() == textures.size(), "Texture WAD roundtrip");
+            w.exportLegacy(out / "legacy.wad", "E1M1", textures);
+            Wadfile legacy;
+            legacy.load(out / "legacy.wad");
+            check(u32(legacy.get("POINTS"), 0) == 4 && u32(legacy.get("LINES"), 0) == 4 &&
+                      u32(legacy.get("SECTORS"), 0) == 1,
+                  "1993 WAD export counts");
         }
-        auto textures = wad.textures();
-        check(!textures.empty(), "Real textures decoded");
-        for (auto &t : textures) {
-            auto im = wad.texture(t);
-            check(im.pixels.size() == size_t(t.width) * t.height, "Texture composition size");
-        }
-        for (auto &name : wad.flatNames())
-            check(wad.flat(name).pixels.size() == 4096, "Flat decoding");
-        DoomProject project;
-        project.loadWad(std::filesystem::u8path(argv[1]));
-        project.maps = {"E1M1"};
-        project.save(out / "project.dpr");
-        DoomProject project2;
-        project2.load(out / "project.dpr");
-        check(project2.textures.size() == project.textures.size() && project2.maps == project.maps,
-              "Project roundtrip");
-        project.exportTextures(out / "textures.wad");
-        Wadfile tw;
-        tw.load(out / "textures.wad");
-        check(tw.textures().size() == textures.size(), "Texture WAD roundtrip");
-        w.exportLegacy(out / "legacy.wad", "E1M1", textures);
-        Wadfile legacy;
-        legacy.load(out / "legacy.wad");
-        check(u32(legacy.get("POINTS"), 0) == 4 && u32(legacy.get("LINES"), 0) == 4 &&
-                  u32(legacy.get("SECTORS"), 0) == 1,
-              "1993 WAD export counts");
-        std::cout << "PASS: " << checks << " checks; " << maps.size() << " real maps, " << mapLines
-                  << " linedefs, " << textures.size() << " textures\n";
+        std::cout << "PASS: " << checks << " checks";
+        if (hasWad)
+            std::cout << "; " << mapCount << " real maps, " << mapLines << " linedefs, "
+                      << textureCount << " textures
+";
+        else
+            std::cout << "; real WAD checks skipped (" << argv[1] << " not available)
+";
         return 0;
     } catch (const std::exception &e) {
         std::cerr << "FAIL after " << checks << " checks: " << e.what() << '\n';

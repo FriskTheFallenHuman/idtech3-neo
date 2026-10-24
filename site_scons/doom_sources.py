@@ -742,6 +742,7 @@ TESTS = [
     {
         'name': 'doomed_core_tests',
         'sources': ['test/editor/CoreTests.cpp'],
+        'args': ['base/wad/DOOM.WAD', 'build/test-scratch/doomed_core'],
         'libs': ['doomed_core'],
         'syslibs': ['windowscodecs', 'ole32'],
     },

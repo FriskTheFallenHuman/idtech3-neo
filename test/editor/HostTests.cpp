@@ -117,6 +117,11 @@ int main(int argc, char **argv) {
     HWND window = nullptr;
     try {
         de::require(argc == 5, "Expected editor DLL, scratch project, WAD, and tools directory");
+        if (!std::filesystem::exists(argv[3])) {
+            // CI has no game data; the host suite needs the retail WAD.
+            std::cout << "Editor host tests skipped: " << argv[3] << " is not available\n";
+            return 0;
+        }
         const auto root = std::filesystem::absolute(argv[2]);
         const auto tools = std::filesystem::absolute(argv[4]);
         std::filesystem::create_directories(root / "base/maps");

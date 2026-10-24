@@ -57,11 +57,14 @@ int main() {
             if (entry.path().extension() != ".mid") {
                 continue;
             }
+            std::printf("score %d: %s\n", scores + 1, entry.path().filename().string().c_str());
             auto midi = Read(entry.path());
             auto *player = fs.new_player(synth);
-            Check(player && fs.player_add_mem(player, midi.data(), midi.size()) == FLUID_OK &&
-                      fs.player_get_total_ticks(player) > 0,
-                  "Converted MIDI parses with a valid duration");
+            // fluid_player_add_mem only queues the score: FluidSynth parses it
+            // on the first synth callback, so the duration stays 0 until the
+            // player has actually started rendering (see FluidSynth issue 648).
+            Check(player && fs.player_add_mem(player, midi.data(), midi.size()) == FLUID_OK,
+                  "Converted MIDI is queued for playback");
             Check(fs.player_play(player) == FLUID_OK, "FluidSynth playback starts");
             std::vector<int16_t> output(44100 * 2 * 3);
             // The player dispatches events on the render thread's sample
@@ -73,6 +76,8 @@ int main() {
                               output.data() + offset * 2 + 1, 0, 2);
                 std::this_thread::sleep_for(std::chrono::milliseconds(2));
             }
+            Check(fs.player_get_total_ticks(player) > 0,
+                  "Converted MIDI reports a valid duration once playing");
             Check(std::any_of(output.begin(), output.end(),
                              [](int16_t sample) { return sample != 0; }),
                   "FluidSynth produces audible PCM for every Doom score");
