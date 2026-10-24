@@ -33,7 +33,7 @@ int main(int argc, char **argv) {
                 "signal skin exists");
             for (const auto &v : surface.frames[0]) {
                 require(v.position.z >= 0 && v.position.z <= 208, "signal bounds");
-                armEnd = std::max(armEnd, v.position.x);
+                armEnd = (std::max)(armEnd, v.position.x);
             }
             const auto e = skinEmission(relativeAsset(signal->file.parent_path(), surface.shader));
             if (e.strength <= 0) {

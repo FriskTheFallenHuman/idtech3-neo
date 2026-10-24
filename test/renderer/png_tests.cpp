@@ -53,7 +53,7 @@ std::vector<byte> ZlibStore(const std::vector<byte> &raw) {
     std::vector<byte> z = {0x78, 0x01};
     size_t start = 0;
     while (start < raw.size()) {
-        const size_t n = std::min(size_t(65535), raw.size() - start);
+        const size_t n = (std::min)(size_t(65535), raw.size() - start);
         z.push_back(start + n == raw.size() ? 1 : 0);
         z.push_back(byte(n));
         z.push_back(byte(n >> 8));

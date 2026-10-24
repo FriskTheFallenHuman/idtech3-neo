@@ -132,7 +132,7 @@ int main(int argc, char **argv) {
         Check(doomaudio::OPLLoad(midi.data(), midi.size(), bank.data(), bank.size()),
               "Deterministic restart");
         for (size_t offset = 0; offset < 44100;) {
-            const size_t count = std::min(size_t(137), size_t(44100) - offset);
+            const size_t count = (std::min)(size_t(137), size_t(44100) - offset);
             Check(doomaudio::OPLRender(split.data() + offset * 2, count) == count,
                   "Partitioned rendering");
             offset += count;
