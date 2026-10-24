@@ -275,7 +275,9 @@ wolf = wolf_env.Program(
     LIBS=[renderer, botlib, splines, OpenAL32, SDL3, doom_opl,
           doom_miniz,
           'winmm', 'ole32', 'oleaut32', 'wsock32', 'user32', 'gdi32', 'shell32', 'advapi32'],
-    LINKFLAGS=['/STACK:8388608', '/LARGEADDRESSAWARE'])
+    # SDL provides WinMain inside SDL3.dll now that the engine entry point is
+    # SDL_main, so the windows subsystem has to be picked explicitly
+    LINKFLAGS=['/STACK:8388608', '/LARGEADDRESSAWARE', '/SUBSYSTEM:WINDOWS'])
 
 # The engine links the SDL3 import library, so the DLL that matches it is
 # copied next to the engine and the tests. libfluidsynth-3.dll needs the
