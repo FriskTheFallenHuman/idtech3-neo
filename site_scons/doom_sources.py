@@ -67,9 +67,10 @@ WOLF_SOURCES = fix_paths([
     'sys/sys_input.cpp',
     'sys/sys_events.cpp',
     'sys/sys_main.cpp',
-    'sys/sys_net.cpp',
+    'sys/win32/win_net.cpp',
     'sys/sys_shared.cpp',
-    'sys/sys_syscon.cpp',
+    'sys/win32/win_shared.cpp',
+    'sys/win32/win_syscon.cpp',
 ])
 
 # Extra engine files that CMake added on top of the main list. The resource
@@ -279,7 +280,7 @@ RENDERER_SOURCES = fix_paths([
     'renderer/tr_sky.cpp',
     'renderer/tr_surface.cpp',
     'renderer/tr_world.cpp',
-    'sys/sys_gamma.cpp',
+    'sys/win32/win_gamma.cpp',
     'sys/sys_glimp.cpp',
     'sys/sys_qgl.cpp',
 ])

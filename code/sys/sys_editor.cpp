@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "../client/client.h"
 #include "sys_local.h"
+#include "win32/win_local.h"
 #include "sys_editor.h"
 #include "../tools/editor/EditorAPI.h"
 #include <cwchar>
@@ -86,7 +87,7 @@ bool loadEditor() {
         return false;
     }
     const DoomEditorHost host{
-        DoomEditorAPIVersion, sizeof(DoomEditorHost), g_sv.hWnd,   projectRoot,
+        DoomEditorAPIVersion, sizeof(DoomEditorHost), Win_GetGameWindow(),   projectRoot,
         copyMessage,          requestReturn,          requestPlay, re.editor};
     const bool initialized = editor->initialize(&host);
     flushMessages();
@@ -185,11 +186,11 @@ void Sys_EditorFrame() {
             pausedByEditor = false;
         }
         if (!Cvar_VariableIntegerValue("r_hiddenWindow")) {
-            if (IsIconic(g_sv.hWnd)) {
-                ShowWindow(g_sv.hWnd, SW_RESTORE);
+            if (IsIconic(Win_GetGameWindow())) {
+                ShowWindow(Win_GetGameWindow(), SW_RESTORE);
             }
-            SetForegroundWindow(g_sv.hWnd);
-            SetFocus(g_sv.hWnd);
+            SetForegroundWindow(Win_GetGameWindow());
+            SetFocus(Win_GetGameWindow());
         }
         IN_Activate(qtrue);
         Com_Printf("Returned to game; editor document retained\n");
@@ -204,9 +205,9 @@ void Sys_EditorFrame() {
     }
 }
 void Sys_EditorDraw(int width, int height) {
-    if (editor && editor->visible() && !IsIconic(g_sv.hWnd)) {
+    if (editor && editor->visible() && !IsIconic(Win_GetGameWindow())) {
         RECT client{};
-        if (GetClientRect(g_sv.hWnd, &client)) {
+        if (GetClientRect(Win_GetGameWindow(), &client)) {
             width = client.right - client.left;
             height = client.bottom - client.top;
         }

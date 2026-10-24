@@ -39,6 +39,7 @@ If you have questions concerning this license or the applicable additional terms
 #include "../renderer/tr_local.h"
 #include "../qcommon/qcommon.h"
 #include "sys_local.h"
+#include "win32/win_local.h"
 
 extern void WG_CheckHardwareGamma( void );
 extern void WG_RestoreGamma( void );
@@ -164,10 +165,10 @@ static rserr_t GLW_SetMode( const char *drivername,
 
 		SDL_SetWindowMinimumSize( glw_state.window, 640, 480 );
 
-		// keep the native handle for the Win32 console and the editor bridge
-		g_sv.hWnd = (HWND)SDL_GetPointerProperty(
+		// publish the native handle for the editor bridge
+		Win_SetGameWindow( (HWND)SDL_GetPointerProperty(
 			SDL_GetWindowProperties( glw_state.window ),
-			SDL_PROP_WINDOW_WIN32_HWND_POINTER, NULL );
+			SDL_PROP_WINDOW_WIN32_HWND_POINTER, NULL ) );
 
 		ri.Printf( PRINT_ALL, "...created window %dx%d\n", glConfig.vidWidth, glConfig.vidHeight );
 	} else
@@ -338,7 +339,7 @@ static qboolean GLW_StartDriverAndSetMode( const char *drivername,
 		if ( glw_state.window ) {
 			SDL_DestroyWindow( glw_state.window );
 			glw_state.window = NULL;
-			g_sv.hWnd = NULL;
+			Win_SetGameWindow( NULL );
 		}
 		return qfalse;
 	}
@@ -677,7 +678,7 @@ void GLimp_Shutdown( void ) {
 		ri.Printf( PRINT_ALL, "...destroying window\n" );
 		SDL_DestroyWindow( glw_state.window );
 		glw_state.window = NULL;
-		g_sv.hWnd = NULL;
+		Win_SetGameWindow( NULL );
 		glw_state.cdsFullscreen = qfalse;
 	}
 

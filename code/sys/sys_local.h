@@ -4,7 +4,7 @@
 Return to Castle Wolfenstein single player GPL Source Code
 Copyright (C) 1999-2010 id Software LLC, a ZeniMax Media company. 
 
-This file is part of the Return to Castle Wolfenstein single player GPL Source Code (“RTCW SP Source Code”).  
+This file is part of the Return to Castle Wolfenstein single player GPL Source Code ("RTCW SP Source Code").  
 
 RTCW SP Source Code is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -27,29 +27,15 @@ If you have questions concerning this license or the applicable additional terms
 */
 
 // sys_local.h: SDL3 platform header for the engine system layer.
-// The window, GL context and input go through SDL3; the console window
-// (syscon) and Winsock networking are still plain Win32 code.
+// The window, GL context, input, timing and the small OS helpers all go
+// through SDL3 here. The parts that cannot be ported - the Win32 console
+// window, Winsock networking and the hardware gamma ramps - live in
+// sys/win32 and are reached through the Win_* bridges below.
 
 #ifndef __SYS_LOCAL_H__
 #define __SYS_LOCAL_H__
 
 #include <SDL3/SDL.h>
-
-#include <windows.h>
-
-#include <winsock.h>
-#include <wsipx.h>
-
-void    IN_MouseEvent( int mstate );
-
-void Sys_QueEvent( int time, sysEventType_t type, int value, int value2, int ptrLength, void *ptr );
-
-void    Sys_CreateConsole( void );
-void    Sys_DestroyConsole( void );
-
-char    *Sys_ConsoleInput( void );
-
-qboolean    Sys_GetPacket( netadr_t *net_from, msg_t *net_message );
 
 // Input subsystem
 
@@ -60,23 +46,48 @@ void    IN_Activate( qboolean active );
 void    IN_Frame( void );
 void    IN_ClearStates( void );
 
+void    IN_MouseEvent( int mstate );
+
 // SDL event pump, called from Sys_GetEvent
 void    Sys_EventLoop( void );
 
 // Resize the renderer after a window size change
 void    Sys_UpdateWindowSize( void );
 
+void    Sys_QueEvent( int time, sysEventType_t type, int value, int value2, int ptrLength, void *ptr );
+
+// Console window, implemented with Win32 in sys/win32/win_syscon.cpp
+
+void    Sys_CreateConsole( void );
+void    Sys_DestroyConsole( void );
+void    Sys_ShowConsole( int visLevel, qboolean quitOnClose );
+void    Sys_SetErrorText( const char *text );
+
+char    *Sys_ConsoleInput( void );
+
 void Conbuf_AppendText( const char *msg );
+
+// Networking, implemented with Winsock in sys/win32/win_net.cpp
+
+qboolean    Sys_GetPacket( netadr_t *net_from, msg_t *net_message );
+
+// Hardware gamma ramps, implemented with Win32 in sys/win32/win_gamma.cpp
+
+void WG_CheckHardwareGamma( void );
+void WG_RestoreGamma( void );
+void GLimp_SetGamma( unsigned char red[256], unsigned char green[256], unsigned char blue[256] );
+
+// Win32-only helpers the SDL files call into, implemented in
+// sys/win32/win_shared.cpp
+
+void Win_SetProcessErrorMode( void );
+void Win_SetTimerResolution( qboolean enable );
+qboolean Win_PumpConsoleMessages( void );
 
 void SNDDMA_Activate( void );
 
 typedef struct
 {
-	HINSTANCE hInstance;         // still needed by the Win32 console window
-
-	HWND hWnd;                  // native handle of the SDL window, kept for
-	                            // the editor bridge and the console code
-
 	qboolean activeApp;
 	qboolean isMinimized;
 

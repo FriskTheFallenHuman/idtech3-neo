@@ -4,7 +4,7 @@
 Return to Castle Wolfenstein single player GPL Source Code
 Copyright (C) 1999-2010 id Software LLC, a ZeniMax Media company. 
 
-This file is part of the Return to Castle Wolfenstein single player GPL Source Code (“RTCW SP Source Code”).  
+This file is part of the Return to Castle Wolfenstein single player GPL Source Code ("RTCW SP Source Code").  
 
 RTCW SP Source Code is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -19,37 +19,34 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with RTCW SP Source Code.  If not, see <http://www.gnu.org/licenses/>.
 
-In addition, the RTCW SP Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied the RTCW SP Source Code.  If not, please request a copy in writing from id Software at the address below.
+In addition, the RTCW SP Source Code is also subject to certain additional terms. You should have received a copy of these additional terms immediately following the terms and conditions of the GNU General Public License which accompanied RTCW SP Source Code.  If not, please request a copy in writing from id Software at the address below.
 
-If you have questions concerning this license or the applicable additional terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
+If you have questions concerning this license or the applicable additional terms, You may contact in writing id Software LLC, c/o ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 
 ===========================================================================
 */
 
-// win_main.h
+// sys_main.cpp: the engine entry point and the OS-level helpers, on SDL3.
+// SDL provides the entry point through SDL_main.h, the process launching,
+// the URL opening, the clipboard, the directory scanning and the DLL
+// loading. The Win32 console window is reached through the Win_* bridges
+// declared in sys_local.h.
 
 #include "../client/client.h"
 #include "../qcommon/qcommon.h"
 #include "sys_local.h"
 
+#include <SDL3/SDL_main.h>
+
 #include <errno.h>
 #include <float.h>
 #include <fcntl.h>
 #include <stdio.h>
-#include <direct.h>
-#include <io.h>
-#include <conio.h>
+#include <stdlib.h>
+#include <string.h>
 
-//#define	CD_BASEDIR	"wolf"
-#define CD_BASEDIR  ""
-//#define	CD_EXE		"wolf.exe"
-#define CD_EXE      "setup\\setup.exe"
-//#define	CD_BASEDIR_LINUX	"bin\\x86\\glibc-2.1"
-#define CD_BASEDIR_LINUX    "bin\\x86\\glibc-2.1"
-//#define	CD_EXE_LINUX "wolf"
-#define CD_EXE_LINUX "setup\\setup"
-
-#define MEM_THRESHOLD 96 * 1024 * 1024
+// less than this much RAM means the low physical memory mode kicks in
+#define MEM_THRESHOLD_MB 96
 
 static char sys_cmdline[MAX_STRING_CHARS];
 
@@ -58,81 +55,35 @@ static char sys_cmdline[MAX_STRING_CHARS];
 Sys_LowPhysicalMemory()
 ==================
 */
-
 qboolean Sys_LowPhysicalMemory() {
-	MEMORYSTATUS stat;
-	GlobalMemoryStatus( &stat );
-	return ( stat.dwTotalPhys <= MEM_THRESHOLD ) ? qtrue : qfalse;
+	// SDL reports the RAM size in megabytes
+	return ( SDL_GetSystemRAM() <= MEM_THRESHOLD_MB ) ? qtrue : qfalse;
 }
 
-//NOTE TTimo: heavily NON PORTABLE, PLZ DON'T USE
-//  show_bug.cgi?id=447
-#if 0
-//----(SA) added
-/*
-==============
-Sys_ShellExecute
-
--	Windows only
-
-	Performs an operation on a specified file.
-
-	See info on ShellExecute() for details.
-
-==============
-*/
-int Sys_ShellExecute( char *op, char *file, qboolean doexit, char *params, char *dir ) {
-	unsigned int retval;
-	char *se_op;
-
-	// set default operation to "open"
-	if ( op ) {
-		se_op = op;
-	} else { se_op = "open";}
-
-
-	// probably need to protect this some in the future so people have
-	// less chance of system invasion with this powerful interface
-	// (okay, not so invasive, but could be annoying/rude)
-
-
-	retval = (UINT)ShellExecute( NULL, se_op, file, params, dir, SW_NORMAL ); // only option forced by game is 'sw_normal'
-
-	if ( retval <= 32 ) { // ERROR
-		Com_DPrintf( "Sys_ShellExecuteERROR: %d\n", retval );
-		return retval;
-	}
-
-	if ( doexit ) {
-		// (SA) this works better for exiting cleanly...
-		Cbuf_ExecuteText( EXEC_APPEND, "quit" );
-	}
-
-	return 999; // success
-}
-//----(SA) end
-#endif
-
-//----(SA)	from NERVE MP codebase (10/15/01)  (checkins at time of this file should be related)
+//----(SA)	from from NERVE MP codebase (10/15/01)  (checkins at time of this file should be related)
 /*
 ==================
 Sys_StartProcess
 ==================
 */
 void Sys_StartProcess( char *exeName, qboolean doexit ) {           // NERVE - SMF
-	TCHAR szPathOrig[_MAX_PATH];
-	STARTUPINFO si;
-	PROCESS_INFORMATION pi;
+	char cmd[MAX_OSPATH];
+	SDL_Process *process;
+	const char *args[2];
 
-	ZeroMemory( &si, sizeof( si ) );
-	si.cb = sizeof( si );
+	Com_sprintf( cmd, sizeof( cmd ), "%s\\%s", Sys_Cwd(), exeName );
 
-	GetCurrentDirectory( _MAX_PATH, szPathOrig );
-	if ( !CreateProcess( NULL, va( "%s\\%s", szPathOrig, exeName ), NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi ) ) {
+	args[0] = cmd;
+	args[1] = NULL;
+	process = SDL_CreateProcess( args, false );
+	if ( !process ) {
 		// couldn't start it, popup error box
-		Com_Error( ERR_DROP, "Could not start process: '%s\\%s' ", szPathOrig, exeName  );
+		Com_Error( ERR_DROP, "Could not start process: '%s' ", cmd );
 		return;
 	}
+
+	// the handle is not needed, the child keeps running on its own
+	SDL_DestroyProcess( process );
 
 	// TTimo: similar way of exiting as used in Sys_OpenURL below
 	if ( doexit ) {
@@ -146,18 +97,10 @@ Sys_OpenURL
 ==================
 */
 void Sys_OpenURL( char *url, qboolean doexit ) {                // NERVE - SMF
-	HWND wnd;
-
-	if ( !ShellExecute( NULL, "open", url, NULL, NULL, SW_RESTORE ) ) {
+	if ( !SDL_OpenURL( url ) ) {
 		// couldn't start it, popup error box
 		Com_Error( ERR_DROP, "Could not open url: '%s' ", url );
 		return;
-	}
-
-	wnd = GetForegroundWindow();
-
-	if ( wnd ) {
-		ShowWindow( wnd, SW_MAXIMIZE );
 	}
 
 	if ( doexit ) {
@@ -185,7 +128,6 @@ Show the early console as an error dialog
 void QDECL Sys_Error( const char *error, ... ) {
 	va_list argptr;
 	char text[4096];
-	MSG msg;
 
 	va_start( argptr, error );
 	vsprintf( text, error, argptr );
@@ -197,17 +139,15 @@ void QDECL Sys_Error( const char *error, ... ) {
 	Sys_SetErrorText( text );
 	Sys_ShowConsole( 1, qtrue );
 
-	timeEndPeriod( 1 );
+	Win_SetTimerResolution( qfalse );
 
 	IN_Shutdown();
 
 	// wait for the user to quit
 	while ( 1 ) {
-		if ( !GetMessage( &msg, NULL, 0, 0 ) ) {
+		if ( !Win_PumpConsoleMessages() ) {
 			Com_Quit_f();
 		}
-		TranslateMessage( &msg );
-		DispatchMessage( &msg );
 	}
 
 	Sys_DestroyConsole();
@@ -221,7 +161,7 @@ Sys_Quit
 ==============
 */
 void Sys_Quit( void ) {
-	timeEndPeriod( 1 );
+	Win_SetTimerResolution( qfalse );
 	IN_Shutdown();
 	Sys_DestroyConsole();
 
@@ -244,7 +184,7 @@ Sys_Mkdir
 ==============
 */
 void Sys_Mkdir( const char *path ) {
-	_mkdir( path );
+	SDL_CreateDirectory( path );
 }
 
 /*
@@ -254,9 +194,23 @@ Sys_Cwd
 */
 char *Sys_Cwd( void ) {
 	static char cwd[MAX_OSPATH];
+	char *s;
+	int length;
 
-	_getcwd( cwd, sizeof( cwd ) - 1 );
-	cwd[MAX_OSPATH - 1] = 0;
+	s = SDL_GetCurrentDirectory();
+	if ( !s ) {
+		cwd[0] = 0;
+		return cwd;
+	}
+
+	// SDL returns the directory with a trailing separator
+	Q_strncpyz( cwd, s, sizeof( cwd ) );
+	SDL_free( s );
+
+	length = strlen( cwd );
+	while ( length > 0 && ( cwd[length - 1] == '/' || cwd[length - 1] == '\\' ) ) {
+		cwd[--length] = 0;
+	}
 
 	return cwd;
 }
@@ -289,50 +243,95 @@ DIRECTORY SCANNING
 
 #define MAX_FOUND_FILES 0x1000
 
-void Sys_ListFilteredFiles( const char *basedir, char *subdirs, char *filter, char **list, int *numfiles ) {
-	char search[MAX_OSPATH], newsubdirs[MAX_OSPATH];
+// the filtered scan recurses into subdirectories through this function
+void Sys_ListFilteredFiles( const char *basedir, char *subdirs, char *filter, char **list, int *numfiles );
+
+// state shared between Sys_ListFilteredFiles and its enumeration callback
+typedef struct {
+	const char *basedir;
+	const char *subdirs;
+	const char *filter;
+	char **list;
+	int *numfiles;
+} filterScan_t;
+
+/*
+==================
+FilteredFilesCallback
+
+One directory entry during a filtered scan: recurse into
+subdirectories and add everything that matches the filter, the same
+walk the old _findfirst code did.
+==================
+*/
+static SDL_EnumerationResult SDLCALL FilteredFilesCallback( void *userdata, const char *dirname, const char *fname ) {
+	filterScan_t *scan = (filterScan_t *)userdata;
 	char filename[MAX_OSPATH];
-	int findhandle;
-	struct _finddata_t findinfo;
+	char newsubdirs[MAX_OSPATH];
+	char path[MAX_OSPATH];
+	SDL_PathInfo info;
+
+	if ( !Q_stricmp( fname, "." ) || !Q_stricmp( fname, ".." ) ) {
+		return SDL_ENUM_CONTINUE;
+	}
+
+	if ( *scan->numfiles >= MAX_FOUND_FILES - 1 ) {
+		return SDL_ENUM_FAILURE;
+	}
+
+	// full OS path of the entry, for the directory test below
+	Com_sprintf( path, sizeof( path ), "%s%s", dirname, fname );
+	if ( !SDL_GetPathInfo( path, &info ) ) {
+		return SDL_ENUM_CONTINUE;
+	}
+
+	if ( info.type == SDL_PATHTYPE_DIRECTORY ) {
+		if ( scan->subdirs[0] ) {
+			Com_sprintf( newsubdirs, sizeof( newsubdirs ), "%s\\%s", scan->subdirs, fname );
+		} else {
+			Com_sprintf( newsubdirs, sizeof( newsubdirs ), "%s", fname );
+		}
+		Sys_ListFilteredFiles( scan->basedir, newsubdirs, scan->filter, scan->list, scan->numfiles );
+
+		if ( *scan->numfiles >= MAX_FOUND_FILES - 1 ) {
+			return SDL_ENUM_FAILURE;
+		}
+	}
+
+	// keep the same entry naming as the old code, including the leading
+	// separator when scanning the base directory itself
+	Com_sprintf( filename, sizeof( filename ), "%s\\%s", scan->subdirs, fname );
+	if ( !Com_FilterPath( scan->filter, filename, qfalse ) ) {
+		return SDL_ENUM_CONTINUE;
+	}
+
+	scan->list[ *scan->numfiles ] = CopyString( filename );
+	( *scan->numfiles )++;
+
+	return SDL_ENUM_CONTINUE;
+}
+
+void Sys_ListFilteredFiles( const char *basedir, char *subdirs, char *filter, char **list, int *numfiles ) {
+	char search[MAX_OSPATH];
+	filterScan_t scan;
 
 	if ( *numfiles >= MAX_FOUND_FILES - 1 ) {
 		return;
 	}
 
 	if ( strlen( subdirs ) ) {
-		Com_sprintf( search, sizeof( search ), "%s\\%s\\*", basedir, subdirs );
+		Com_sprintf( search, sizeof( search ), "%s\\%s", basedir, subdirs );
 	} else {
-		Com_sprintf( search, sizeof( search ), "%s\\*", basedir );
+		Com_sprintf( search, sizeof( search ), "%s", basedir );
 	}
 
-	findhandle = _findfirst( search, &findinfo );
-	if ( findhandle == -1 ) {
-		return;
-	}
+	scan.basedir = basedir;
+	scan.subdirs = subdirs;
+	scan.filter = filter;
+	scan.list = list;
+	scan.numfiles = numfiles;
 
-	do {
-		if ( findinfo.attrib & _A_SUBDIR ) {
-			if ( Q_stricmp( findinfo.name, "." ) && Q_stricmp( findinfo.name, ".." ) ) {
-				if ( strlen( subdirs ) ) {
-					Com_sprintf( newsubdirs, sizeof( newsubdirs ), "%s\\%s", subdirs, findinfo.name );
-				} else {
-					Com_sprintf( newsubdirs, sizeof( newsubdirs ), "%s", findinfo.name );
-				}
-				Sys_ListFilteredFiles( basedir, newsubdirs, filter, list, numfiles );
-			}
-		}
-		if ( *numfiles >= MAX_FOUND_FILES - 1 ) {
-			break;
-		}
-		Com_sprintf( filename, sizeof( filename ), "%s\\%s", subdirs, findinfo.name );
-		if ( !Com_FilterPath( filter, filename, qfalse ) ) {
-			continue;
-		}
-		list[ *numfiles ] = CopyString( filename );
-		( *numfiles )++;
-	} while ( _findnext( findhandle, &findinfo ) != -1 );
-
-	_findclose( findhandle );
+	SDL_EnumerateDirectory( search, FilteredFilesCallback, &scan );
 }
 
 static qboolean strgtr( const char *s0, const char *s1 ) {
@@ -356,14 +355,75 @@ static qboolean strgtr( const char *s0, const char *s1 ) {
 	return qfalse;
 }
 
+// state shared between Sys_ListFiles and its enumeration callback
+typedef struct {
+	char **list;
+	int nfiles;
+	const char *extension;
+	qboolean dirsOnly;
+	qboolean wantsubs;
+} listFilesScan_t;
+
+/*
+==================
+ListFilesCallback
+
+One directory entry during a plain listing.
+==================
+*/
+static SDL_EnumerationResult SDLCALL ListFilesCallback( void *userdata, const char *dirname, const char *fname ) {
+	listFilesScan_t *scan = (listFilesScan_t *)userdata;
+	char path[MAX_OSPATH];
+	SDL_PathInfo info;
+	qboolean isDir;
+	qboolean want;
+	int nameLen, extLen;
+
+	if ( !Q_stricmp( fname, "." ) || !Q_stricmp( fname, ".." ) ) {
+		return SDL_ENUM_CONTINUE;
+	}
+
+	if ( scan->nfiles == MAX_FOUND_FILES - 1 ) {
+		return SDL_ENUM_FAILURE;
+	}
+
+	Com_sprintf( path, sizeof( path ), "%s%s", dirname, fname );
+	if ( !SDL_GetPathInfo( path, &info ) ) {
+		return SDL_ENUM_CONTINUE;
+	}
+	isDir = ( info.type == SDL_PATHTYPE_DIRECTORY );
+
+	// passing a slash as extension finds directories, otherwise
+	// wantsubs picks files or directories
+	if ( scan->dirsOnly ) {
+		want = isDir;
+	} else {
+		want = scan->wantsubs ? isDir : !isDir;
+	}
+	if ( !want ) {
+		return SDL_ENUM_CONTINUE;
+	}
+
+	// match the trailing extension the way the old "*ext" search did
+	if ( scan->extension[0] ) {
+		nameLen = strlen( fname );
+		extLen = strlen( scan->extension );
+		if ( nameLen < extLen || Q_stricmp( fname + nameLen - extLen, scan->extension ) ) {
+			return SDL_ENUM_CONTINUE;
+		}
+	}
+
+	scan->list[ scan->nfiles ] = CopyString( fname );
+	scan->nfiles++;
+
+	return SDL_ENUM_CONTINUE;
+}
+
 char **Sys_ListFiles( const char *directory, const char *extension, char *filter, int *numfiles, qboolean wantsubs ) {
-	char search[MAX_OSPATH];
 	int nfiles;
 	char        **listCopy;
 	char        *list[MAX_FOUND_FILES];
-	struct _finddata_t findinfo;
-	int findhandle;
-	int flag;
+	listFilesScan_t scan;
 	int i;
 
 	if ( filter ) {
@@ -394,35 +454,23 @@ char **Sys_ListFiles( const char *directory, const char *extension, char *filter
 	// passing a slash as extension will find directories
 	if ( extension[0] == '/' && extension[1] == 0 ) {
 		extension = "";
-		flag = 0;
+		scan.dirsOnly = qtrue;
 	} else {
-		flag = _A_SUBDIR;
+		scan.dirsOnly = qfalse;
 	}
-
-	Com_sprintf( search, sizeof( search ), "%s\\*%s", directory, extension );
 
 	// search
 	nfiles = 0;
 
-	findhandle = _findfirst( search, &findinfo );
-	if ( findhandle == -1 ) {
-		*numfiles = 0;
-		return NULL;
-	}
+	scan.list = list;
+	scan.nfiles = 0;
+	scan.extension = extension;
+	scan.wantsubs = wantsubs;
 
-	do {
-		if ( ( !wantsubs && flag ^ ( findinfo.attrib & _A_SUBDIR ) ) || ( wantsubs && findinfo.attrib & _A_SUBDIR ) ) {
-			if ( nfiles == MAX_FOUND_FILES - 1 ) {
-				break;
-			}
-			list[ nfiles ] = CopyString( findinfo.name );
-			nfiles++;
-		}
-	} while ( _findnext( findhandle, &findinfo ) != -1 );
+	SDL_EnumerateDirectory( directory, ListFilesCallback, &scan );
+	nfiles = scan.nfiles;
 
 	list[ nfiles ] = 0;
-
-	_findclose( findhandle );
 
 	// return a copy of the list
 	*numfiles = nfiles;
@@ -438,7 +486,8 @@ char **Sys_ListFiles( const char *directory, const char *extension, char *filter
 	listCopy[i] = NULL;
 
 	do {
-		flag = 0;
+		int flag = 0;
+
 		for ( i = 1; i < nfiles; i++ ) {
 			if ( strgtr( listCopy[i - 1], listCopy[i] ) ) {
 				char *temp = listCopy[i];
@@ -447,7 +496,10 @@ char **Sys_ListFiles( const char *directory, const char *extension, char *filter
 				flag = 1;
 			}
 		}
-	} while ( flag );
+		if ( !flag ) {
+			break;
+		}
+	} while ( 1 );
 
 	return listCopy;
 }
@@ -471,67 +523,15 @@ void    Sys_FreeFileList( char **list ) {
 
 /*
 ================
-Sys_ScanForCD
-
-Search all the drives to see if there is a valid CD to grab
-the cddir from
-================
-*/
-qboolean Sys_ScanForCD( void ) {
-	static char cddir[MAX_OSPATH];
-	char drive[4];
-	FILE        *f;
-	char test[MAX_OSPATH];
-#if 0
-	// don't override a cdpath on the command line
-	if ( strstr( sys_cmdline, "cdpath" ) ) {
-		return;
-	}
-#endif
-
-	drive[0] = 'c';
-	drive[1] = ':';
-	drive[2] = '\\';
-	drive[3] = 0;
-
-	// scan the drives
-	for ( drive[0] = 'c' ; drive[0] <= 'z' ; drive[0]++ ) {
-		if ( GetDriveType( drive ) != DRIVE_CDROM ) {
-			continue;
-		}
-
-		sprintf( cddir, "%s%s", drive, CD_BASEDIR );
-		sprintf( test, "%s\\%s", cddir, CD_EXE );
-		f = fopen( test, "r" );
-		if ( f ) {
-			fclose( f );
-			return qtrue;
-
-		} else {
-			sprintf( cddir, "%s%s", drive, CD_BASEDIR_LINUX );
-			sprintf( test, "%s\\%s", cddir, CD_EXE_LINUX );
-			f = fopen( test, "r" );
-			if ( f ) {
-				fclose( f );
-				return qtrue;
-			}
-		}
-	}
-
-	return qfalse;
-}
-
-/*
-================
 Sys_CheckCD
 
-Return true if the proper CD is in the drive
+Return true if the proper CD is in the drive. The CD scan itself is
+dead, nothing can ship on a CD any more.
 ================
 */
 qboolean    Sys_CheckCD( void ) {
 	// FIXME: mission pack
 	return qtrue;
-//	return Sys_ScanForCD();
 }
 
 
@@ -545,20 +545,17 @@ char *Sys_GetClipboardData( void ) {
 	char *data = NULL;
 	char *cliptext;
 
-	if ( OpenClipboard( NULL ) != 0 ) {
-		HANDLE hClipboardData;
-
-		if ( ( hClipboardData = GetClipboardData( CF_TEXT ) ) != 0 ) {
-			if ( ( cliptext = (char *)GlobalLock( hClipboardData ) ) != 0 ) {
-				data = (char *)Z_Malloc( GlobalSize( hClipboardData ) + 1 );
-				Q_strncpyz( data, cliptext, GlobalSize( hClipboardData ) );
-				GlobalUnlock( hClipboardData );
-
-				strtok( data, "\n\r\b" );
-			}
-		}
-		CloseClipboard();
+	cliptext = SDL_GetClipboardText();
+	if ( cliptext && cliptext[0] ) {
+		data = (char *)Z_Malloc( strlen( cliptext ) + 1 );
+		Q_strncpyz( data, cliptext, strlen( cliptext ) + 1 );
+		strtok( data, "\n\r\b" );
 	}
+
+	if ( cliptext ) {
+		SDL_free( cliptext );
+	}
+
 	return data;
 }
 
@@ -581,9 +578,7 @@ void Sys_UnloadDll( void *dllHandle ) {
 	if ( !dllHandle ) {
 		return;
 	}
-	if ( !FreeLibrary((HMODULE)( dllHandle )) ) {
-		Com_Error( ERR_FATAL, "Sys_UnloadDll FreeLibrary failed" );
-	}
+	SDL_UnloadObject( dllHandle );
 }
 
 /*
@@ -595,21 +590,21 @@ The entry point is looked up by name and called with the import table;
 it returns the module's export table.
 =================
 */
-extern char     *FS_BuildOSPath( const char *base, const char *game, const char *qpath );
+extern char *FS_BuildOSPath( const char *base, const char *game, const char *qpath );
 
 void * QDECL Sys_LoadDll( const char *name, void **dllHandle, const char *entryName, void *import ) {
 	static int lastWarning = 0;
-	HINSTANCE libHandle;
+	SDL_SharedObject *libHandle;
 	void * ( QDECL * entry )( void * );
 	char    *basepath;
 	char    *cdpath;
 	char    *gamedir;
 	char    *fn;
+	char filename[MAX_QPATH];
 #ifdef NDEBUG
 	int timestamp;
-	int ret;
+	int buttonID;
 #endif
-	char filename[MAX_QPATH];
 
 #ifdef WOLF_SP_DEMO
 	Com_sprintf( filename, sizeof( filename ), "%sx86_d.dll", name );
@@ -623,15 +618,30 @@ void * QDECL Sys_LoadDll( const char *name, void **dllHandle, const char *entryN
 	if ( ( ( timestamp - lastWarning ) > ( 5 * 60000 ) ) && !Cvar_VariableIntegerValue( "dedicated" )
 		 && !Cvar_VariableIntegerValue( "com_blindlyLoadDLLs" ) ) {
 		if ( FS_FileExists( filename ) ) {
+			// Enter and Escape both pick Cancel, like the old MB_DEFBUTTON2 box
+			const SDL_MessageBoxButtonData buttons[] = {
+				{ 0, 0, "OK" },
+				{ SDL_MESSAGEBOX_BUTTON_ESCAPEKEY_DEFAULT |
+				  SDL_MESSAGEBOX_BUTTON_RETURNKEY_DEFAULT, 1, "Cancel" },
+			};
+			const SDL_MessageBoxData messageBox = {
+				SDL_MESSAGEBOX_WARNING,       // SDL_MessageBoxFlags flags
+				NULL,                         // SDL_Window *window
+				"Security Warning",           // const char *title
+				"You are about to load a .DLL executable that\n"
+				"has not been verified for use with Wolfenstein.\n"
+				"This type of file can compromise the security of\n"
+				"your computer.\n\n"
+				"Select 'OK' if you choose to load it anyway.",  // const char *message
+				SDL_arraysize( buttons ),     // int numbuttons
+				buttons,                      // const SDL_MessageBoxButtonData *buttons
+				NULL                          // SDL_MessageBoxColorScheme *colorScheme
+			};
+
 			lastWarning = timestamp;
-			ret = MessageBoxEx( NULL, "You are about to load a .DLL executable that\n"
-							  "has not been verified for use with Wolfenstein.\n"
-							  "This type of file can compromise the security of\n"
-							  "your computer.\n\n"
-							  "Select 'OK' if you choose to load it anyway.",
-							"Security Warning", MB_OKCANCEL | MB_ICONEXCLAMATION | MB_DEFBUTTON2 | MB_TOPMOST | MB_SETFOREGROUND,
-							MAKELANGID( LANG_NEUTRAL, SUBLANG_DEFAULT ) );
-			if ( ret != IDOK ) {
+			buttonID = 0;
+			SDL_ShowMessageBox( &messageBox, &buttonID );
+			if ( buttonID != 0 ) {
 				return NULL;
 			}
 		}
@@ -641,7 +651,7 @@ void * QDECL Sys_LoadDll( const char *name, void **dllHandle, const char *entryN
 	// check current folder only if we are a developer
 	if ( 1 ) { //----(SA)	always dll
 //	if (Cvar_VariableIntegerValue( "devdll" )) {
-		libHandle = LoadLibrary( filename );
+		libHandle = SDL_LoadObject( filename );
 		if ( libHandle ) {
 			goto found_dll;
 		}
@@ -649,16 +659,16 @@ void * QDECL Sys_LoadDll( const char *name, void **dllHandle, const char *entryN
 
 	// the build puts the modules into bin/base, next to the engine
 	{
-		char exePath[MAX_OSPATH];
-		if ( GetModuleFileName( NULL, exePath, sizeof( exePath ) ) ) {
-			char *lastSlash = strrchr( exePath, '\\' );
-			if ( lastSlash ) {
-				Com_sprintf( lastSlash + 1, sizeof( exePath ) - ( lastSlash + 1 - exePath ),
-							 "base\\%s", filename );
-				libHandle = LoadLibrary( exePath );
-				if ( libHandle ) {
-					goto found_dll;
-				}
+		char *exeDir = SDL_GetBasePath();
+
+		if ( exeDir ) {
+			char exePath[MAX_OSPATH];
+
+			Com_sprintf( exePath, sizeof( exePath ), "%sbase\\%s", exeDir, filename );
+			SDL_free( exeDir );
+			libHandle = SDL_LoadObject( exePath );
+			if ( libHandle ) {
+				goto found_dll;
 			}
 		}
 	}
@@ -668,12 +678,12 @@ void * QDECL Sys_LoadDll( const char *name, void **dllHandle, const char *entryN
 	gamedir = Cvar_VariableString( "fs_game" );
 
 	fn = FS_BuildOSPath( basepath, gamedir, filename );
-	libHandle = LoadLibrary( fn );
+	libHandle = SDL_LoadObject( fn );
 
 	if ( !libHandle ) {
 		if ( cdpath[0] ) {
 			fn = FS_BuildOSPath( cdpath, gamedir, filename );
-			libHandle = LoadLibrary( fn );
+			libHandle = SDL_LoadObject( fn );
 		}
 
 		if ( !libHandle ) {
@@ -683,9 +693,9 @@ void * QDECL Sys_LoadDll( const char *name, void **dllHandle, const char *entryN
 
 found_dll:
 
-	entry = ( void * ( QDECL * )( void * ) )GetProcAddress( libHandle, entryName );
+	entry = ( void * ( QDECL * )( void * ) )SDL_LoadFunction( libHandle, entryName );
 	if ( !entry ) {
-		FreeLibrary( libHandle );
+		SDL_UnloadObject( libHandle );
 		return NULL;
 	}
 
@@ -701,36 +711,6 @@ BACKGROUND FILE STREAMING
 
 ========================================================================
 */
-
-typedef struct {
-	fileHandle_t file;
-	byte    *buffer;
-	qboolean eof;
-	qboolean active;
-	int bufferSize;
-	int streamPosition;     // next byte to be returned by Sys_StreamRead
-	int threadPosition;     // next byte to be read from file
-} streamsIO_t;
-
-typedef struct {
-	HANDLE threadHandle;
-	int threadId;
-	HANDLE musicThreadHandle;
-	int musicThreadId;
-	CRITICAL_SECTION crit;
-	streamsIO_t sIO[64];
-} streamState_t;
-
-int FS_ReadDirect( void *buffer, int len, fileHandle_t f );
-
-void Sys_MusicThread( void ) {
-	while ( 1 ) {
-		Sleep( 33 );
-		S_UpdateThread();
-	}
-}
-
-#if 1
 
 void Sys_InitStreamThread( void ) {
 }
@@ -762,250 +742,6 @@ void Sys_EnterCriticalSection( void *ptr ) {
 
 void Sys_LeaveCriticalSection( void *ptr ) {
 }
-
-#else
-
-void Sys_StreamFillBuffer( int i ) {
-	int count;
-	int r;
-	int buffer;
-	int readCount;
-	int bufferPoint;
-
-	// if there is any space left in the buffer, fill it up
-	if ( stream.sIO[i].active  && !stream.sIO[i].eof ) {
-		count = stream.sIO[i].bufferSize - ( stream.sIO[i].threadPosition - stream.sIO[i].streamPosition );
-		if ( !count ) {
-			return;
-		}
-
-		bufferPoint = stream.sIO[i].threadPosition % stream.sIO[i].bufferSize;
-		buffer = stream.sIO[i].bufferSize - bufferPoint;
-		readCount = buffer < count ? buffer : count;
-
-		r = FS_ReadDirect( stream.sIO[i].buffer + bufferPoint, readCount, stream.sIO[i].file );
-		if ( r != readCount ) {
-			stream.sIO[i].eof = qtrue;
-		}
-		stream.sIO[i].threadPosition += r;
-	}
-}
-
-/*
-===============
-Sys_StreamThread
-
-A thread will be sitting in this loop forever
-================
-*/
-void Sys_StreamThread( void ) {
-	int i;
-
-	while ( 1 ) {
-		Sleep( 10 );
-		EnterCriticalSection( &stream.crit );
-		for ( i = 1; i < 64; i++ ) {
-			Sys_StreamFillBuffer( i );
-		}
-		LeaveCriticalSection( &stream.crit );
-	}
-}
-
-
-/*
-===============
-Sys_InitStreamThread
-
-================
-*/
-void Sys_InitStreamThread( void ) {
-	int i;
-
-	InitializeCriticalSection( &stream.crit );
-
-	stream.threadHandle = CreateThread(
-		NULL,   // LPSECURITY_ATTRIBUTES lpsa,
-		0,      // DWORD cbStack,
-		(LPTHREAD_START_ROUTINE)Sys_StreamThread,   // LPTHREAD_START_ROUTINE lpStartAddr,
-		0,          // LPVOID lpvThreadParm,
-		0,          //   DWORD fdwCreate,
-		&stream.threadId );
-
-	for ( i = 0; i < 64; i++ ) {
-		stream.sIO[i].active = qfalse;
-	}
-
-	stream.musicThreadHandle = CreateThread(
-		NULL,   // LPSECURITY_ATTRIBUTES lpsa,
-		0,      // DWORD cbStack,
-		(LPTHREAD_START_ROUTINE)Sys_MusicThread, // LPTHREAD_START_ROUTINE lpStartAddr,
-		0,          // LPVOID lpvThreadParm,
-		0,          //   DWORD fdwCreate,
-		&stream.musicThreadId );
-
-}
-
-/*
-===============
-Sys_ShutdownStreamThread
-
-================
-*/
-void Sys_ShutdownStreamThread( void ) {
-}
-
-
-/*
-===============
-Sys_BeginStreamedFile
-
-================
-*/
-void Sys_BeginStreamedFile( fileHandle_t f, int readAhead ) {
-	if ( stream.sIO[f].file ) {
-		Sys_EndStreamedFile( stream.sIO[f].file );
-	}
-
-	stream.sIO[f].buffer = Z_Malloc( readAhead );
-	stream.sIO[f].bufferSize = readAhead;
-	stream.sIO[f].streamPosition = 0;
-	stream.sIO[f].threadPosition = 0;
-	stream.sIO[f].eof = qfalse;
-	stream.sIO[f].file = f;
-	stream.sIO[f].active = qtrue;
-
-	EnterCriticalSection( &stream.crit );
-
-	Sys_StreamFillBuffer( f );
-
-	LeaveCriticalSection( &stream.crit );
-}
-
-/*
-===============
-Sys_EndStreamedFile
-
-================
-*/
-void Sys_EndStreamedFile( fileHandle_t f ) {
-	if ( f != stream.sIO[f].file ) {
-		Com_Error( ERR_FATAL, "Sys_EndStreamedFile: wrong file" );
-	}
-
-	EnterCriticalSection( &stream.crit );
-
-	stream.sIO[f].active = qfalse;
-	stream.sIO[f].file = 0;
-
-	Z_Free( stream.sIO[f].buffer );
-
-	stream.sIO[f].buffer = NULL;
-
-	LeaveCriticalSection( &stream.crit );
-}
-
-
-/*
-===============
-Sys_StreamedRead
-
-================
-*/
-int Sys_StreamedRead( void *buffer, int size, int count, fileHandle_t f ) {
-	int available;
-	int remaining;
-	int sleepCount;
-	int copy;
-	int bufferCount;
-	int bufferPoint;
-	byte    *dest;
-
-	if ( stream.sIO[f].active == qfalse ) {
-		Com_Error( ERR_FATAL, "Streamed read with non-streaming file" );
-	}
-
-	dest = (byte *)buffer;
-	remaining = size * count;
-
-	if ( remaining <= 0 ) {
-		Com_Error( ERR_FATAL, "Streamed read with non-positive size" );
-	}
-
-	sleepCount = 0;
-	while ( remaining > 0 ) {
-		available = stream.sIO[f].threadPosition - stream.sIO[f].streamPosition;
-		if ( !available ) {
-			if ( stream.sIO[f].eof ) {
-				break;
-			}
-			if ( sleepCount == 1 ) {
-				Com_DPrintf( "Sys_StreamedRead: waiting\n" );
-			}
-			if ( ++sleepCount > 100 ) {
-				Com_Error( ERR_FATAL, "Sys_StreamedRead: thread has died" );
-			}
-			Sleep( 10 );
-			continue;
-		}
-
-		bufferPoint = stream.sIO[f].streamPosition % stream.sIO[f].bufferSize;
-		bufferCount = stream.sIO[f].bufferSize - bufferPoint;
-
-		copy = available < bufferCount ? available : bufferCount;
-		if ( copy > remaining ) {
-			copy = remaining;
-		}
-		memcpy( dest, stream.sIO[f].buffer + bufferPoint, copy );
-		stream.sIO[f].streamPosition += copy;
-		dest += copy;
-		remaining -= copy;
-	}
-
-	return ( count * size - remaining ) / size;
-}
-
-/*
-===============
-Sys_StreamSeek
-
-================
-*/
-void Sys_StreamSeek( fileHandle_t f, int offset, int origin ) {
-
-	// halt the thread
-	EnterCriticalSection( &stream.crit );
-
-	// clear to that point
-	FS_Seek( f, offset, origin );
-	stream.sIO[f].streamPosition = 0;
-	stream.sIO[f].threadPosition = 0;
-	stream.sIO[f].eof = qfalse;
-
-	// let the thread start running at the new position
-	LeaveCriticalSection( &stream.crit );
-}
-
-void *Sys_InitializeCriticalSection() {
-	LPCRITICAL_SECTION crit;
-
-	crit = malloc( sizeof( CRITICAL_SECTION ) );
-	InitializeCriticalSection( crit );
-	return crit;
-}
-
-void Sys_EnterCriticalSection( void *ptr ) {
-	LPCRITICAL_SECTION crit;
-	crit = ptr;
-	EnterCriticalSection( crit );
-}
-
-void Sys_LeaveCriticalSection( void *ptr ) {
-	LPCRITICAL_SECTION crit;
-	crit = ptr;
-	LeaveCriticalSection( crit );
-}
-
-#endif
 
 /*
 ========================================================================
@@ -1061,7 +797,6 @@ void Sys_QueEvent( int time, sysEventType_t type, int value, int value2, int ptr
 /*
 ================
 Sys_GetEvent
-
 ================
 */
 sysEvent_t Sys_GetEvent( void ) {
@@ -1115,7 +850,7 @@ sysEvent_t Sys_GetEvent( void ) {
 	// create an empty event to return
 
 	memset( &ev, 0, sizeof( ev ) );
-	ev.evTime = timeGetTime();
+	ev.evTime = Sys_Milliseconds();
 
 	return ev;
 }
@@ -1155,23 +890,17 @@ Called after the common systems (cvars, files, etc)
 are initialized
 ================
 */
-#define OSR2_BUILD_NUMBER 1111
-#define WIN98_BUILD_NUMBER 1998
-
 void Sys_Init( void ) {
 	int cpuid;
 
 	// make sure the timer is high precision, otherwise
 	// NT gets 18ms resolution
-	timeBeginPeriod( 1 );
+	Win_SetTimerResolution( qtrue );
 
 	Cmd_AddCommand( "in_restart", Sys_In_Restart_f );
 	Cmd_AddCommand( "net_restart", Sys_Net_Restart_f );
 
 	Cvar_Set( "arch", "winnt" );
-
-	// save out a couple things in rom cvars for the renderer to access
-	Cvar_Get( "win_hinstance", va( "%i", (int)g_sv.hInstance ), CVAR_ROM );
 
 	//
 	// figure out our CPU
@@ -1245,27 +974,30 @@ int totalMsec, countMsec;
 
 /*
 ==================
-WinMain
+main
 
+SDL provides the entry point: SDL_main.h renames main to SDL_main and
+the WinMain inside SDL3.dll parses the command line and calls it.
 ==================
 */
-int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow ) {
-	char cwd[MAX_OSPATH];
+int main( int argc, char *argv[] ) {
 	int startTime, endTime;
+	int i;
 
-	// should never get a previous instance in Win32
-	if ( hPrevInstance ) {
-		return 0;
+	// rebuild the command line string Com_Init expects
+	sys_cmdline[0] = 0;
+	for ( i = 1; i < argc; i++ ) {
+		if ( i > 1 ) {
+			Q_strcat( sys_cmdline, sizeof( sys_cmdline ), " " );
+		}
+		Q_strcat( sys_cmdline, sizeof( sys_cmdline ), argv[i] );
 	}
-
-	g_sv.hInstance = hInstance;
-	Q_strncpyz( sys_cmdline, lpCmdLine, sizeof( sys_cmdline ) );
 
 	// done before Com/Sys_Init since we need this for error output
 	Sys_CreateConsole();
 
 	// no abort/retry/fail errors
-	SetErrorMode( SEM_FAILCRITICALERRORS );
+	Win_SetProcessErrorMode();
 
 	// SDL owns the window, the GL context and the input from here on
 	if ( !SDL_Init( SDL_INIT_VIDEO | SDL_INIT_GAMEPAD ) ) {
@@ -1275,24 +1007,12 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 	// get the initial time base
 	Sys_Milliseconds();
 
-// re-enabled CD checking for proper 'setup.exe' file on game cd
-// (SA) enable to do cd check for setup\setup.exe
-//#if 1
-#if 0
-	// if we find the CD, add a +set cddir xxx command line
-	if ( !Sys_ScanForCD() ) {
-		Sys_Error( "Game CD not in drive" );
-	}
-
-#endif
-
 	Sys_InitStreamThread();
 
 	Com_Init( sys_cmdline );
 	NET_Init();
 
-	_getcwd( cwd, sizeof( cwd ) );
-	Com_Printf( "Working directory: %s\n", cwd );
+	Com_Printf( "Working directory: %s\n", Sys_Cwd() );
 
 	// hide the early console since we've reached the point where we
 	// have a working graphics subsystems
@@ -1300,15 +1020,15 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 		Sys_ShowConsole( 0, qfalse );
 	}
 
-	if ( g_sv.hWnd ) {
-		SetFocus( g_sv.hWnd );
+	if ( glw_state.window ) {
+		SDL_RaiseWindow( glw_state.window );
 	}
 
 	// main game loop
 	while ( 1 ) {
 		// if not running as a game client, sleep a bit
 		if ( g_sv.isMinimized || ( com_dedicated && com_dedicated->integer ) ) {
-			Sleep( 5 );
+			SDL_Delay( 5 );
 		}
 
 		// set low precision every frame, because some system calls
