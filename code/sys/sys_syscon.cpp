@@ -29,7 +29,7 @@ If you have questions concerning this license or the applicable additional terms
 // win_syscon.h
 #include "../client/client.h"
 #include "sys_local.h"
-#include "win32/resource.h"
+#include "rc/resource.h"
 #include <errno.h>
 #include <float.h>
 #include <fcntl.h>

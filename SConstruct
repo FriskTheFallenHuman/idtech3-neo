@@ -266,8 +266,8 @@ wolf_env['SUBSYSTEM'] = 'WINDOWS'
 # cannot read a .rc file. Compile the resource file with the resource
 # compiler first and feed the .res file to the Program call.
 wolf_res = wolf_env.RES(
-    wolf_variant + '/sys/win32/winquake.res',
-    wolf_variant + '/sys/win32/winquake.rc')
+    wolf_variant + '/sys/rc/winquake.res',
+    wolf_variant + '/sys/rc/winquake.rc')
 wolf = wolf_env.Program(
     '#bin/Doom',
     [wolf_variant + '/' + p for p in
