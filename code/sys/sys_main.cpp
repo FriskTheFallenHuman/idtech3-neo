@@ -244,7 +244,7 @@ DIRECTORY SCANNING
 #define MAX_FOUND_FILES 0x1000
 
 // the filtered scan recurses into subdirectories through this function
-void Sys_ListFilteredFiles( const char *basedir, char *subdirs, char *filter, char **list, int *numfiles );
+void Sys_ListFilteredFiles( const char *basedir, const char *subdirs, const char *filter, char **list, int *numfiles );
 
 // state shared between Sys_ListFilteredFiles and its enumeration callback
 typedef struct {
@@ -301,7 +301,7 @@ static SDL_EnumerationResult SDLCALL FilteredFilesCallback( void *userdata, cons
 	// keep the same entry naming as the old code, including the leading
 	// separator when scanning the base directory itself
 	Com_sprintf( filename, sizeof( filename ), "%s\\%s", scan->subdirs, fname );
-	if ( !Com_FilterPath( scan->filter, filename, qfalse ) ) {
+	if ( !Com_FilterPath( (char *)scan->filter, filename, qfalse ) ) {
 		return SDL_ENUM_CONTINUE;
 	}
 
@@ -311,7 +311,7 @@ static SDL_EnumerationResult SDLCALL FilteredFilesCallback( void *userdata, cons
 	return SDL_ENUM_CONTINUE;
 }
 
-void Sys_ListFilteredFiles( const char *basedir, char *subdirs, char *filter, char **list, int *numfiles ) {
+void Sys_ListFilteredFiles( const char *basedir, const char *subdirs, const char *filter, char **list, int *numfiles ) {
 	char search[MAX_OSPATH];
 	filterScan_t scan;
 
@@ -578,7 +578,7 @@ void Sys_UnloadDll( void *dllHandle ) {
 	if ( !dllHandle ) {
 		return;
 	}
-	SDL_UnloadObject( dllHandle );
+	SDL_UnloadObject( (SDL_SharedObject *)dllHandle );
 }
 
 /*
@@ -659,13 +659,13 @@ void * QDECL Sys_LoadDll( const char *name, void **dllHandle, const char *entryN
 
 	// the build puts the modules into bin/base, next to the engine
 	{
-		char *exeDir = SDL_GetBasePath();
+		const char *exeDir = SDL_GetBasePath();
 
 		if ( exeDir ) {
 			char exePath[MAX_OSPATH];
 
 			Com_sprintf( exePath, sizeof( exePath ), "%sbase\\%s", exeDir, filename );
-			SDL_free( exeDir );
+			SDL_free( (void *)exeDir );
 			libHandle = SDL_LoadObject( exePath );
 			if ( libHandle ) {
 				goto found_dll;
