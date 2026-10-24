@@ -7,7 +7,7 @@ from pathlib import Path
 import re
 import subprocess
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[3]
 
 
 def main():
@@ -61,8 +61,7 @@ def main():
             cwd=binaries,
             stdout=output,
             stderr=subprocess.STDOUT,
-            timeo
-ut=150,
+            timeout=150,
             check=True,
             creationflags=subprocess.CREATE_NO_WINDOW,
         )

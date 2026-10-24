@@ -8,7 +8,7 @@ import re
 import subprocess
 import sys
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(ROOT / "code/tools/compilers"))
 from integrated import compiler_command
 
@@ -51,8 +51,7 @@ def main():
         + "\n"
     )
     helpers.run(
- 
-       [*compiler_command("dmap"), "--base", base, "--wad", ROOT / "base/wad/DOOM.WAD", source],
+        [*compiler_command("dmap"), "--base", base, "--wad", ROOT / "base/wad/DOOM.WAD", source],
         home / "doommap.log",
     )
     hazard = home / "hazard.dwd"
@@ -117,8 +116,7 @@ def main():
         ("logfile", 2),
         ("r_fullscreen", 0),
         ("r_mode", 3),
-      
-  ("com_blindlyLoadDLLs", 1),
+        ("com_blindlyLoadDLLs", 1),
         ("doom_skill", 2),
         ("net_port", 27974),
     ):
@@ -157,8 +155,7 @@ def main():
         json.dumps(
             {
                 "passed": True,
-                "pickups
-": 34,
+                "pickups": 34,
                 "inventory": records[35],
                 "hazard_health": [r[0] for r in records[36:]],
             },

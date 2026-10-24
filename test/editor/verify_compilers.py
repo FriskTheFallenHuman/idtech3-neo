@@ -7,7 +7,7 @@ from pathlib import Path
 import struct
 import sys
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[4]
 sys.path.insert(0, str(ROOT / "code/tools/compilers"))
 from integrated import run_compiler
 
@@ -45,8 +45,7 @@ def main():
     if bsp_tools.png(textures / "startan3.png") != expected:
         raise RuntimeError("Wall texture assigned to a floor has incorrect pixels")
     if not (textures / "floor0_1.png").is_file():
-        raise RuntimeError("Floor text
-ure assigned to a wall is missing")
+        raise RuntimeError("Floor texture assigned to a wall is missing")
     rejected = project / "out/rejected"
     rejected.mkdir(parents=True, exist_ok=True)
     for source, data in (

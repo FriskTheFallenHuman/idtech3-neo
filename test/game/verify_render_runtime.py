@@ -7,7 +7,7 @@ import re
 import subprocess
 import sys
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(ROOT / "code/tools/compilers"))
 from integrated import compiler_command
 
@@ -52,8 +52,7 @@ def main():
     door_source = home / "door.dwd"
     geometry.fixture(
         door_source,
-  
-      [
+        [
             geometry.line((0, 0), (0, 128), left),
             geometry.line((0, 128), (128, 128), left),
             geometry.line((128, 0), (0, 0), left),
@@ -113,8 +112,7 @@ def main():
                 "screenshot shotgun_position",
                 "s_musicinfo",
                 "toggleconsole",
-        
-        "wait 90",
+                "wait 90",
                 "screenshot black_console",
                 "quit",
                 "",

@@ -10,7 +10,7 @@ import sys
 
 from PIL import Image
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(ROOT / "code/tools/compilers"))
 from integrated import compiler_command
 
@@ -64,8 +64,7 @@ def launch(home, map_name, commands, *, allow_error=False, skill=3):
     return log
 
 
-def
- main():
+def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--label", default="release")
     parser.add_argument("--binaries", type=Path, default=ROOT)
@@ -117,8 +116,7 @@ def
     if struct.unpack_from("<i", data)[0] != 22 or any(
         name.encode() + b"\0" not in data for name in required
     ):
-        raise RuntimeError("Legacy save version/name
-s were not retained")
+        raise RuntimeError("Legacy save version/names were not retained")
     if "Doom save callbacks: 1250 registered" not in log:
         raise RuntimeError("Native game DLL did not validate the migrated registry")
     for name in ("e1m5_loaded", "e1m5_cross_loaded"):
@@ -160,8 +158,7 @@ s were not retained")
             "    0 (0 : STARTAN3 / STARTAN3 / STARTAN3 )\n"
             "    0 : FLOOR4_8 128 : CEIL3_5 192 0 0\n"
         )
-    source.wr
-ite_text(
+    source.write_text(
         "WorldServer version 4\n\nlines:4\n"
         + "".join(lines)
         + "\nthings:2\n(256,256,0) :1, 7\n(3840,256,180) :3003, 7\n",
@@ -222,8 +219,7 @@ ite_text(
             raise RuntimeError(f"Live projectile callback missing from {name}")
 
     # Alter only callback bytes, keeping the original routing header and record
-    # lengths. E
-rrors must be rejected by the real game loader, without a crash.
+    # lengths. Errors must be rejected by the real game loader, without a crash.
     invalid_results = {}
     needle = b"DoomItemThink\0"
     for label, replacement, expected in (

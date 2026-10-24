@@ -56,8 +56,7 @@ def main():
     if len(positions) != 3 or len(set(positions)) != 1:
         raise RuntimeError(f"Player did not survive all three restoration paths: {positions}")
     if len(counts) != 3 or len(set(counts)) != 1 or len(actors) != 3 * counts[0]:
-        raise Runtim
-eError(f"Restored actor roster differs: {counts}; {len(actors)} actor records")
+        raise RuntimeError(f"Restored actor roster differs: {counts}; {len(actors)} actor records")
     count = counts[0]
     if actors[:count] != actors[count : 2 * count] or actors[:count] != actors[2 * count :]:
         raise RuntimeError("Saved monster species/health changed after reloading")

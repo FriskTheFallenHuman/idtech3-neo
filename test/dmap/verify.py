@@ -13,8 +13,7 @@ import sys
 import zlib
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(ROOT / "code/tools/compilers"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from integrated import run_compiler
 
 SIZES = [1, 72, 16, 36, 48, 4, 4, 40, 12, 8, 44, 4, 72, 104, 1, 1, 1, 68, 36, 48, 16, 24]
@@ -49,8 +48,7 @@ class Bsp:
             for e in re.findall(r"\{([^}]+)\}", self.lumps[0].decode("ascii"))
         ]
         self.brushes = list(struct.iter_unpack("<3i", self.lumps[8]))
-        self.brush_sides = list(struct.iter_unpa
-ck("<2i", self.lumps[9]))
+        self.brush_sides = list(struct.iter_unpack("<2i", self.lumps[9]))
         self.planes = list(struct.iter_unpack("<4f", self.lumps[2]))
         self.validate()
 
@@ -88,8 +86,7 @@ ck("<2i", self.lumps[9]))
                         u[2] * v[0] - u[0] * v[2],
                         u[0] * v[1] - u[1] * v[0],
                     )
- 
-               )
+                )
                 check(area > 1e-10, f"degenerate triangle on surface {i}")
         for first, count, shader in self.brushes:
             check(
@@ -132,8 +129,7 @@ ck("<2i", self.lumps[9]))
                     for n, p in zip(self.planes[plane][:3], (point[0], point[1], point[2] - offset))
                 )
                 <= self.planes[plane][3] + 1e-4
-                for pla
-ne, _ in self.brush_sides[first : first + count]
+                for plane, _ in self.brush_sides[first : first + count]
             ):
                 return True
         return False
@@ -183,8 +179,7 @@ def expected_wall(wad, name):
         if label not in lumps:
             continue
         table = lumps[label]
-        for i in range(struct.unpack_from("<I", table)[0
-]):
+        for i in range(struct.unpack_from("<I", table)[0]):
             offset = struct.unpack_from("<I", table, 4 + i * 4)[0]
             if table[offset : offset + 8].rstrip(b"\0").decode("ascii") != name:
                 continue
@@ -226,8 +221,7 @@ def line(a, b, front, back=None, special=0):
 
 
 def loop(points, definition):
-    return [line(a, b, definition)
- for a, b in zip(points, points[1:] + points[:1])]
+    return [line(a, b, definition) for a, b in zip(points, points[1:] + points[:1])]
 
 
 def fixture(path, lines):
@@ -278,8 +272,7 @@ def main():
                 continue
             side = sides[side_ids[0]]
             sec = side[2]
-            if (sec, 0) not in
- movers and (sec, 1) not in movers:
+            if (sec, 0) not in movers and (sec, 1) not in movers:
                 continue
             if side[5].split(b"\0")[0] == b"-":
                 continue
@@ -329,8 +322,7 @@ def main():
                 "entities": len(bsp.entities),
             }
         )
-    check(len(maps) == 27, "expected all 27 sour
-ce maps")
+    check(len(maps) == 27, "expected all 27 source maps")
     root = output / "fixtures"
     root.mkdir(exist_ok=True)
     outer = [(0, 0), (0, 256), (256, 256), (256, 0)]
@@ -373,8 +365,7 @@ ce maps")
         line((128, 128), (128, 0), left, door, 1),
         line((128, 128), (160, 128), door),
         line((160, 0), (128, 0), door),
-        line((
-160, 128), (160, 0), door, right),
+        line((160, 128), (160, 0), door, right),
         line((160, 128), (288, 128), right),
         line((288, 128), (288, 0), right),
         line((288, 0), (160, 0), right),
@@ -418,8 +409,7 @@ ce maps")
     run(compiler, root, wad, path, extra=("--strict",))
     switches = Bsp(root / "maps/switches.bsp")
     check(
-        sum(e.get("d
-oom_switch") == "1" for e in switches.entities) == 2, "switch metadata missing"
+        sum(e.get("doom_switch") == "1" for e in switches.entities) == 2, "switch metadata missing"
     )
     check(
         (root / "textures/switches/sw1brcom.png").is_file()
@@ -466,7 +456,6 @@ oom_switch") == "1" for e in switches.entities) == 2, "switch metadata missing"
     surfaces = [
         i for i, meta in enumerate(shaft_bsp.surface_sectors) if meta[1] == 6 and meta[0] == 1
     ]
-
     heights = [
         vertex[2]
         for i in surfaces
@@ -514,8 +503,7 @@ oom_switch") == "1" for e in switches.entities) == 2, "switch metadata missing"
     bsp = Bsp(root / "maps/stairs.bsp")
     movers = [e for e in bsp.entities if e["classname"] == "doom_mover"]
     check(
-        len(movers) == 3 and sorted(float(e["doom_stairheight"]) for e 
-in movers) == [8, 16, 24],
+        len(movers) == 3 and sorted(float(e["doom_stairheight"]) for e in movers) == [8, 16, 24],
         "stair chain targets",
     )
     check(all(e["doom_linkedtag"] == "7" for e in movers), "untagged stair chain activation")
@@ -556,8 +544,7 @@ in movers) == [8, 16, 24],
             "disconnected equal sectors",
             "door submodel collision and open translation",
             "stationary door jambs and lift shaft walls across all maps",
-   
-         "switch state metadata and paired textures",
+            "switch state metadata and paired textures",
             "lift floor collision and lowered translation",
             "connected untagged stair chain",
             "signed editor linedef flags",

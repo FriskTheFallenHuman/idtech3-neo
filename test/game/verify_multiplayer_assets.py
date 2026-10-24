@@ -6,7 +6,7 @@ import unittest
 
 from PIL import Image
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[3]
 
 
 class MultiplayerAssets(unittest.TestCase):
@@ -43,8 +43,7 @@ class MultiplayerAssets(unittest.TestCase):
                 original = list(source.convert("RGBA").get_flattened_data())
                 for team, base in (("red", 176), ("blue", 192)):
                     target = path.parent.parent / f"frames_{team}" / path.name
-             
-       self.assertIn(
+                    self.assertIn(
                         f"clampmap models/players/doomguy/frames_{team}/{path.name}", shader
                     )
                     with Image.open(target) as translated:

@@ -12,7 +12,7 @@ import re
 import subprocess
 import sys
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(ROOT / "code/tools/compilers"))
 from integrated import compiler_command
 
@@ -54,8 +54,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--configuration", choices=("Debug", "Release"), default="Release")
     parser.add_argument("--binaries", type=Path, help="Override native binary directory")
-    parser.add_argument("--label", help="Distinct output label
- for another toolchain")
+    parser.add_argument("--label", help="Distinct output label for another toolchain")
     args = parser.parse_args()
     binaries = args.binaries.resolve() if args.binaries else ROOT
     home = ROOT / f"out/monster-pursuit-{args.label or args.configuration.lower()}"
@@ -107,8 +106,7 @@ def main():
         ("net_port", 27970),
     ):
         command.extend(("+set", name, str(value)))
-    c
-ommand.extend(("+spdevmap", "chase", "+exec", "verify.cfg"))
+    command.extend(("+spdevmap", "chase", "+exec", "verify.cfg"))
     # STARTF_USESHOWWINDOW also hides the native window when the engine starts.
     startup = subprocess.STARTUPINFO()
     startup.dwFlags = subprocess.STARTF_USESHOWWINDOW
@@ -144,8 +142,7 @@ ommand.extend(("+spdevmap", "chase", "+exec", "verify.cfg"))
     (home / "verification.json").write_text(
         json.dumps({"positions": positions, "passed": True}, indent=2)
     )
-    print(f"Native {args.configuration} pursuit, AAS rou
-ting and save/load passed: {home}")
+    print(f"Native {args.configuration} pursuit, AAS routing and save/load passed: {home}")
 
 
 if __name__ == "__main__":

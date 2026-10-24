@@ -8,7 +8,7 @@ import time
 
 from PIL import Image
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[3]
 
 
 def launch(binaries, home, name, port, commands, start):
@@ -71,8 +71,7 @@ def main():
             output / "host",
             "DoomHost",
             27977,
-  
-          [
+            [
                 "wait 180",
                 "god",
                 "notarget",
@@ -134,7 +133,6 @@ def main():
         for process in processes:
             if process.wait(timeout=90):
                 raise RuntimeError(f"Native process exited unsuccessfully: {output}")
-
         host_text = host_log.read_text(errors="replace")
         guest_text = (output / "guest/base/doomconsole.log").read_text(errors="replace")
         if "Going from CS_PRIMED to CS_ACTIVE for DoomGuest" not in host_text:

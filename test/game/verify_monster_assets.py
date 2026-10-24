@@ -9,7 +9,7 @@ import wave
 import zlib
 from collections import Counter
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[3]
 
 
 def main():
@@ -50,8 +50,7 @@ def main():
     patches = 0
     for actor, record in manifest["actors"].items():
         for name in record["patches"]:
-        
-    metadata, rgba = helper.decode_patch(lumps[name], palette)
+            metadata, rgba = helper.decode_patch(lumps[name], palette)
             png = (ROOT / f"base/models/players/{actor}/frames/{name.lower()}.png").read_bytes()
             assert png[:8] == b"\x89PNG\r\n\x1a\n"
             assert struct.unpack_from(">II", png, 16) == metadata[4:6]

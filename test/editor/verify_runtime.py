@@ -14,7 +14,7 @@ import time
 
 from PIL import Image, ImageChops
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[4]
 
 
 def verify_window_controls(process, base):
@@ -54,8 +54,7 @@ def verify_window_controls(process, base):
 
     def rect(client=False):
         bounds = wintypes.RECT()
-        query = user.GetClientRect
- if client else user.GetWindowRect
+        query = user.GetClientRect if client else user.GetWindowRect
         if not query(window, ctypes.byref(bounds)):
             raise ctypes.WinError(ctypes.get_last_error())
         return (bounds.left, bounds.top, bounds.right, bounds.bottom)
@@ -103,8 +102,7 @@ def verify_window_controls(process, base):
                 if caption(window) != "Doom" or not user.IsZoomed(window):
                     raise RuntimeError("Return to game did not restore native title/style")
                 if rect(True)[2:] != sizes["editor_maximized"]:
-                    raise RuntimeError(
-"Return to game did not retain maximized native bounds")
+                    raise RuntimeError("Return to game did not retain maximized native bounds")
                 command(0xF020)
                 if not user.IsIconic(window):
                     raise RuntimeError("Game minimize control failed")
@@ -138,8 +136,7 @@ def verify_window_controls(process, base):
                 if not user.IsZoomed(window):
                     raise RuntimeError("Maximize control did not maximize the actual engine")
                 bounds = rect(True)
-                s
-izes["editor_maximized"] = bounds[2:]
+                sizes["editor_maximized"] = bounds[2:]
             elif stage == "MINIMIZE":
                 command(0xF020)  # SC_MINIMIZE
                 if not user.IsIconic(window):
@@ -178,8 +175,7 @@ def main():
     # publishing fixture outputs or profiles into the user's campaign tree.
     for name in ("Doom.exe", "toolsx86.dll"):
         shutil.copy2(args.runtime_directory / name, output / name)
-    for name in ("cgamex86.dll", "qagam
-ex86.dll", "uix86.dll"):
+    for name in ("cgamex86.dll", "qagamex86.dll", "uix86.dll"):
         shutil.copy2(args.runtime_directory / "base" / name, base / name)
         # The legacy native DLL loader searches beside the executable before
         # fs_basepath/base, and does not consult fs_homepath. Keep this run's
@@ -230,8 +226,7 @@ ex86.dll", "uix86.dll"):
         "wait 120",
         "s_info",
         "s_musicinfo",
-        "savegame
- editor_pause_b",
+        "savegame editor_pause_b",
         "echo EDITOR_PAUSE_END",
         "editor_active",
         "screenshot editor_workspace",
@@ -297,8 +292,7 @@ ex86.dll", "uix86.dll"):
         ]
         index = commands.index("screenshot editor_game_after")
         commands[index:index] = ["echo EDITOR_WINDOW_GAME", "wait 4"]
-        index = commands.index("screenshot editor_r
-estart")
+        index = commands.index("screenshot editor_restart")
         commands[index:index] = ["echo EDITOR_WINDOW_RESTART", "wait 4"]
         index = commands.index("screenshot editor_game_restart")
         commands[index:index] = ["echo EDITOR_WINDOW_GAME_RESTART", "wait 4"]
@@ -350,8 +344,7 @@ estart")
         "Editor shown; Return to game / F12 preserves the document",
         "Returned to game; editor document retained",
         '"editor_active" is:"1',
-        '"editor_active"
- is:"0',
+        '"editor_active" is:"0',
         "Map names must contain 1..32",
         "Built BSP and all four AAS profiles:",
     )
@@ -389,8 +382,7 @@ estart")
     resumed_music = re.findall(r"Doom music: .*position=(\d+) loops=(\d+)", resumed)
     if len(paused_music) != 2 or paused_music[0] != paused_music[1]:
         raise RuntimeError("Music advanced while editing")
-    if not resumed_music or in
-t(resumed_music[0][0]) <= int(paused_music[0][0]):
+    if not resumed_music or int(resumed_music[0][0]) <= int(paused_music[0][0]):
         raise RuntimeError("Music did not resume from its retained position")
     times = [
         struct.unpack_from("<i", (base / "save" / f"{name}.svg").read_bytes(), 68)[0]
@@ -430,8 +422,7 @@ t(resumed_music[0][0]) <= int(paused_music[0][0]):
             and not ImageChops.difference(workspace, captures[name]).getbbox()
         ):
             raise RuntimeError(f"Editor/game switch did not change output: {name}")
-    # The right view must contain actual textured scene pixels, not only UI chro
-me.
+    # The right view must contain actual textured scene pixels, not only UI chrome.
     preview = workspace.crop(
         (
             int(workspace.width * 0.3),

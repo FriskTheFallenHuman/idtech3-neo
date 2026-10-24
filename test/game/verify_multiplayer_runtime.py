@@ -9,7 +9,7 @@ import sys
 
 from PIL import Image
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(ROOT / "code/tools/compilers"))
 from integrated import compiler_command
 
@@ -67,8 +67,7 @@ def fixture(output):
     source = output / "doombotarena.dwd"
     source.write_text(
         "WorldServer version 4\n\nlines:8\n"
-        + "".join
-(lines)
+        + "".join(lines)
         + f"\nthings:{len(things)}\n"
         + "".join(
             f"({x},{y},{angle}) :{kind}, {23 if kind == 2005 else 7}\n"
@@ -144,8 +143,7 @@ def native(output, mode, label):
         "g_doWarmup": 0,
         "g_warmup": 0,
         "fraglimit": 0,
-  
-      "timelimit": 0,
+        "timelimit": 0,
         "g_friendlyFire": 0,
         "doom_botCount": 4,
         "doom_botSkill": 5,
@@ -186,8 +184,7 @@ def native(output, mode, label):
     if not any(int(row["spawn"]) > 1 for row in played) or "Kill:" not in game_log:
         raise RuntimeError(f"Bot damage, death and respawn were not exercised: {home}")
     if mode == "team" and {int(row["team"]) for row in played} != {1, 2}:
-        
-raise RuntimeError(f"Team bots were not assigned both teams: {played}")
+        raise RuntimeError(f"Team bots were not assigned both teams: {played}")
     for path in (base / "screenshots").glob("*.tga"):
         with Image.open(path) as picture:
             picture.save(home / f"{path.stem}.png")

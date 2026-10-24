@@ -7,7 +7,7 @@ import re
 import struct
 import subprocess
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[3]
 MONSTERS = {3004, 9, 3001, 3002, 58, 3006, 3005, 3003, 16, 7}
 
 
@@ -42,8 +42,7 @@ def main():
             (sum(t[3] in item_types and bool(t[4] & bit) and not t[4] & 16 for t in things), skill)
         )
         commands.extend(
-            (f"set doom_skil
-l {skill}", f"spdevmap {name}", "wait 180", "doomai nav", "doomai")
+            (f"set doom_skill {skill}", f"spdevmap {name}", "wait 180", "doomai nav", "doomai")
         )
     commands.append("quit")
     (base / "verify.cfg").write_text("\n".join(commands) + "\n")
@@ -92,8 +91,7 @@ l {skill}", f"spdevmap {name}", "wait 180", "doomai nav", "doomai")
     item_records = [
         (int(count), int(skill))
         for count, skill in re.findall(
-            r"Doo
-m items: spawned (\d+) original pickups at skill (\d+)", text
+            r"Doom items: spawned (\d+) original pickups at skill (\d+)", text
         )
     ]
     if item_records[-len(expected_items) :] != expected_items:

@@ -10,7 +10,7 @@ import unittest
 
 from PIL import Image
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[3]
 spec = importlib.util.spec_from_file_location("weapon_import", ROOT / "code/import-doom-weapons.py")
 importer = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(importer)
@@ -42,8 +42,7 @@ class WeaponAssetTests(unittest.TestCase):
                         for y in range(length):
                             index = lump[pos + 3 + y]
                             color = tuple(palette[index * 3 : index * 3 + 3]) + (255,)
-                            expected.putpixel((x, row + y), c
-olor)
+                            expected.putpixel((x, row + y), color)
                         pos += length + 4
                 self.assertEqual(image.tobytes(), expected.tobytes(), str(path))
             if path.parent.name != "ammo":
@@ -85,8 +84,7 @@ olor)
             self.assertEqual(len(rows), 12)
             for row in rows:
                 first, length, fps, loop = map(int, row)
-                self.assertTrue(0 <= first < frames and 0 < len
-gth <= frames - first)
+                self.assertTrue(0 <= first < frames and 0 < length <= frames - first)
                 self.assertTrue(fps == 35 and 0 <= loop <= length)
             attack = importer.WEAPONS[directory.name][1]
             self.assertEqual(

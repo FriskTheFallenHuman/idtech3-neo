@@ -6,7 +6,7 @@ from pathlib import Path
 import re
 import subprocess
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[3]
 
 
 def main():
@@ -64,8 +64,7 @@ def main():
                 "wait 250",
                 "screenshot level_e1m2_again",
                 "quit",
-         
-       "",
+                "",
             )
         )
     )
@@ -117,8 +116,7 @@ def main():
     if "unsupported or malformed" in text or "OpenAL: cannot" in text:
         raise RuntimeError("Native sound decoding or upload failed")
     if (
-        "Doom OPL2 musi
-c: music/doom/d_inter.mid" not in text
+        "Doom OPL2 music: music/doom/d_inter.mid" not in text
         or "Doom OPL2 music: music/doom/d_e1m2.mid" not in text
     ):
         raise RuntimeError("Intermission and destination music did not start")
