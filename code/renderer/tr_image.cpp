@@ -244,7 +244,7 @@ int imageBufferSize[BUFFER_MAX_TYPES] = {0,0,0};
 void        *imageBufferPtr[BUFFER_MAX_TYPES] = {NULL,NULL,NULL};
 
 void *R_GetImageBuffer( int size, bufferMemType_t bufferType ) {
-	if ( imageBufferSize[bufferType] < R_IMAGE_BUFFER_SIZE && size <= imageBufferSize[bufferType] ) {
+	if ( !imageBufferPtr[bufferType] ) {
 		imageBufferSize[bufferType] = R_IMAGE_BUFFER_SIZE;
 		imageBufferPtr[bufferType] = malloc( imageBufferSize[bufferType] );
 	}
@@ -1393,7 +1393,8 @@ static void LoadPCX( const char *filename, byte **pic, byte **palette, int *widt
 
 	if ( raw - (byte *)pcx > len ) {
 		ri.Printf( PRINT_DEVELOPER, "PCX file %s was malformed", filename );
-		free( *pic );
+		// *pic points into the shared image buffer, which stays owned by the
+		// buffer pool, so there is nothing to free here
 		*pic = NULL;
 	}
 
@@ -1411,6 +1412,7 @@ static void LoadPCX32( const char *filename, byte **pic, int *width, int *height
 	byte    *pic8;
 	int i, c, p;
 	byte    *pic32;
+	byte    *indices;
 
 	LoadPCX( filename, &pic8, &palette, width, height );
 	if ( !pic8 ) {
@@ -1419,9 +1421,16 @@ static void LoadPCX32( const char *filename, byte **pic, int *width, int *height
 	}
 
 	c = ( *width ) * ( *height );
+
+	// LoadPCX wrote the 8-bit picture into the shared image buffer. Copy the
+	// indices out first: the 32-bit output below reuses the same buffer pool
+	// and would otherwise alias (or free) pic8 while it is still being read.
+	indices = (byte *)malloc( c );
+	memcpy( indices, pic8, c );
+
 	pic32 = *pic = (byte *)R_GetImageBuffer( 4 * c, BUFFER_IMAGE );
 	for ( i = 0 ; i < c ; i++ ) {
-		p = pic8[i];
+		p = indices[i];
 		pic32[0] = palette[p * 3];
 		pic32[1] = palette[p * 3 + 1];
 		pic32[2] = palette[p * 3 + 2];
@@ -1429,7 +1438,7 @@ static void LoadPCX32( const char *filename, byte **pic, int *width, int *height
 		pic32 += 4;
 	}
 
-	free( pic8 );
+	free( indices );
 	free( palette );
 }
 
