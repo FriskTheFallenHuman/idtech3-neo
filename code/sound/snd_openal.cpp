@@ -5,7 +5,7 @@
 #include "../openal/include/AL/alc.h"
 #include "../openal/include/AL/alext.h"
 #include <windows.h>
-#include "../win32/win_local.h"
+#include "../sys/sys_local.h"
 #include <array>
 #include <vector>
 
@@ -464,7 +464,7 @@ void S_Update() {
         const float fraction = min(1.0f, max(0.0f, float(now - fadeStart) / (fadeEnd - fadeStart)));
         globalGain = fadeStartGain + (fadeTarget - fadeStartGain) * fraction;
     }
-    alListenerf(AL_GAIN, max(0.0f, globalGain) * ((muted->integer && !g_wv.activeApp) ? 0 : 1));
+    alListenerf(AL_GAIN, max(0.0f, globalGain) * ((muted->integer && !g_sv.activeApp) ? 0 : 1));
     for (auto &voice : voices) {
         if (voice.loop && !voice.seen) {
             Stop(voice);

@@ -29,7 +29,7 @@ If you have questions concerning this license or the applicable additional terms
 // cl_scrn.cpp -- master for refresh, status bar, console, chat, notify, etc
 
 #include "client.h"
-#include "../win32/win_editor.h"
+#include "../sys/sys_editor.h"
 
 qboolean scr_initialized;           // ready to draw
 

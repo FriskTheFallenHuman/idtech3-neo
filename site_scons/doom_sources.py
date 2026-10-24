@@ -64,12 +64,12 @@ WOLF_SOURCES = fix_paths([
     'server/sv_snapshot.cpp',
     'server/sv_world.cpp',
     'qcommon/unzip.cpp',
-    'win32/win_input.cpp',
-    'win32/win_main.cpp',
-    'win32/win_net.cpp',
-    'win32/win_shared.cpp',
-    'win32/win_syscon.cpp',
-    'win32/win_wndproc.cpp',
+    'sys/sys_input.cpp',
+    'sys/sys_events.cpp',
+    'sys/sys_main.cpp',
+    'sys/sys_net.cpp',
+    'sys/sys_shared.cpp',
+    'sys/sys_syscon.cpp',
 ])
 
 # Extra engine files that CMake added on top of the main list. The resource
@@ -78,7 +78,7 @@ WOLF_SOURCES = fix_paths([
 WOLF_EXTRA_SOURCES = fix_paths([
     'client/cl_console_font.cpp',
     'qcommon/doom_content.cpp',
-    'win32/win_editor.cpp',
+    'sys/sys_editor.cpp',
     'sound/snd_openal.cpp',
     'sound/snd_music.cpp',
     'sound/snd_fluidsynth.cpp',
@@ -279,9 +279,9 @@ RENDERER_SOURCES = fix_paths([
     'renderer/tr_sky.cpp',
     'renderer/tr_surface.cpp',
     'renderer/tr_world.cpp',
-    'win32/win_gamma.cpp',
-    'win32/win_glimp.cpp',
-    'win32/win_qgl.cpp',
+    'sys/sys_gamma.cpp',
+    'sys/sys_glimp.cpp',
+    'sys/sys_qgl.cpp',
 ])
 
 RENDERER_EXTRA_SOURCES = fix_paths([
@@ -291,7 +291,7 @@ RENDERER_EXTRA_SOURCES = fix_paths([
     'renderer/tr_decals.cpp',
     'renderer/tr_hbao.cpp',
     'renderer/tr_editor.cpp',
-    'win32/win_png.cpp',
+    'sys/sys_png.cpp',
 ])
 
 SPLINES_SOURCES = fix_paths([
@@ -487,7 +487,7 @@ TESTS = [
     },
     {
         'name': 'doom_png_tests',
-        'sources': ['test/renderer/png_tests.cpp', 'win32/win_png.cpp'],
+        'sources': ['test/renderer/png_tests.cpp', 'sys/sys_png.cpp'],
         # win_png.cpp carries the stb_image implementation and the fixtures
         # are hand rolled, so the test needs no extra libraries.
     },

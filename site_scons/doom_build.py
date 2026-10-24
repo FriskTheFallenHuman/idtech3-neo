@@ -39,7 +39,7 @@ LEGACY_INCLUDE_PATHS = [
     '#code/game/game/tests',   # "../../game/x.h" from the aasbuild compiler
     '#code/client',            # "../qcommon/x.h", "../renderer/x.h", ... from moved files
     '#code/sys',               # "win32/x.h"
-    '#code/sys/win32',         # "../win32/x.h"
+    '#code/third-party/SDL3/include',  # <SDL3/SDL.h> for the sys layer
     '#code/third-party',       # "openal/x.h", "fluidsynth/x.h", ...
 ]
 

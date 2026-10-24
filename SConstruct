@@ -122,6 +122,11 @@ doom_opl = opl_env.StaticLibrary(
 # in doom_build.py.
 OpenAL32 = env.File('#code/third-party/openal/libs/Win32/OpenAL32.lib')
 
+# SDL3: the window, GL context and input all go through the SDL3 library
+# that ships with the engine, so the import library is linked here and the
+# matching DLL is copied next to the engine and the tests below.
+SDL3 = env.File('#code/third-party/SDL3/lib/x86/SDL3.lib')
+
 # --- the engine parts ---
 
 renderer_env, renderer_variant = module_env('renderer')
@@ -267,10 +272,18 @@ wolf = wolf_env.Program(
     '#bin/Doom',
     [wolf_variant + '/' + p for p in
      doom_sources.WOLF_SOURCES + doom_sources.WOLF_EXTRA_SOURCES] + [wolf_res],
-    LIBS=[renderer, botlib, splines, OpenAL32, doom_opl,
+    LIBS=[renderer, botlib, splines, OpenAL32, SDL3, doom_opl,
           doom_miniz,
           'winmm', 'ole32', 'oleaut32', 'wsock32', 'user32', 'gdi32', 'shell32', 'advapi32'],
     LINKFLAGS=['/STACK:8388608', '/LARGEADDRESSAWARE'])
+
+# The engine links the SDL3 import library, so the DLL that matches it is
+# copied next to the engine and the tests. libfluidsynth-3.dll needs the
+# same SDL3.dll next to it, and the copy below satisfies that too.
+sdl_copies = [
+    env.InstallAs('#bin/SDL3.dll', '#code/third-party/SDL3/lib/x86/SDL3.dll'),
+    env.InstallAs('#bin/tests/SDL3.dll', '#code/third-party/SDL3/lib/x86/SDL3.dll'),
+]
 
 # The import library binds to OpenAL32.dll, so the bundled soft_oal.dll is
 # copied next to the engine and the tests under the name the linker expects.
@@ -281,12 +294,13 @@ openal_copies = [
 
 # FluidSynth is loaded at runtime, so its DLL ships next to the engine and
 # the tests when the prebuilt package is present. libfluidsynth-3.dll needs
-# sndfile.dll and SDL3.dll next to it, so the three ship together. The
-# library itself is optional: the engine still boots without it.
+# sndfile.dll and SDL3.dll next to it; SDL3.dll itself is the engine copy
+# installed above. The library itself is optional: the engine still boots
+# without it.
 fluidsynth_bin = 'code/third-party/fluidsynth/Win32/bin'
 fluidsynth_copies = []
 if os.path.exists(os.path.join(fluidsynth_bin, 'libfluidsynth-3.dll')):
-    for dll in ('libfluidsynth-3.dll', 'sndfile.dll', 'SDL3.dll'):
+    for dll in ('libfluidsynth-3.dll', 'sndfile.dll'):
         source = os.path.join(fluidsynth_bin, dll)
         if os.path.exists(source):
             fluidsynth_copies.append(
@@ -369,7 +383,7 @@ env.Alias('test', test_run)
 
 # --- the default target ---
 
-default_targets = [wolf] + openal_copies + fluidsynth_copies
+default_targets = [wolf] + sdl_copies + openal_copies + fluidsynth_copies
 if build_editor:
     default_targets += [editor_dll] + aas_copies
 env.Default(default_targets)

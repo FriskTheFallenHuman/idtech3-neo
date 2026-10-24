@@ -30,7 +30,7 @@ If you have questions concerning this license or the applicable additional terms
 
 #include "client.h"
 #include "console_font.h"
-#include "../win32/win_editor.h"
+#include "../sys/sys_editor.h"
 #include <limits.h>
 
 cvar_t  *cl_nodelta;
