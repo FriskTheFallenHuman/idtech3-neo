@@ -37,6 +37,9 @@ If you have questions concerning this license or the applicable additional terms
 #include "tr_glprogs.h"
 #include "tr_vfx.h"
 
+static byte s_intensitytable[256];
+static unsigned char s_gammatable[256];
+
 /*
 ===============================================================================
 
@@ -220,9 +223,6 @@ void RB_ApplyGammaShader( void ) {
 static void LoadBMP( const char *name, byte **pic, int *width, int *height );
 static void LoadTGA( const char *name, byte **pic, int *width, int *height );
 static void LoadJPG( const char *name, byte **pic, int *width, int *height );
-
-static byte s_intensitytable[256];
-static unsigned char s_gammatable[256];
 
 int gl_filter_min = GL_NEAREST;
 int gl_filter_max = GL_NEAREST;
