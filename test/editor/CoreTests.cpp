@@ -209,11 +209,9 @@ int main(int argc, char **argv) {
         std::cout << "PASS: " << checks << " checks";
         if (hasWad)
             std::cout << "; " << mapCount << " real maps, " << mapLines << " linedefs, "
-                      << textureCount << " textures
-";
+                      << textureCount << " textures\n";
         else
-            std::cout << "; real WAD checks skipped (" << argv[1] << " not available)
-";
+            std::cout << "; real WAD checks skipped (" << argv[1] << " not available)\n";
         return 0;
     } catch (const std::exception &e) {
         std::cerr << "FAIL after " << checks << " checks: " << e.what() << '\n';
