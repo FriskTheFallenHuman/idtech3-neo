@@ -593,7 +593,6 @@ it returns the module's export table.
 extern char *FS_BuildOSPath( const char *base, const char *game, const char *qpath );
 
 void * QDECL Sys_LoadDll( const char *name, void **dllHandle, const char *entryName, void *import ) {
-	static int lastWarning = 0;
 	SDL_SharedObject *libHandle;
 	void * ( QDECL * entry )( void * );
 	char    *basepath;
@@ -604,6 +603,7 @@ void * QDECL Sys_LoadDll( const char *name, void **dllHandle, const char *entryN
 #ifdef NDEBUG
 	int timestamp;
 	int buttonID;
+	static int lastWarning = 0; // only the release DLL warning box reads this
 #endif
 
 #ifdef WOLF_SP_DEMO

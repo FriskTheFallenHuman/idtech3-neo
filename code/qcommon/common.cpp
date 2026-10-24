@@ -1014,7 +1014,7 @@ Hunk_SmallLog
 void Hunk_SmallLog( void ) {
 	hunkblock_t *block, *block2;
 	char buf[4096];
-	int size, numBlocks;
+	int size, locsize, numBlocks;
 
 	if ( !logfile || !FS_Initialized() ) {
 		return;
@@ -1030,6 +1030,8 @@ void Hunk_SmallLog( void ) {
 		if ( block->printed ) {
 			continue;
 		}
+		// one line per allocation site, so sum every block from this site
+		locsize = block->size;
 		for ( block2 = block->next; block2; block2 = block2->next ) {
 			if ( block->line != block2->line ) {
 				continue;
@@ -1037,14 +1039,14 @@ void Hunk_SmallLog( void ) {
 			if ( Q_stricmp( block->file, block2->file ) ) {
 				continue;
 			}
-			size += block2->size;
+			locsize += block2->size;
 			block2->printed = qtrue;
 		}
 #ifdef HUNK_DEBUG
 		Com_sprintf( buf, sizeof( buf ), "size = %8d: %s, line: %d (%s)\r\n", locsize, block->file, block->line, block->label );
 		FS_Write( buf, strlen( buf ), logfile );
 #endif
-		size += block->size;
+		size += locsize;
 		numBlocks++;
 	}
 	Com_sprintf( buf, sizeof( buf ), "%d Hunk memory\r\n", size );
