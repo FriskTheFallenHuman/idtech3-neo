@@ -34,6 +34,178 @@ If you have questions concerning this license or the applicable additional terms
 */
 
 #include "tr_local.h"
+#include "tr_glprogs.h"
+#include "tr_vfx.h"
+
+/*
+===============================================================================
+
+GAMMA SHADER
+
+The gamma tables can run as a post-process pass when GLSL is available,
+which also covers windowed mode where the hardware ramps do not apply.
+The pass copies the finished frame into a texture and pushes every color
+through the 256 entry lookup table before the buffer swap.
+
+===============================================================================
+*/
+
+static idGLProgram	gammaProgram;
+static unsigned int	gammaTableTexture = 0;
+static unsigned int	gammaSceneTexture = 0;
+static int			gammaSceneWidth = 0;
+static int			gammaSceneHeight = 0;
+static int			gammaScreenSizeUniform = -1;
+static qboolean		gammaShaderReady = qfalse;
+
+// qgl.h predates this constant, so declare it locally like tr_vfx does.
+#define GAMMA_CLAMP_TO_EDGE 0x812F
+
+/*
+====================
+R_InitGammaShader
+====================
+*/
+void R_InitGammaShader( void ) {
+	if ( gammaShaderReady ) {
+		return;
+	}
+	if ( !R_VfxAvailable() ) {
+		ri.Printf( PRINT_ALL, "Gamma shader skipped: GLSL is not available\n" );
+		return;
+	}
+	if ( !gammaProgram.Load( "glprogs/screen.vert", "glprogs/gamma.frag" ) ) {
+		return;
+	}
+	gammaProgram.Bind();
+	gammaProgram.SetInt( gammaProgram.Uniform( "uScene" ), 0 );
+	gammaProgram.SetInt( gammaProgram.Uniform( "uGammaTable" ), 1 );
+	gammaScreenSizeUniform = gammaProgram.Uniform( "uScreenSize" );
+	idGLProgram::Unbind();
+	qglGenTextures( 1, &gammaTableTexture );
+	qglGenTextures( 1, &gammaSceneTexture );
+	gammaSceneWidth = gammaSceneHeight = 0;
+	gammaShaderReady = qtrue;
+}
+
+/*
+====================
+R_ShutdownGammaShader
+====================
+*/
+void R_ShutdownGammaShader( void ) {
+	if ( gammaTableTexture ) {
+		qglDeleteTextures( 1, &gammaTableTexture );
+		gammaTableTexture = 0;
+	}
+	if ( gammaSceneTexture ) {
+		qglDeleteTextures( 1, &gammaSceneTexture );
+		gammaSceneTexture = 0;
+	}
+	gammaProgram.Shutdown();
+	gammaSceneWidth = gammaSceneHeight = 0;
+	gammaShaderReady = qfalse;
+}
+
+/*
+====================
+R_UploadGammaTable
+
+Upload the current gamma table as a 256x1 texture.
+====================
+*/
+static void R_UploadGammaTable( void ) {
+	unsigned char lut[256 * 4];
+	int i;
+
+	for ( i = 0; i < 256; i++ ) {
+		lut[i * 4 + 0] = s_gammatable[i];
+		lut[i * 4 + 1] = s_gammatable[i];
+		lut[i * 4 + 2] = s_gammatable[i];
+		lut[i * 4 + 3] = 255;
+	}
+
+	glstate_t saved = glState;
+	GL_SelectTexture( 0 );
+	qglBindTexture( GL_TEXTURE_2D, gammaTableTexture );
+	glState.currenttextures[0] = gammaTableTexture;
+	qglTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
+	qglTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
+	qglTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GAMMA_CLAMP_TO_EDGE );
+	qglTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GAMMA_CLAMP_TO_EDGE );
+	qglTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, 256, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, lut );
+	GL_SelectTexture( saved.currenttmu );
+	glState = saved;
+}
+
+/*
+====================
+RB_ApplyGammaShader
+
+Copy the finished frame into a texture and redraw it through the gamma
+lookup table. Runs at the end of RB_SwapBuffers, right before the swap.
+====================
+*/
+void RB_ApplyGammaShader( void ) {
+	int width, height;
+	glstate_t saved;
+
+	if ( !gammaShaderReady || !r_gammaShader->integer ) {
+		return;
+	}
+
+	width = glConfig.vidWidth;
+	height = glConfig.vidHeight;
+	if ( width <= 0 || height <= 0 ) {
+		return;
+	}
+
+	saved = glState;
+	qglPushAttrib( GL_ALL_ATTRIB_BITS );
+	qglDisable( GL_SCISSOR_TEST );
+	qglDisable( GL_FOG );
+	qglDisable( GL_CLIP_PLANE0 );
+	GL_Cull( CT_TWO_SIDED );
+	GL_State( GLS_DEPTHTEST_DISABLE | GLS_SRCBLEND_ONE | GLS_DSTBLEND_ZERO );
+	qglDepthRange( 0, 1 );
+
+	GL_SelectTexture( 0 );
+	qglReadBuffer( GL_BACK );
+	qglBindTexture( GL_TEXTURE_2D, gammaSceneTexture );
+	glState.currenttextures[0] = gammaSceneTexture;
+	if ( width != gammaSceneWidth || height != gammaSceneHeight ) {
+		// the copy target has to match the framebuffer size exactly
+		qglCopyTexImage2D( GL_TEXTURE_2D, 0, GL_RGB, 0, 0, width, height, 0 );
+		qglTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+		qglTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+		qglTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GAMMA_CLAMP_TO_EDGE );
+		qglTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GAMMA_CLAMP_TO_EDGE );
+		gammaSceneWidth = width;
+		gammaSceneHeight = height;
+	} else {
+		qglCopyTexSubImage2D( GL_TEXTURE_2D, 0, 0, 0, 0, 0, width, height );
+	}
+
+	qglViewport( 0, 0, width, height );
+	gammaProgram.Bind();
+	GL_SelectTexture( 1 );
+	qglBindTexture( GL_TEXTURE_2D, gammaTableTexture );
+	glState.currenttextures[1] = gammaTableTexture;
+	gammaProgram.SetVec2( gammaScreenSizeUniform, (float)width, (float)height );
+
+	qglBegin( GL_QUADS );
+	qglVertex2f( -1.0f, -1.0f );
+	qglVertex2f( 1.0f, -1.0f );
+	qglVertex2f( 1.0f, 1.0f );
+	qglVertex2f( -1.0f, 1.0f );
+	qglEnd();
+
+	idGLProgram::Unbind();
+	GL_SelectTexture( saved.currenttmu );
+	qglPopAttrib();
+	glState = saved;
+}
+
 
 /* Image loading and saving go through the vendored stb headers. The
  * stb_image implementation lives in win_png.cpp, both files are part of
@@ -1962,9 +2134,14 @@ void R_SetColorMappings( void ) {
 	int inf;
 	int shift;
 
+	// the shader pass can pick up lazily after a cvar change
+	if ( r_gammaShader->integer && !gammaShaderReady && R_VfxAvailable() ) {
+		R_InitGammaShader();
+	}
+
 	// setup the overbright lighting
 	tr.overbrightBits = r_overBrightBits->integer;
-	if ( !glConfig.deviceSupportsGamma ) {
+	if ( !glConfig.deviceSupportsGamma && !( gammaShaderReady && r_gammaShader->integer ) ) {
 		tr.overbrightBits = 0;      // need hardware gamma for overbright
 	}
 
@@ -2029,7 +2206,17 @@ void R_SetColorMappings( void ) {
 		s_intensitytable[i] = j;
 	}
 
-	if ( glConfig.deviceSupportsGamma ) {
+	if ( gammaShaderReady && r_gammaShader->integer ) {
+		// the shader owns the correction, keep the hardware ramps neutral
+		if ( glConfig.deviceSupportsGamma ) {
+			unsigned char identity[256];
+			for ( i = 0; i < 256; i++ ) {
+				identity[i] = i;
+			}
+			GLimp_SetGamma( identity, identity, identity );
+		}
+		R_UploadGammaTable();
+	} else if ( glConfig.deviceSupportsGamma ) {
 		GLimp_SetGamma( s_gammatable, s_gammatable, s_gammatable );
 	}
 }
@@ -2045,6 +2232,9 @@ void    R_InitImages( void ) {
 	// Ridah, caching system
 	R_InitTexnumImages( qfalse );
 	// done.
+
+	// the shader pass needs to exist before the first table upload
+	R_InitGammaShader();
 
 	// build brightness translation tables
 	R_SetColorMappings();
@@ -2276,1085 +2466,4 @@ qhandle_t RE_GetShaderFromModel( qhandle_t modelid, int surfnum, int withlightma
 
 	return 0;
 }
-
-//----(SA) end
-
-/*
-===============
-RE_RegisterSkin
-
-===============
-*/
-qhandle_t RE_RegisterSkin( const char *name ) {
-	qhandle_t hSkin;
-	skin_t      *skin;
-	skinSurface_t   *surf;
-	skinModel_t *model;          //----(SA) added
-	char        *text, *text_p;
-	char        *token;
-	char surfName[MAX_QPATH];
-
-	if ( !name || !name[0] ) {
-		Com_Printf( "Empty name passed to RE_RegisterSkin\n" );
-		return 0;
-	}
-
-	if ( strlen( name ) >= MAX_QPATH ) {
-		Com_Printf( "Skin name exceeds MAX_QPATH\n" );
-		return 0;
-	}
-
-
-	// see if the skin is already loaded
-	for ( hSkin = 1; hSkin < tr.numSkins ; hSkin++ ) {
-		skin = tr.skins[hSkin];
-		if ( !Q_stricmp( skin->name, name ) ) {
-			if ( skin->numSurfaces == 0 ) {
-				return 0;       // default skin
-			}
-			return hSkin;
-		}
-	}
-
-	// allocate a new skin
-	if ( tr.numSkins == MAX_SKINS ) {
-		ri.Printf( PRINT_WARNING, "WARNING: RE_RegisterSkin( '%s' ) MAX_SKINS hit\n", name );
-		return 0;
-	}
-
-
-//----(SA)	moved things around slightly to fix the problem where you restart
-//			a map that has ai characters who had invalid skin names entered
-//			in thier "skin" or "head" field
-
-	// make sure the render thread is stopped
-	R_SyncRenderThread();
-
-	// If not a .skin file, load as a single shader
-	if ( strcmp( name + strlen( name ) - 5, ".skin" ) ) {
-		tr.numSkins++;
-		skin = (skin_t *)ri.Hunk_Alloc( sizeof( skin_t ), h_low );
-		tr.skins[hSkin] = skin;
-		Q_strncpyz( skin->name, name, sizeof( skin->name ) );
-		skin->numSurfaces   = 0;
-		skin->numModels     = 0;    //----(SA) added
-		skin->numSurfaces = 1;
-		skin->surfaces[0] = (skinSurface_t *)ri.Hunk_Alloc( sizeof( skin->surfaces[0] ), h_low );
-		skin->surfaces[0]->shader = R_FindShader( name, LIGHTMAP_NONE, qtrue );
-		return hSkin;
-	}
-
-	// load and parse the skin file
-	ri.FS_ReadFile( name, (void **)&text );
-	if ( !text ) {
-		return 0;
-	}
-
-	tr.numSkins++;
-	skin = (skin_t *)ri.Hunk_Alloc( sizeof( skin_t ), h_low );
-	tr.skins[hSkin] = skin;
-	Q_strncpyz( skin->name, name, sizeof( skin->name ) );
-	skin->numSurfaces   = 0;
-	skin->numModels     = 0;    //----(SA) added
-
-//----(SA)	end
-
-	text_p = text;
-	while ( text_p && *text_p ) {
-		// get surface name
-		token = CommaParse( &text_p );
-		Q_strncpyz( surfName, token, sizeof( surfName ) );
-
-		if ( !token[0] ) {
-			break;
-		}
-		// lowercase the surface name so skin compares are faster
-		Q_strlwr( surfName );
-
-		if ( *text_p == ',' ) {
-			text_p++;
-		}
-
-		if ( strstr( token, "tag_" ) ) {
-			continue;
-		}
-
-		if ( strstr( token, "md3_" ) ) {  // this is specifying a model
-			model = skin->models[ skin->numModels ] = (skinModel_t *)ri.Hunk_Alloc( sizeof( *skin->models[0] ), h_low );
-			Q_strncpyz( model->type, token, sizeof( model->type ) );
-
-			// get the model name
-			token = CommaParse( &text_p );
-
-			Q_strncpyz( model->model, token, sizeof( model->model ) );
-
-			skin->numModels++;
-			continue;
-		}
-
-//----(SA)	added
-		if ( strstr( token, "playerscale" ) ) {
-			token = CommaParse( &text_p );
-			skin->scale[0] = atof( token );   // uniform scaling for now
-			skin->scale[1] = atof( token );
-			skin->scale[2] = atof( token );
-			continue;
-		}
-//----(SA) end
-
-		// parse the shader name
-		token = CommaParse( &text_p );
-
-		surf = skin->surfaces[ skin->numSurfaces ] = (skinSurface_t *)ri.Hunk_Alloc( sizeof( *skin->surfaces[0] ), h_low );
-		Q_strncpyz( surf->name, surfName, sizeof( surf->name ) );
-		surf->shader = R_FindShader( token, LIGHTMAP_NONE, qtrue );
-		skin->numSurfaces++;
-	}
-
-	ri.FS_FreeFile( text );
-
-
-	// never let a skin have 0 shaders
-
-	//----(SA)	allow this for the (current) special case of the loper's upper body
-	//			(it's upper body has no surfaces, only tags)
-	if ( skin->numSurfaces == 0 ) {
-		if ( !( strstr( name, "loper" ) && strstr( name, "upper" ) ) ) {
-			return 0;       // use default skin
-		}
-	}
-
-	return hSkin;
-}
-
-
-/*
-===============
-R_InitSkins
-===============
-*/
-void    R_InitSkins( void ) {
-	skin_t      *skin;
-
-	tr.numSkins = 1;
-
-	// make the default skin have all default shaders
-	skin = tr.skins[0] = (skin_t *)ri.Hunk_Alloc( sizeof( skin_t ), h_low );
-	Q_strncpyz( skin->name, "<default skin>", sizeof( skin->name )  );
-	skin->numSurfaces = 1;
-	skin->surfaces[0] = (skinSurface_t *)ri.Hunk_Alloc( sizeof( *skin->surfaces ), h_low );
-	skin->surfaces[0]->shader = tr.defaultShader;
-}
-
-/*
-===============
-R_GetSkinByHandle
-===============
-*/
-skin_t  *R_GetSkinByHandle( qhandle_t hSkin ) {
-	if ( hSkin < 1 || hSkin >= tr.numSkins ) {
-		return tr.skins[0];
-	}
-	return tr.skins[ hSkin ];
-}
-
-/*
-===============
-R_SkinList_f
-===============
-*/
-void    R_SkinList_f( void ) {
-	int i, j;
-	skin_t      *skin;
-
-	ri.Printf( PRINT_ALL, "------------------\n" );
-
-	for ( i = 0 ; i < tr.numSkins ; i++ ) {
-		skin = tr.skins[i];
-
-		ri.Printf( PRINT_ALL, "%3i:%s\n", i, skin->name );
-		for ( j = 0 ; j < skin->numSurfaces ; j++ ) {
-			ri.Printf( PRINT_ALL, "       %s = %s\n",
-					   skin->surfaces[j]->name, skin->surfaces[j]->shader->name );
-		}
-	}
-	ri.Printf( PRINT_ALL, "------------------\n" );
-}
-
-// Ridah, utility for automatically cropping and numbering a bunch of images in a directory
-/*
-=============
-SaveTGA
-
-  saves out to 24 bit uncompressed format (no alpha)
-=============
-*/
-void SaveTGA( char *name, byte **pic, int width, int height ) {
-	byte    *inpixel, *outpixel;
-	byte    *outbuf, *b;
-
-	outbuf = (byte *)ri.Hunk_AllocateTempMemory( width * height * 4 + 18 );
-	b = outbuf;
-
-	memset( b, 0, 18 );
-	b[2] = 2;       // uncompressed type
-	b[12] = width & 255;
-	b[13] = width >> 8;
-	b[14] = height & 255;
-	b[15] = height >> 8;
-	b[16] = 24; // pixel size
-
-	{
-		int row, col;
-		int rows, cols;
-
-		rows = ( height );
-		cols = ( width );
-
-		outpixel = b + 18;
-
-		for ( row = ( rows - 1 ); row >= 0; row-- )
-		{
-			inpixel = ( ( *pic ) + ( row * cols ) * 4 );
-
-			for ( col = 0; col < cols; col++ )
-			{
-				*outpixel++ = *( inpixel + 2 );   // blue
-				*outpixel++ = *( inpixel + 1 );   // green
-				*outpixel++ = *( inpixel + 0 );   // red
-				//*outpixel++ = *(inpixel + 3);	// alpha
-
-				inpixel += 4;
-			}
-		}
-	}
-
-	ri.FS_WriteFile( name, outbuf, (int)( outpixel - outbuf ) );
-
-	ri.Hunk_FreeTempMemory( outbuf );
-
-}
-
-/*
-=============
-SaveTGAAlpha
-
-  saves out to 32 bit uncompressed format (with alpha)
-=============
-*/
-void SaveTGAAlpha( char *name, byte **pic, int width, int height ) {
-	byte    *inpixel, *outpixel;
-	byte    *outbuf, *b;
-
-	outbuf = (byte *)ri.Hunk_AllocateTempMemory( width * height * 4 + 18 );
-	b = outbuf;
-
-	memset( b, 0, 18 );
-	b[2] = 2;       // uncompressed type
-	b[12] = width & 255;
-	b[13] = width >> 8;
-	b[14] = height & 255;
-	b[15] = height >> 8;
-	b[16] = 32; // pixel size
-
-	{
-		int row, col;
-		int rows, cols;
-
-		rows = ( height );
-		cols = ( width );
-
-		outpixel = b + 18;
-
-		for ( row = ( rows - 1 ); row >= 0; row-- )
-		{
-			inpixel = ( ( *pic ) + ( row * cols ) * 4 );
-
-			for ( col = 0; col < cols; col++ )
-			{
-				*outpixel++ = *( inpixel + 2 );   // blue
-				*outpixel++ = *( inpixel + 1 );   // green
-				*outpixel++ = *( inpixel + 0 );   // red
-				*outpixel++ = *( inpixel + 3 );   // alpha
-
-				inpixel += 4;
-			}
-		}
-	}
-
-	ri.FS_WriteFile( name, outbuf, (int)( outpixel - outbuf ) );
-
-	ri.Hunk_FreeTempMemory( outbuf );
-
-}
-
-/*
-==============
-R_CropImage
-==============
-*/
-#define CROPIMAGES_ENABLED
-//#define FUNNEL_HACK
-#define RESIZE
-//#define QUICKTIME_BANNER
-#define TWILTB2_HACK
-
-qboolean R_CropImage( char *name, byte **pic, int border, int *width, int *height, int lastBox[2] ) {
-#ifdef CROPIMAGES_ENABLED
-	int row, col;
-	int rows, cols;
-	byte    *inpixel, *temppic, *outpixel;
-	int mins[2], maxs[2];
-	int diff[2];
-	//int	newWidth;
-	int /*a, max,*/ i;
-	int alpha;
-	//int	*center;
-	qboolean /*invalid,*/ skip;
-	vec3_t fCol, fScale;
-	qboolean filterColors = qfalse;
-	int fCount;
-	float f,c;
-#define FADE_BORDER_RANGE   ( ( *width ) / 40 )
-
-	rows = ( *height );
-	cols = ( *width );
-
-	mins[0] = 99999;
-	mins[1] = 99999;
-	maxs[0] = -99999;
-	maxs[1] = -99999;
-
-#ifdef TWILTB2_HACK
-	// find the filter color (use first few pixels)
-	filterColors = qtrue;
-	inpixel = ( *pic );
-	VectorClear( fCol );
-	for ( fCount = 0; fCount < 8; fCount++, inpixel += 4 ) {
-		for ( i = 0; i < 3; i++ ) {
-			if ( *( inpixel + i ) > 70 ) {
-				continue;   // too bright, cant be noise
-			}
-			if ( fCol[i] < *( inpixel + i ) ) {
-				fCol[i] = *( inpixel + i );
-			}
-		}
-	}
-	//VectorScale( fCol, 1.0/fCount, fCol );
-	for ( i = 0; i < 3; i++ ) {
-		fCol[i] += 4;
-		fScale[i] = 255.0 / ( 255.0 - fCol[i] );
-	}
-#endif
-
-	for ( row = 0; row < rows; row++ )
-	{
-		inpixel = ( ( *pic ) + ( row * cols ) * 4 );
-
-		for ( col = 0; col < cols; col++, inpixel += 4 )
-		{
-			if ( filterColors ) {
-				// special code for filtering the twiltb series
-				for ( i = 0; i < 3; i++ ) {
-					f = *( inpixel + i );
-					f -= fCol[i];
-					if ( f <= 0 ) {
-						f = 0;
-					} else { f *= fScale[i];}
-					if ( f > 255 ) {
-						f = 255;
-					}
-					*( inpixel + i ) = f;
-				}
-				// if this pixel is near the edge, then fade it out (just do a brightness fade)
-				if ( (int *)inpixel ) {
-					// calc the fade scale
-					f = (float)row / FADE_BORDER_RANGE;
-					if ( f > (float)( rows - row - 1 ) / FADE_BORDER_RANGE ) {
-						f = (float)( rows - row - 1 ) / FADE_BORDER_RANGE;
-					}
-					if ( f > (float)( cols - col - 1 ) / FADE_BORDER_RANGE ) {
-						f = (float)( cols - col - 1 ) / FADE_BORDER_RANGE;
-					}
-					if ( f > (float)( col ) / FADE_BORDER_RANGE ) {
-						f = (float)( col ) / FADE_BORDER_RANGE;
-					}
-					if ( f < 1.0 ) {
-						if ( f <= 0 ) {
-							*( (int *)inpixel ) = 0;
-						} else {
-							f += 0.2 * crandom();
-							if ( f < 1.0 ) {
-								if ( f <= 0 ) {
-									*( (int *)inpixel ) = 0;
-								} else {
-									f = 1.0 - f;
-									for ( i = 0; i < 3; i++ ) {
-										c = *( inpixel + i );
-										c -= f * c;
-										if ( c < 0 ) {
-											c = 0;
-										}
-										*( inpixel + i ) = c;
-									}
-								}
-							}
-						}
-					}
-				}
-				continue;
-			}
-
-			skip = qfalse;
-#ifdef QUICKTIME_BANNER
-			// hack for quicktime ripped images
-			if ( ( col > cols - 3 || row > rows - 36 ) ) {
-				// filter this pixel out
-				*( inpixel + 0 ) = 0;
-				*( inpixel + 1 ) = 0;
-				*( inpixel + 2 ) = 0;
-				skip = qtrue;
-			}
-#endif
-
-			if ( !skip ) {
-				if (    ( *( inpixel + 0 ) > 20 )       // blue
-						||  ( *( inpixel + 1 ) > 20 ) // green
-						||  ( *( inpixel + 2 ) > 20 ) ) { // red
-
-					if ( col < mins[0] ) {
-						mins[0] = col;
-					}
-					if ( col > maxs[0] ) {
-						maxs[0] = col;
-					}
-					if ( row < mins[1] ) {
-						mins[1] = row;
-					}
-					if ( row > maxs[1] ) {
-						maxs[1] = row;
-					}
-
-				} else {
-					// filter this pixel out
-					*( inpixel + 0 ) = 0;
-					*( inpixel + 1 ) = 0;
-					*( inpixel + 2 ) = 0;
-				}
-			}
-
-#ifdef FUNNEL_HACK  // scale brightness down
-			for ( i = 0; i < 3; i++ ) {
-				alpha = *( inpixel + i );
-				if ( ( alpha -= 20 ) < 0 ) {
-					alpha = 0;
-				}
-				*( inpixel + i ) = alpha;
-			}
-#endif
-
-			// set the alpha component
-			alpha = *( inpixel + 0 ); // + *(inpixel + 1) + *(inpixel + 2);
-			if ( *( inpixel + 1 ) > alpha ) {
-				alpha = *( inpixel + 1 );
-			}
-			if ( *( inpixel + 2 ) > alpha ) {
-				alpha = *( inpixel + 2 );
-			}
-			//alpha = (int)((float)alpha / 3.0);
-			//alpha /= 3;
-			if ( alpha > 255 ) {
-				alpha = 255;
-			}
-			*( inpixel + 3 ) = (byte)alpha;
-		}
-	}
-
-#ifdef RESIZE
-	return qtrue;
-#endif
-
-	// convert it so that the center is the center of the image
-	// this is used for some explosions
-	/*
-	for (i=0; i<2; i++) {
-		if (i==0)	center = width;
-		else		center = height;
-
-		if ((*center/2 - mins[i]) > (maxs[i] - *center/2)) {
-			maxs[i] = *center/2 + (*center/2 - mins[i]);
-		} else {
-			mins[i] = *center/2 - (maxs[i] - *center/2);
-		}
-	}
-	*/
-
-	// HACK for funnel
-#ifdef FUNNEL_HACK
-	mins[0] = 210;
-	maxs[0] = 430;
-	mins[1] = 0;
-	maxs[1] = *height - 1;
-
-	for ( i = 0; i < 2; i++ ) {
-		diff[i] = maxs[i] - mins[i];
-	}
-#else
-
-#ifndef RESIZE
-	// apply the border
-	for ( i = 0; i < 2; i++ ) {
-		mins[i] -= border;
-		if ( mins[i] < 0 ) {
-			mins[i] = 0;
-		}
-		maxs[i] += border;
-		if ( i == 0 ) {
-			if ( maxs[i] > *width - 1 ) {
-				maxs[i] = *width - 1;
-			}
-		} else {
-			if ( maxs[i] > *height - 1 ) {
-				maxs[i] = *height - 1;
-			}
-		}
-	}
-
-	// we have the mins/maxs, so work out the best square to crop to
-	for ( i = 0; i < 2; i++ ) {
-		diff[i] = maxs[i] - mins[i];
-	}
-
-	// widen the axis that has the smallest diff
-	a = -1;
-	if ( diff[1] > diff[0] ) {
-		a = 0;
-		max = *width - 1;
-	} else if ( diff[0] > diff[1] ) {
-		a = 1;
-		max = *height - 1;
-	}
-	if ( a >= 0 ) {
-		invalid = qfalse;
-		while ( diff[a] < diff[!a] ) {
-			if ( invalid ) {
-				Com_Printf( "unable to find a good crop size\n" );
-				return qfalse;
-			}
-			invalid = qtrue;
-			if ( mins[a] > 0 ) {
-				mins[a] -= 1;
-				diff[a] = maxs[a] - mins[a];
-				invalid = qfalse;
-			}
-			if ( ( diff[a] < diff[!a] ) && ( maxs[a] < max ) ) {
-				maxs[a] += 1;
-				diff[a] = maxs[a] - mins[a];
-				invalid = qfalse;
-			}
-		}
-	}
-
-	// make sure it's bigger or equal to the last one
-	for ( i = 0; i < 2; i++ ) {
-		if ( ( maxs[i] - mins[i] ) < lastBox[i] ) {
-			if ( i == 0 ) {
-				center = width;
-			} else { center = height;}
-
-			maxs[i] = *center / 2 + ( lastBox[i] / 2 );
-			mins[i] = maxs[i] - lastBox[i];
-			diff[i] = lastBox[i];
-		}
-	}
-#else
-	for ( i = 0; i < 2; i++ ) {
-		diff[i] = maxs[i] - mins[i];
-		lastBox[i] = diff[i];
-	}
-#endif  // RESIZE
-#endif  // FUNNEL_HACK
-
-	temppic = (byte *)malloc( sizeof( unsigned int ) * diff[0] * diff[1] );
-	outpixel = temppic;
-
-	for ( row = mins[1]; row < maxs[1]; row++ )
-	{
-		inpixel = ( ( *pic ) + ( row * cols ) * 4 );
-		inpixel += mins[0] * 4;
-
-		for ( col = mins[0]; col < maxs[0]; col++ )
-		{
-			*outpixel++ = *( inpixel + 0 );   // blue
-			*outpixel++ = *( inpixel + 1 );   // green
-			*outpixel++ = *( inpixel + 2 );   // red
-			*outpixel++ = *( inpixel + 3 );   // alpha
-
-			inpixel += 4;
-		}
-	}
-
-	// for some reason this causes memory drop, not worth investigating (dev command only)
-	//ri.Free( *pic );
-
-	*pic = temppic;
-
-	*width = diff[0];
-	*height = diff[1];
-
-	return qtrue;
-#else
-	return qtrue;   // shutup the compiler
-#endif
-}
-
-
-/*
-===============
-R_CropAndNumberImagesInDirectory
-===============
-*/
-void    R_CropAndNumberImagesInDirectory( char *dir, char *ext, int maxWidth, int maxHeight, int withAlpha ) {
-#ifdef CROPIMAGES_ENABLED
-	char    **fileList;
-	int numFiles, j;
-#ifndef RESIZE
-	int i;
-#endif
-	byte    *pic, *temppic;
-	int width, height, newWidth, newHeight;
-	char    *pch;
-	int b,c,d,lastNumber;
-	int lastBox[2] = {0,0};
-
-	fileList = ri.FS_ListFiles( dir, ext, &numFiles );
-
-	if ( !numFiles ) {
-		ri.Printf( PRINT_ALL, "no '%s' files in directory '%s'\n", ext, dir );
-		return;
-	}
-
-	ri.Printf( PRINT_ALL, "%i files found, beginning processing..\n", numFiles );
-
-	for ( j = 0; j < numFiles; j++ ) {
-		char filename[MAX_QPATH], outfilename[MAX_QPATH];
-
-		if ( !Q_strncmp( fileList[j], "spr", 3 ) ) {
-			continue;
-		}
-
-		Com_sprintf( filename, sizeof( filename ), "%s/%s", dir, fileList[j] );
-		ri.Printf( PRINT_ALL, "...cropping '%s'.. ", filename );
-
-		R_LoadImage( filename, &pic, &width, &height );
-		if ( !pic ) {
-			ri.Printf( PRINT_ALL, "error reading file, ignoring.\n" );
-			continue;
-		}
-
-		// file has been read, crop it, resize it down to a power of 2, then save
-		if ( !R_CropImage( filename, &pic, 6, &width, &height, lastBox ) ) {
-			ri.Printf( PRINT_ALL, "unable to crop image.\n" );
-			//ri.Free( pic );
-			break;
-		}
-#ifndef RESIZE
-		for ( i = 2; ( 1 << i ) <= maxWidth; i++ ) {
-			if ( ( width < ( 1 << i ) ) && ( width > ( 1 << ( i - 1 ) ) ) ) {
-				newWidth = ( 1 << ( i - 1 ) );
-				if ( newWidth > maxWidth ) {
-					newWidth = maxWidth;
-				}
-				newHeight = newWidth;
-				temppic = ri.Z_Malloc( sizeof( unsigned int ) * newWidth * newHeight );
-				ResampleTexture( (unsigned int *)pic, width, height, (unsigned int *)temppic, newWidth, newHeight );
-				memcpy( pic, temppic, sizeof( unsigned int ) * newWidth * newHeight );
-				ri.Free( temppic );
-				width = height = newWidth;
-				break;
-			}
-		}
-		if ( width > maxWidth ) {
-			// we need to force the scale downwards
-			newWidth = maxWidth;
-			newHeight = maxWidth;
-			temppic = ri.Z_Malloc( sizeof( unsigned int ) * newWidth * newHeight );
-			ResampleTexture( (unsigned int *)pic, width, height, (unsigned int *)temppic, newWidth, newHeight );
-			memcpy( pic, temppic, sizeof( unsigned int ) * newWidth * newHeight );
-			ri.Free( temppic );
-			width = newWidth;
-			height = newHeight;
-		}
-#else
-		newWidth = maxWidth;
-		newHeight = maxHeight;
-		temppic = (byte *)malloc( sizeof( unsigned int ) * newWidth * newHeight );
-		ResampleTexture( (unsigned int *)pic, width, height, (unsigned int *)temppic, newWidth, newHeight );
-		memcpy( pic, temppic, sizeof( unsigned int ) * newWidth * newHeight );
-		free( temppic );
-		width = newWidth;
-		height = newHeight;
-#endif
-
-		// set the new filename
-		pch = strrchr( filename, '/' );
-		*pch = '\0';
-		lastNumber = j;
-		b = lastNumber / 100;
-		lastNumber -= b * 100;
-		c = lastNumber / 10;
-		lastNumber -= c * 10;
-		d = lastNumber;
-		Com_sprintf( outfilename, sizeof( outfilename ), "%s/spr%i%i%i.tga", filename, b, c, d );
-
-		if ( withAlpha ) {
-			SaveTGAAlpha( outfilename, &pic, width, height );
-		} else {
-			SaveTGA( outfilename, &pic, width, height );
-		}
-
-		// free the pixel data
-		//ri.Free( pic );
-
-		ri.Printf( PRINT_ALL, "done.\n" );
-	}
-#endif
-}
-
-/*
-==============
-R_CropImages_f
-==============
-*/
-void R_CropImages_f( void ) {
-#ifdef CROPIMAGES_ENABLED
-	if ( ri.Cmd_Argc() < 5 ) {
-		ri.Printf( PRINT_ALL, "syntax: cropimages <dir> <extension> <maxWidth> <maxHeight> <alpha 0/1>\neg: 'cropimages sprites/fire1 .tga 64 64 0'\n" );
-		return;
-	}
-	R_CropAndNumberImagesInDirectory( ri.Cmd_Argv( 1 ), ri.Cmd_Argv( 2 ), atoi( ri.Cmd_Argv( 3 ) ), atoi( ri.Cmd_Argv( 4 ) ), atoi( ri.Cmd_Argv( 5 ) ) );
-#else
-	ri.Printf( PRINT_ALL, "This command has been disabled.\n" );
-#endif
-}
-// done.
-
-//==========================================================================================
-// Ridah, caching system
-
-static int numBackupImages = 0;
-static image_t  *backupHashTable[FILE_HASH_SIZE];
-
-static image_t  *texnumImages[MAX_DRAWIMAGES * 2];
-
-/*
-===============
-R_CacheImageAlloc
-
-  this will only get called to allocate the image_t structures, not that actual image pixels
-===============
-*/
-void *R_CacheImageAlloc( int size ) {
-	if ( r_cache->integer && r_cacheShaders->integer ) {
-		return malloc( size );
-		//return ri.Z_Malloc( size );
-	} else {
-		return ri.Hunk_Alloc( size, h_low );
-	}
-}
-
-/*
-===============
-R_CacheImageFree
-===============
-*/
-void R_CacheImageFree( void *ptr ) {
-	if ( r_cache->integer && r_cacheShaders->integer ) {
-		free( ptr );
-		//ri.Free( ptr );
-	}
-}
-
-/*
-===============
-R_TouchImage
-
-  remove this image from the backupHashTable and make sure it doesn't get overwritten
-===============
-*/
-qboolean R_TouchImage( image_t *inImage ) {
-	image_t *bImage, *bImagePrev;
-	int hash;
-
-	if ( inImage == tr.dlightImage ||
-		 inImage == tr.whiteImage ||
-		 inImage == tr.defaultImage ||
-		 inImage->imgName[0] == '*' ) { // can't use lightmaps since they might have the same name, but different maps will have different actual lightmap pixels
-		return qfalse;
-	}
-
-	hash = inImage->hash;
-
-	bImage = backupHashTable[hash];
-	bImagePrev = NULL;
-	while ( bImage ) {
-
-		if ( bImage == inImage ) {
-			// add it to the current images
-			if ( tr.numImages == MAX_DRAWIMAGES ) {
-				ri.Error( ERR_DROP, "R_CreateImage: MAX_DRAWIMAGES hit\n" );
-			}
-
-			tr.images[tr.numImages] = bImage;
-
-			// remove it from the backupHashTable
-			if ( bImagePrev ) {
-				bImagePrev->next = bImage->next;
-			} else {
-				backupHashTable[hash] = bImage->next;
-			}
-
-			// add it to the hashTable
-			bImage->next = hashTable[hash];
-			hashTable[hash] = bImage;
-
-			// get the new texture
-			tr.numImages++;
-
-			return qtrue;
-		}
-
-		bImagePrev = bImage;
-		bImage = bImage->next;
-	}
-
-	return qtrue;
-}
-
-/*
-===============
-R_PurgeImage
-===============
-*/
-void R_PurgeImage( image_t *image ) {
-
-	texnumImages[image->texnum - 1024] = NULL;
-
-	qglDeleteTextures( 1, &image->texnum );
-
-	R_CacheImageFree( image );
-
-	memset( glState.currenttextures, 0, sizeof( glState.currenttextures ) );
-	if ( qglBindTexture ) {
-		if ( qglActiveTextureARB ) {
-			GL_SelectTexture( 1 );
-			qglBindTexture( GL_TEXTURE_2D, 0 );
-			GL_SelectTexture( 0 );
-			qglBindTexture( GL_TEXTURE_2D, 0 );
-		} else {
-			qglBindTexture( GL_TEXTURE_2D, 0 );
-		}
-	}
-}
-
-
-/*
-===============
-R_PurgeBackupImages
-
-  Can specify the number of Images to purge this call (used for background purging)
-===============
-*/
-void R_PurgeBackupImages( int purgeCount ) {
-	int i, cnt;
-	static int lastPurged = 0;
-	image_t *image;
-
-	if ( !numBackupImages ) {
-		// nothing to purge
-		lastPurged = 0;
-		return;
-	}
-
-	R_SyncRenderThread();
-
-	cnt = 0;
-	for ( i = lastPurged; i < FILE_HASH_SIZE; ) {
-		lastPurged = i;
-		// TTimo: suggests () around assignment used as truth value
-		if ( ( image = backupHashTable[i] ) ) {
-			// kill it
-			backupHashTable[i] = image->next;
-			R_PurgeImage( image );
-			cnt++;
-
-			if ( cnt >= purgeCount ) {
-				return;
-			}
-		} else {
-			i++;    // no images in this slot, so move to the next one
-		}
-	}
-
-	// all done
-	numBackupImages = 0;
-	lastPurged = 0;
-}
-
-/*
-===============
-R_BackupImages
-===============
-*/
-void R_BackupImages( void ) {
-
-	if ( !r_cache->integer ) {
-		return;
-	}
-	if ( !r_cacheShaders->integer ) {
-		return;
-	}
-
-	// backup the hashTable
-	memcpy( backupHashTable, hashTable, sizeof( backupHashTable ) );
-
-	// pretend we have cleared the list
-	numBackupImages = tr.numImages;
-	tr.numImages = 0;
-
-	memset( glState.currenttextures, 0, sizeof( glState.currenttextures ) );
-	if ( qglBindTexture ) {
-		if ( qglActiveTextureARB ) {
-			GL_SelectTexture( 1 );
-			qglBindTexture( GL_TEXTURE_2D, 0 );
-			GL_SelectTexture( 0 );
-			qglBindTexture( GL_TEXTURE_2D, 0 );
-		} else {
-			qglBindTexture( GL_TEXTURE_2D, 0 );
-		}
-	}
-}
-
-/*
-=============
-R_FindCachedImage
-=============
-*/
-image_t *R_FindCachedImage( const char *name, int hash ) {
-	image_t *bImage;
-
-	if ( !r_cacheShaders->integer ) {
-		return NULL;
-	}
-
-	if ( !numBackupImages ) {
-		return NULL;
-	}
-
-	bImage = backupHashTable[hash];
-	while ( bImage ) {
-
-		if ( !Q_stricmp( name, bImage->imgName ) ) {
-			// add it to the current images
-			if ( tr.numImages == MAX_DRAWIMAGES ) {
-				ri.Error( ERR_DROP, "R_CreateImage: MAX_DRAWIMAGES hit\n" );
-			}
-
-			R_TouchImage( bImage );
-			return bImage;
-		}
-
-		bImage = bImage->next;
-	}
-
-	return NULL;
-}
-
-/*
-===============
-R_InitTexnumImages
-===============
-*/
-static int last_i;
-void R_InitTexnumImages( qboolean force ) {
-	if ( force || !numBackupImages ) {
-		memset( texnumImages, 0, sizeof( texnumImages ) );
-		last_i = 0;
-	}
-}
-
-/*
-============
-R_FindFreeTexnum
-============
-*/
-void R_FindFreeTexnum( image_t *inImage ) {
-	int i, max;
-	image_t **image;
-
-	max = ( MAX_DRAWIMAGES * 2 );
-	if ( last_i && !texnumImages[last_i + 1] ) {
-		i = last_i + 1;
-	} else {
-		i = 0;
-		image = (image_t **)&texnumImages;
-		while ( i < max && *( image++ ) ) {
-			i++;
-		}
-	}
-
-	if ( i < max ) {
-		if ( i < max - 1 ) {
-			last_i = i;
-		} else {
-			last_i = 0;
-		}
-		inImage->texnum = 1024 + i;
-		texnumImages[i] = inImage;
-	} else {
-		ri.Error( ERR_DROP, "R_FindFreeTexnum: MAX_DRAWIMAGES hit\n" );
-	}
-}
-
-/*
-===============
-R_LoadCacheImages
-===============
-*/
-void R_LoadCacheImages( void ) {
-	int len;
-	byte *buf;
-	char    *token, *pString;
-	char name[MAX_QPATH];
-	int parms[4], i;
-
-	if ( numBackupImages ) {
-		return;
-	}
-
-	len = ri.FS_ReadFile( "image.cache", NULL );
-
-	if ( len <= 0 ) {
-		return;
-	}
-
-	buf = (byte *)ri.Hunk_AllocateTempMemory( len );
-	ri.FS_ReadFile( "image.cache", (void **)&buf );
-	pString = (char*)buf;   //DAJ added (char*)
-
-	while ( ( token = COM_ParseExt( &pString, qtrue ) ) && token[0] ) {
-		Q_strncpyz( name, token, sizeof( name ) );
-		for ( i = 0; i < 4; i++ ) {
-			token = COM_ParseExt( &pString, qfalse );
-			parms[i] = atoi( token );
-		}
-		R_FindImageFileExt( name, parms[0], parms[1], parms[2], parms[3] );
-	}
-
-	ri.Hunk_FreeTempMemory( buf );
-}
-// done.
-//==========================================================================================
-
-byte *R_AllocateImagePixels(int size){return static_cast<byte *>(R_GetImageBuffer(size,BUFFER_IMAGE));}
 

@@ -1126,6 +1126,7 @@ extern cvar_t  *r_showcluster;
 extern cvar_t   *r_mode;                // video mode
 extern cvar_t   *r_fullscreen;
 extern cvar_t   *r_gamma;
+extern cvar_t   *r_gammaShader;         // apply the gamma tables with the post-process shader
 extern cvar_t   *r_displayRefresh;      // optional display refresh option
 extern cvar_t   *r_ignorehwgamma;       // overrides hardware gamma capabilities
 
@@ -1345,6 +1346,9 @@ image_t     *R_CreateImageExt( const char *name, const byte *pic, int width, int
 qboolean    R_GetModeInfo( int *width, int *height, float *windowAspect, int mode );
 
 void        R_SetColorMappings( void );
+void        R_InitGammaShader( void );
+void        R_ShutdownGammaShader( void );
+void        RB_ApplyGammaShader( void );
 void        R_GammaCorrect( byte *buffer, int bufSize );
 
 void    R_ImageList_f( void );

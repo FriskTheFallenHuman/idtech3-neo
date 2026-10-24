@@ -170,6 +170,7 @@ cvar_t  *r_textureMode;
 cvar_t  *r_offsetFactor;
 cvar_t  *r_offsetUnits;
 cvar_t  *r_gamma;
+cvar_t  *r_gammaShader;
 cvar_t  *r_intensity;
 cvar_t  *r_lockpvs;
 cvar_t  *r_noportals;
@@ -1063,6 +1064,7 @@ void R_Register( void ) {
 #else
 	r_gamma = ri.Cvar_Get( "r_gamma", "1.3", CVAR_ARCHIVE );
 #endif
+	r_gammaShader = ri.Cvar_Get( "r_gammaShader", "1", CVAR_ARCHIVE );
 	r_facePlaneCull = ri.Cvar_Get( "r_facePlaneCull", "1", CVAR_ARCHIVE );
 
 	r_railWidth = ri.Cvar_Get( "r_railWidth", "16", CVAR_ARCHIVE );
@@ -1281,6 +1283,7 @@ void RE_Shutdown( qboolean destroyWindow ) {
     if (tr.registered) {
         R_SyncRenderThread();
         hbao.Shutdown();
+        R_ShutdownGammaShader();
         R_ShutdownVfx();
     }
 

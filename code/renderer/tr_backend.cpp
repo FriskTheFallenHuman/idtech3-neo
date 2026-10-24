@@ -1585,6 +1585,9 @@ const void  *RB_SwapBuffers( const void *data ) {
 		qglFinish();
 	}
 
+	// run the frame through the gamma lookup table before the swap
+	RB_ApplyGammaShader();
+
 	GLimp_LogComment( "***************** RB_SwapBuffers *****************\n\n\n" );
 
 	GLimp_EndFrame();
